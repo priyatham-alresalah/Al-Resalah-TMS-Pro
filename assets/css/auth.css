@@ -1,0 +1,146 @@
+/* =========================
+   GLOBAL
+========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f3f4f6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   HEADER
+========================= */
+.auth-header {
+  background: #1f2937;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.auth-header img {
+  height: 45px;
+  width: auto;
+}
+
+.auth-header h1 {
+  color: #ffffff;
+  font-size: 22px;
+  margin: 0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* =========================
+   MAIN CONTAINER
+========================= */
+.auth-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* =========================
+   LOGIN / RESET CARD
+========================= */
+.auth-card {
+  background: #ffffff;
+  width: 340px;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.auth-card h2 {
+  margin: 0 0 20px;
+  font-size: 22px;
+  color: #111827;
+}
+
+/* =========================
+   INPUTS
+========================= */
+.auth-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.auth-card input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* =========================
+   BUTTON
+========================= */
+.auth-card button {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.auth-card button:hover {
+  background: #1d4ed8;
+}
+
+/* =========================
+   LINKS
+========================= */
+.auth-card a {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 14px;
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.auth-card a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.auth-footer {
+  background: #1f2937;
+  color: #ffffff;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+}
+
+/* =========================
+   HELPERS
+========================= */
+.hidden {
+  display: none;
+}
