@@ -1,6 +1,10 @@
 <?php
 session_start();
 
+error_reporting(0);
+ini_set('display_errors', 0);
+
+
 /* Supabase credentials (backend only) */
 define('SUPABASE_URL', 'https://qqmzkqsbvsmteqdtparn.supabase.co');
 

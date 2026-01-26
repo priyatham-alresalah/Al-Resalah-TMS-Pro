@@ -2,7 +2,6 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
-/* SUPABASE CONTEXT */
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
@@ -20,22 +19,7 @@ $trainings = json_decode(
     $ctx
   ),
   true
-);
-
-/* FETCH INQUIRIES */
-$inquiries = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries",
-    false,
-    $ctx
-  ),
-  true
-);
-
-$inqMap = [];
-foreach ($inquiries ?? [] as $i) {
-  $inqMap[$i['id']] = $i;
-}
+) ?: [];
 
 /* FETCH CLIENTS */
 $clients = json_decode(
@@ -45,10 +29,10 @@ $clients = json_decode(
     $ctx
   ),
   true
-);
+) ?: [];
 
 $clientMap = [];
-foreach ($clients ?? [] as $c) {
+foreach ($clients as $c) {
   $clientMap[$c['id']] = $c;
 }
 ?>
@@ -65,63 +49,74 @@ foreach ($clients ?? [] as $c) {
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
-  <h2>Trainings</h2>
-  <p class="muted">Manage trainings, candidates, certificates & invoices</p>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Client</th>
-        <th>Course</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th width="260">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
+<h2>Trainings</h2>
+<p class="muted">Manage training lifecycle</p>
 
-    <?php if (!empty($trainings)): ?>
-      <?php foreach ($trainings as $t): ?>
-        <?php
-          $inq = $inqMap[$t['inquiry_id']] ?? [];
-          $client = $clientMap[$t['client_id']] ?? [];
-        ?>
-        <tr>
-          <td><?= htmlspecialchars($client['company_name'] ?? '-') ?></td>
-          <td><?= htmlspecialchars($inq['course_name'] ?? '-') ?></td>
-          <td><?= date('d M Y', strtotime($t['training_date'])) ?></td>
-          <td>
-            <span class="badge badge-<?= strtolower($t['status']) ?>">
-              <?= strtoupper($t['status']) ?>
-            </span>
-          </td>
-          <td class="actions">
+<table class="table">
+  <thead>
+    <tr>
+      <th>Client</th>
+      <th>Course</th>
+      <th>Date</th>
+      <th>Status</th>
+      <th width="340">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
 
-            <!-- Candidates -->
-            <a class="btn small"
-               href="training_candidates.php?training_id=<?= $t['id'] ?>">
-               Candidates
-            </a>
+<?php if ($trainings): foreach ($trainings as $t): ?>
+<tr>
+  <td><?= htmlspecialchars($clientMap[$t['client_id']]['company_name'] ?? '-') ?></td>
+  <td><?= htmlspecialchars($t['course_name']) ?></td>
+  <td><?= date('d M Y', strtotime($t['training_date'])) ?></td>
+  <td>
+    <span class="badge badge-<?= $t['status'] ?>">
+      <?= strtoupper($t['status']) ?>
+    </span>
+  </td>
+  <td>
 
-            <!-- Issue Certificates -->
-            <?php if ($t['status'] === 'completed'): ?>
-              <a class="btn small btn-success"
-                 href="issue_certificates.php?training_id=<?= $t['id'] ?>">
-                 Issue Certificates
-              </a>
-            <?php endif; ?>
+    <!-- Candidates -->
+    <a class="btn small"
+       href="training_candidates.php?training_id=<?= $t['id'] ?>">
+       Candidates
+    </a>
 
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <tr>
-        <td colspan="5">No trainings found</td>
-      </tr>
+    <!-- Status transitions -->
+    <?php if ($t['status'] === 'scheduled'): ?>
+      <form method="post" action="api/trainings/update_status.php" style="display:inline">
+        <input type="hidden" name="id" value="<?= $t['id'] ?>">
+        <input type="hidden" name="status" value="ongoing">
+        <button class="btn small">Start</button>
+      </form>
     <?php endif; ?>
 
-    </tbody>
-  </table>
+    <?php if ($t['status'] === 'ongoing'): ?>
+      <form method="post" action="api/trainings/update_status.php" style="display:inline">
+        <input type="hidden" name="id" value="<?= $t['id'] ?>">
+        <input type="hidden" name="status" value="completed">
+        <button class="btn small btn-success">Complete</button>
+      </form>
+    <?php endif; ?>
+
+    <!-- Certificates -->
+    <?php if ($t['status'] === 'completed'): ?>
+      <a class="btn small btn-warning"
+         href="issue_certificates.php?training_id=<?= $t['id'] ?>">
+         Issue Certificates
+      </a>
+    <?php endif; ?>
+
+  </td>
+</tr>
+<?php endforeach; else: ?>
+<tr><td colspan="5">No trainings found</td></tr>
+<?php endif; ?>
+
+  </tbody>
+</table>
+
 </main>
 
 <?php include 'layout/footer.php'; ?>

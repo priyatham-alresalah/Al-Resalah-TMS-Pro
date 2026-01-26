@@ -2,6 +2,9 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
+$role = $_SESSION['user']['role'];
+
+/* SUPABASE CONTEXT */
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
@@ -11,7 +14,9 @@ $ctx = stream_context_create([
   ]
 ]);
 
-/* FETCH CLIENTS */
+/* =========================
+   FETCH CLIENTS
+========================= */
 $clients = json_decode(
   file_get_contents(
     SUPABASE_URL . "/rest/v1/clients?order=company_name.asc",
@@ -19,18 +24,25 @@ $clients = json_decode(
     $ctx
   ),
   true
-);
+) ?: [];
 
 $clientMap = [];
 foreach ($clients as $cl) {
   $clientMap[$cl['id']] = $cl;
 }
 
-/* ADD CANDIDATE */
+/* =========================
+   ADD CANDIDATE
+========================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+  if (empty($_POST['full_name']) || empty($_POST['client_id'])) {
+    die('Required fields missing');
+  }
+
   $payload = json_encode([
+    'full_name' => trim($_POST['full_name']),
     'client_id' => $_POST['client_id'],
-    'full_name' => $_POST['full_name'],
     'email'     => $_POST['email'] ?: null,
     'phone'     => $_POST['phone'] ?: null
   ]);
@@ -54,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   exit;
 }
 
-/* FETCH CANDIDATES */
+/* =========================
+   FETCH CANDIDATES
+========================= */
 $candidates = json_decode(
   file_get_contents(
     SUPABASE_URL . "/rest/v1/candidates?order=created_at.desc",
@@ -62,7 +76,7 @@ $candidates = json_decode(
     $ctx
   ),
   true
-);
+) ?: [];
 ?>
 
 <!DOCTYPE html>
@@ -77,32 +91,35 @@ $candidates = json_decode(
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
+
   <h2>Candidates</h2>
-  <p class="muted">Training participants</p>
+  <p class="muted">Master list of training participants</p>
 
-  <!-- ADD FORM -->
-  <form method="post" class="form-inline" style="margin-bottom:20px;">
-    <select name="client_id" required>
-      <option value="">Select Client *</option>
-      <?php foreach ($clients as $cl): ?>
-        <option value="<?= $cl['id'] ?>">
-          <?= htmlspecialchars($cl['company_name']) ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
+  <!-- CREATE -->
+  <?php if (in_array($role, ['admin','accounts','bdm','bdo'])): ?>
+    <form method="post" class="form-inline" style="margin-bottom:20px;">
+      <select name="client_id" required>
+        <option value="">Select Client *</option>
+        <?php foreach ($clients as $cl): ?>
+          <option value="<?= $cl['id'] ?>">
+            <?= htmlspecialchars($cl['company_name']) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
 
-    <input name="full_name" placeholder="Full Name *" required>
-    <input name="email" placeholder="Email">
-    <input name="phone" placeholder="Phone">
+      <input name="full_name" placeholder="Full Name *" required>
+      <input name="email" placeholder="Email">
+      <input name="phone" placeholder="Phone">
 
-    <button type="submit">Add Candidate</button>
-  </form>
+      <button type="submit">Add Candidate</button>
+    </form>
+  <?php endif; ?>
 
   <!-- LIST -->
   <table class="table">
     <thead>
       <tr>
-        <th>Candidate</th>
+        <th>Name</th>
         <th>Company</th>
         <th>Email</th>
         <th>Phone</th>
@@ -111,24 +128,29 @@ $candidates = json_decode(
     </thead>
     <tbody>
 
-    <?php if (!empty($candidates)): foreach ($candidates as $c): ?>
+    <?php if (!empty($candidates)): ?>
+      <?php foreach ($candidates as $c): ?>
+        <tr>
+          <td><?= htmlspecialchars($c['full_name']) ?></td>
+          <td>
+            <?= htmlspecialchars(
+              $clientMap[$c['client_id']]['company_name'] ?? '-'
+            ) ?>
+          </td>
+          <td><?= htmlspecialchars($c['email'] ?? '-') ?></td>
+          <td><?= htmlspecialchars($c['phone'] ?? '-') ?></td>
+          <td><?= date('d M Y', strtotime($c['created_at'])) ?></td>
+        </tr>
+      <?php endforeach; ?>
+    <?php else: ?>
       <tr>
-        <td><?= htmlspecialchars($c['full_name']) ?></td>
-        <td>
-          <?= htmlspecialchars(
-            $clientMap[$c['client_id']]['company_name'] ?? '-'
-          ) ?>
-        </td>
-        <td><?= htmlspecialchars($c['email'] ?? '-') ?></td>
-        <td><?= htmlspecialchars($c['phone'] ?? '-') ?></td>
-        <td><?= date('d M Y', strtotime($c['created_at'])) ?></td>
+        <td colspan="5">No candidates found</td>
       </tr>
-    <?php endforeach; else: ?>
-      <tr><td colspan="5">No candidates found</td></tr>
     <?php endif; ?>
 
     </tbody>
   </table>
+
 </main>
 
 <?php include 'layout/footer.php'; ?>
