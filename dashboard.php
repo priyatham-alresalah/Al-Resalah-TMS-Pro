@@ -1,21 +1,42 @@
 <?php
 require 'includes/config.php';
-require 'includes/auth_check.php';
+
+/* =========================
+   AUTH GUARD
+========================= */
+if (!isset($_SESSION['user'])) {
+  header('Location: ' . BASE_PATH . '/index.php');
+  exit;
+}
+
+$user = $_SESSION['user'];
 ?>
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dashboard | Training Management System</title>
+  <meta charset="UTF-8">
+  <title>Dashboard | <?= APP_NAME ?></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- GLOBAL CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
 
 <?php include 'layout/header.php'; ?>
 <?php include 'layout/sidebar.php'; ?>
 
+<!-- ================= CONTENT ================= -->
 <main class="content">
+
   <h2>Dashboard</h2>
-  <p>Welcome, <?= htmlspecialchars($_SESSION['user']['email']) ?></p>
+  <p class="muted">
+    Welcome back, <strong><?= htmlspecialchars($user['name']) ?></strong>
+    (<?= htmlspecialchars($user['role']) ?>)
+  </p>
+
 </main>
 
 <?php include 'layout/footer.php'; ?>
