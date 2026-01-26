@@ -1,48 +1,67 @@
 <?php
 require '../../includes/config.php';
 
+/* =========================
+   ALLOW POST ONLY
+========================= */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  header("Location: /training-management-system/");
+  header('Location: ' . BASE_PATH . '/index.php');
   exit;
 }
 
-$email = $_POST['email'] ?? '';
-$password = $_POST['password'] ?? '';
+/* =========================
+   INPUTS
+========================= */
+$email    = trim($_POST['email'] ?? '');
+$password = trim($_POST['password'] ?? '');
 
 if ($email === '' || $password === '') {
-  die("Email and password required");
+  header('Location: ' . BASE_PATH . '/index.php?error=invalid');
+  exit;
 }
 
-/* ---------- SUPABASE LOGIN ---------- */
+/* =========================
+   SUPABASE LOGIN (ANON KEY)
+========================= */
 $payload = json_encode([
-  "email" => $email,
-  "password" => $password
+  'email'    => $email,
+  'password' => $password
 ]);
 
-$loginCtx = stream_context_create([
+$ctx = stream_context_create([
   'http' => [
-    'method' => 'POST',
-    'header' =>
+    'method'  => 'POST',
+    'header'  =>
       "Content-Type: application/json\r\n" .
-      "apikey: " . SUPABASE_ANON,
-    'content' => $payload,
-    'ignore_errors' => true
+      "apikey: " . SUPABASE_ANON . "\r\n",
+    'content' => $payload
   ]
 ]);
 
-$response = file_get_contents(
-  SUPABASE_URL . "/auth/v1/token?grant_type=password",
+$response = @file_get_contents(
+  SUPABASE_URL . '/auth/v1/token?grant_type=password',
   false,
-  $loginCtx
+  $ctx
 );
+
+if ($response === false) {
+  header('Location: ' . BASE_PATH . '/index.php?error=invalid');
+  exit;
+}
 
 $data = json_decode($response, true);
 
-if (!isset($data['user'])) {
-  die("Invalid login credentials");
+/* =========================
+   INVALID LOGIN
+========================= */
+if (!isset($data['access_token'], $data['user']['id'])) {
+  header('Location: ' . BASE_PATH . '/index.php?error=invalid');
+  exit;
 }
 
-/* ---------- FETCH USER ROLE ---------- */
+/* =========================
+   FETCH USER PROFILE
+========================= */
 $profileCtx = stream_context_create([
   'http' => [
     'method' => 'GET',
@@ -52,28 +71,34 @@ $profileCtx = stream_context_create([
   ]
 ]);
 
-$profileResponse = file_get_contents(
-  SUPABASE_URL .
-  "/rest/v1/profiles?id=eq." . $data['user']['id'] .
-  "&select=full_name,role,is_active",
+$profileResponse = @file_get_contents(
+  SUPABASE_URL . '/rest/v1/profiles?id=eq.' . $data['user']['id'] . '&select=*',
   false,
   $profileCtx
 );
 
-$profile = json_decode($profileResponse, true);
+$profile = json_decode($profileResponse, true)[0] ?? null;
 
-if (!$profile || !$profile[0]['is_active']) {
-  die("User is inactive");
+/* =========================
+   PROFILE VALIDATION
+========================= */
+if (!$profile || !$profile['is_active']) {
+  header('Location: ' . BASE_PATH . '/index.php?error=inactive');
+  exit;
 }
 
-/* ---------- SESSION ---------- */
+/* =========================
+   CREATE SESSION
+========================= */
 $_SESSION['user'] = [
   'id'    => $data['user']['id'],
-  'email' => $data['user']['email'],
-  'name'  => $profile[0]['full_name'],
-  'role'  => $profile[0]['role']
+  'email' => $email,
+  'role'  => $profile['role'],
+  'name'  => $profile['full_name']
 ];
 
-/* ---------- REDIRECT ---------- */
-header("Location: /training-management-system/dashboard.php");
+/* =========================
+   SUCCESS
+========================= */
+header('Location: ' . BASE_PATH . '/dashboard.php');
 exit;

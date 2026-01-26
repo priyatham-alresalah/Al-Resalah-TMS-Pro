@@ -6,7 +6,7 @@ require 'includes/auth_check.php';
 <html>
 <head>
   <title>Dashboard | Training Management System</title>
-  <link rel="stylesheet" href="/training-management-system/assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 

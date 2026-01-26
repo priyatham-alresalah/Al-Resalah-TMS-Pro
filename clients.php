@@ -27,7 +27,7 @@ $clients = json_decode($response, true);
 <html>
 <head>
   <title>Clients</title>
-  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 

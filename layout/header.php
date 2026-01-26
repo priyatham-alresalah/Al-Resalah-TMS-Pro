@@ -1,6 +1,6 @@
 <header class="main-header">
   <div class="header-left">
-    <img src="/training-management-system/assets/images/logo.png" alt="Logo">
+    <img src="/assets/images/logo.png" alt="Logo">
     <span>Al Resalah Consultancies & Training</span>
   </div>
 

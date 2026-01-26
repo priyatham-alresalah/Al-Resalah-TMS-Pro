@@ -1,69 +1,96 @@
+<?php
+session_start();
+
+/* If already logged in, go to dashboard */
+if (isset($_SESSION['user'])) {
+  header('Location: dashboard.php');
+  exit;
+}
+
+$error = $_GET['error'] ?? '';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login | Training Management System</title>
+  <title>Login | AI Resalah Consultancies & Training</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="/training-management-system/assets/css/auth.css">
+  <!-- SINGLE GLOBAL CSS -->
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
+
 <body>
 
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
 <header class="auth-header">
   <div class="header-inner">
-    <img src="/training-management-system/assets/images/logo.png" alt="Logo">
-    <h1>Al Resalah Consultancies & Training</h1>
+    <img src="assets/images/logo.png" alt="AI Resalah">
+    <h1>AI Resalah Consultancies & Training</h1>
   </div>
 </header>
 
-<!-- MAIN CONTENT -->
-<main class="auth-container">
-
-  <!-- LOGIN FORM -->
-  <form method="post" action="/training-management-system/api/auth/login.php"
-        class="auth-card" id="loginBox">
+<!-- ================= LOGIN ================= -->
+<div class="auth-container">
+  <div class="auth-card">
 
     <h2>Login</h2>
 
-    <input type="email" name="email" placeholder="Email" required>
-    <input type="password" name="password" placeholder="Password" required>
+    <?php if ($error === 'invalid'): ?>
+      <p style="color:#dc2626;font-size:14px;margin-bottom:10px;">
+        Invalid email or password
+      </p>
+    <?php endif; ?>
 
-    <button type="submit">Login</button>
+    <form method="post" action="api/auth/login.php">
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+      >
+
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+      >
+
+      <button type="submit">Login</button>
+    </form>
 
     <a href="#" onclick="showReset(); return false;">Forgot password?</a>
-  </form>
 
-  <!-- RESET PASSWORD FORM -->
-  <form method="post" action="/training-management-system/api/auth/reset.php"
-        class="auth-card hidden" id="resetBox">
+    <!-- RESET PASSWORD -->
+    <div id="resetBox" class="hidden" style="margin-top:20px;">
+      <form method="post" action="api/auth/reset.php">
+        <input
+          type="email"
+          name="email"
+          placeholder="Registered Email"
+          required
+        >
+        <button type="submit">Send Reset Link</button>
+      </form>
+      <a href="#" onclick="hideReset(); return false;">Back to login</a>
+    </div>
 
-    <h2>Reset Password</h2>
+  </div>
+</div>
 
-    <input type="email" name="email" placeholder="Registered Email" required>
-
-    <button type="submit">Send Reset Link</button>
-
-    <a href="#" onclick="showLogin(); return false;">Back to login</a>
-  </form>
-
-</main>
-
-<!-- FOOTER -->
+<!-- ================= FOOTER ================= -->
 <footer class="auth-footer">
-  © <?php echo date('Y'); ?> Al Resalah Consultancies & Training
+  © <?= date('Y') ?> AI Resalah Consultancies & Training
 </footer>
 
-<!-- JS -->
 <script>
 function showReset() {
-  document.getElementById('loginBox').classList.add('hidden');
   document.getElementById('resetBox').classList.remove('hidden');
 }
-
-function showLogin() {
+function hideReset() {
   document.getElementById('resetBox').classList.add('hidden');
-  document.getElementById('loginBox').classList.remove('hidden');
 }
 </script>
 

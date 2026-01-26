@@ -1,23 +1,50 @@
 <?php
-session_start();
+/* =========================
+   SESSION
+========================= */
+if (session_status() === PHP_SESSION_NONE) {
+  session_start();
+}
 
-error_reporting(0);
-ini_set('display_errors', 0);
+/* =========================
+   BASE PATH (IMPORTANT)
+========================= */
+/*
+  This makes paths work on:
+  - localhost
+  - cPanel
+  - subfolder hosting
 
+  Example:
+  https://reports.alresalahct.com/training-management-system/
+*/
+define('BASE_PATH', '/training-management-system');
 
-/* Supabase credentials (backend only) */
+/* =========================
+   SUPABASE CONFIG
+========================= */
 define('SUPABASE_URL', 'https://qqmzkqsbvsmteqdtparn.supabase.co');
 
-/* anon public key */
+/*
+  ANON key → used for LOGIN / RESET
+*/
 define('SUPABASE_ANON', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbXprcXNidnNtdGVxZHRwYXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMjI2MjEsImV4cCI6MjA4NDg5ODYyMX0.aDCwm8cf46GGCxYhXIT0lqefLHK_5sAKEsDgEhp2158');
 
-/* service role key (NEVER expose in frontend) */
+/*
+  SERVICE key → used for DB CRUD (server-side only)
+*/
 define('SUPABASE_SERVICE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbXprcXNidnNtdGVxZHRwYXJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyMjYyMSwiZXhwIjoyMDg0ODk4NjIxfQ.VbJCSHYPyhMFUosl-GRZgicdlUXSO68fEQlUgDBpsUs');
 
-// SMTP EMAIL CONFIG
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', 'priyatham.ramsai@gmail.com');
-define('SMTP_PASS', 'fufy xjtu vrqo szld');
-define('SMTP_FROM', 'priyatham.ramsai@gmail.com');
-define('SMTP_FROM_NAME', 'Training Department');
+/* =========================
+   APP SETTINGS
+========================= */
+define('APP_NAME', 'AI Resalah Consultancies & Training');
+
+/* =========================
+   ERROR REPORTING (DEV ONLY)
+========================= */
+/*
+  TURN OFF IN PRODUCTION
+*/
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
