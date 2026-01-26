@@ -34,7 +34,7 @@ $roles = ['admin', 'bdm', 'bdo', 'coordinator', 'trainer', 'accounts'];
 <head>
   <meta charset="UTF-8">
   <title>Users | Training Management System</title>
-  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 

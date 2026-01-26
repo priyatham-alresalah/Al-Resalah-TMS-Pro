@@ -58,7 +58,7 @@ foreach ($clients as $c) $clientMap[$c['id']] = $c;
 <html>
 <head>
   <title>Certificates</title>
-  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 

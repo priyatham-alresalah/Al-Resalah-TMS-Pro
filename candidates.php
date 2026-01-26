@@ -83,7 +83,7 @@ $candidates = json_decode(
 <html>
 <head>
   <title>Candidates</title>
-  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
