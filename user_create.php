@@ -2,7 +2,6 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
-/* ADMIN ONLY */
 if ($_SESSION['user']['role'] !== 'admin') {
   die('Access denied');
 }
@@ -19,45 +18,37 @@ if ($_SESSION['user']['role'] !== 'admin') {
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
-  <h2>Create User</h2>
-  <p class="muted">Add a new system user</p>
-
   <div class="form-card">
-    <form method="post" action="api/users/create.php">
+    <h2>Create User</h2>
 
+    <form action="api/users/create.php" method="post">
       <div class="form-group">
-        <label>Full Name *</label>
+        <label>Full Name</label>
         <input type="text" name="full_name" required>
       </div>
 
       <div class="form-group">
-        <label>Email *</label>
+        <label>Email</label>
         <input type="email" name="email" required>
       </div>
 
       <div class="form-group">
-        <label>Password *</label>
-        <input type="password" name="password" required minlength="6">
-        <small class="muted">Minimum 6 characters</small>
+        <label>Password</label>
+        <input type="password" name="password" required minlength="8">
       </div>
 
       <div class="form-group">
-        <label>Role *</label>
-        <select name="role" required>
+        <label>Role</label>
+        <select name="role">
           <option value="admin">Admin</option>
-          <option value="accounts">Accounts</option>
-          <option value="bdm">BDM</option>
-          <option value="bdo">BDO</option>
-          <option value="coordinator">Coordinator</option>
           <option value="trainer">Trainer</option>
         </select>
       </div>
 
       <div class="form-actions">
-        <button type="submit">Create User</button>
+        <button class="btn">Create User</button>
         <a href="users.php">Cancel</a>
       </div>
-
     </form>
   </div>
 </main>

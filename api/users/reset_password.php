@@ -2,14 +2,7 @@
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
 
-$data = json_encode([
-  'email' => $_POST['email'],
-  'password' => $_POST['password'],
-  'user_metadata' => [
-    'full_name' => $_POST['full_name'],
-    'role' => $_POST['role']
-  ]
-]);
+$id = $_POST['user_id'];
 
 $ctx = stream_context_create([
   'http' => [
@@ -18,9 +11,14 @@ $ctx = stream_context_create([
       "Content-Type: application/json\r\n" .
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
       "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => $data
+    'content' => json_encode(['user_id' => $id])
   ]
 ]);
 
-file_get_contents(SUPABASE_URL . "/auth/v1/admin/users", false, $ctx);
+file_get_contents(
+  SUPABASE_URL . "/auth/v1/admin/users/$id/recover",
+  false,
+  $ctx
+);
+
 header('Location: ../../users.php');

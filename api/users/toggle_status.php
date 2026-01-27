@@ -2,25 +2,24 @@
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
 
-$data = json_encode([
-  'email' => $_POST['email'],
-  'password' => $_POST['password'],
-  'user_metadata' => [
-    'full_name' => $_POST['full_name'],
-    'role' => $_POST['role']
-  ]
-]);
+$id = $_POST['user_id'];
+$is_active = $_POST['is_active'];
 
 $ctx = stream_context_create([
   'http' => [
-    'method' => 'POST',
+    'method' => 'PATCH',
     'header' =>
       "Content-Type: application/json\r\n" .
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
       "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => $data
+    'content' => json_encode(['is_active' => $is_active])
   ]
 ]);
 
-file_get_contents(SUPABASE_URL . "/auth/v1/admin/users", false, $ctx);
+file_get_contents(
+  SUPABASE_URL . "/rest/v1/profiles?id=eq.$id",
+  false,
+  $ctx
+);
+
 header('Location: ../../users.php');
