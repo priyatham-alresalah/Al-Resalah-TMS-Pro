@@ -18,30 +18,42 @@ if ($_SESSION['user']['role'] !== 'admin') {
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
-  <div class="form-card">
-    <h2>Create User</h2>
+  <div class="page-header">
+    <div>
+      <h2>Create User</h2>
+      <p class="muted">Add a new user and assign a role</p>
+    </div>
+    <div class="actions">
+      <a href="users.php" class="btn btn-sm btn-secondary">Back to Users</a>
+    </div>
+  </div>
 
+  <div class="form-card">
     <form action="api/users/create.php" method="post">
       <div class="form-group">
         <label>Full Name</label>
-        <input type="text" name="full_name" required>
+        <input type="text" name="full_name" required autocomplete="name">
       </div>
 
       <div class="form-group">
         <label>Email</label>
-        <input type="email" name="email" required>
+        <input type="email" name="email" required autocomplete="email">
       </div>
 
       <div class="form-group">
         <label>Password</label>
-        <input type="password" name="password" required minlength="8">
+        <input type="password" name="password" required minlength="8" autocomplete="new-password">
       </div>
 
       <div class="form-group">
         <label>Role</label>
-        <select name="role">
+        <select name="role" required>
           <option value="admin">Admin</option>
+          <option value="bdm">BDM</option>
+          <option value="bdo">BDO</option>
+          <option value="coordinator">Coordinator</option>
           <option value="trainer">Trainer</option>
+          <option value="accounts">Accounts</option>
         </select>
       </div>
 
