@@ -2,11 +2,11 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
+/* ADMIN ONLY */
 if ($_SESSION['user']['role'] !== 'admin') {
   die('Access denied');
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -23,26 +23,26 @@ if ($_SESSION['user']['role'] !== 'admin') {
   <p class="muted">Add a new system user</p>
 
   <div class="form-card">
-
     <form method="post" action="api/users/create.php">
 
       <div class="form-group">
-        <label>Full Name</label>
+        <label>Full Name *</label>
         <input type="text" name="full_name" required>
       </div>
 
       <div class="form-group">
-        <label>Email</label>
+        <label>Email *</label>
         <input type="email" name="email" required>
       </div>
 
       <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="password" required>
+        <label>Password *</label>
+        <input type="password" name="password" required minlength="6">
+        <small class="muted">Minimum 6 characters</small>
       </div>
 
       <div class="form-group">
-        <label>Role</label>
+        <label>Role *</label>
         <select name="role" required>
           <option value="admin">Admin</option>
           <option value="accounts">Accounts</option>
@@ -59,7 +59,6 @@ if ($_SESSION['user']['role'] !== 'admin') {
       </div>
 
     </form>
-
   </div>
 </main>
 
