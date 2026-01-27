@@ -241,6 +241,24 @@ textarea:focus {
   border-color: #2563eb;
 }
 
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+}
+
 button {
   padding: 8px 14px;
   background: #2563eb;
@@ -259,6 +277,13 @@ button:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.form-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .form-card {
@@ -450,6 +475,68 @@ footer {
 }
 
 .action-links .danger {
+  color: #dc2626;
+}
+
+/* =========================================================
+   ACTION MENU (3 DOTS)
+========================================================= */
+.action-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.btn-icon:hover {
+  background: #e5e7eb;
+}
+
+.action-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+  padding: 6px 0;
+  z-index: 50;
+  display: none;
+}
+
+.action-menu.open {
+  display: block;
+}
+
+.action-menu a,
+.action-menu button {
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: 6px 12px;
+  font-size: 13px;
+  background: none;
+  border: none;
+}
+
+.action-menu a:hover,
+.action-menu button:hover {
+  background: #f3f4f6;
+}
+
+.action-menu .danger {
   color: #dc2626;
 }
 

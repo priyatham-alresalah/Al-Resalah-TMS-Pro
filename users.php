@@ -71,23 +71,28 @@ $users = json_decode(
         </td>
         <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
         <td class="col-actions">
-          <div class="action-links">
-            <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
+          <div class="action-menu-wrapper">
+            <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+              &#8942;
+            </button>
+            <div class="action-menu">
+              <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
 
-            <form action="api/users/toggle_status.php" method="post">
-              <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-              <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
-              <button type="submit" class="danger">
-                <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
-              </button>
-            </form>
+              <form action="api/users/toggle_status.php" method="post">
+                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
+                <button type="submit" class="danger">
+                  <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
+                </button>
+              </form>
 
-            <form action="api/users/reset_password.php" method="post">
-              <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-              <button type="submit" class="danger">
-                Reset Password
-              </button>
-            </form>
+              <form action="api/users/reset_password.php" method="post">
+                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                <button type="submit" class="danger">
+                  Reset Password
+                </button>
+              </form>
+            </div>
           </div>
         </td>
       </tr>
@@ -100,6 +105,32 @@ $users = json_decode(
     </tbody>
   </table>
 </main>
+
+<script>
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        // close all first
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        // toggle current
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+</script>
 
 <?php include 'layout/footer.php'; ?>
 </body>
