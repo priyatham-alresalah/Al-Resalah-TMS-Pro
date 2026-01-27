@@ -164,7 +164,7 @@ $inquiries = json_decode(
 
         <div class="form-actions">
           <button class="btn" type="submit">Submit Inquiry</button>
-          <a href="dashboard.php">Cancel</a>
+          <a href="dashboard.php" class="btn-cancel">Cancel</a>
         </div>
       </form>
     </div>

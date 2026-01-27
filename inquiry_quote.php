@@ -164,7 +164,7 @@ $allInquiries = json_decode(
 
       <div class="form-actions">
         <button class="btn" type="submit">Create Quote</button>
-        <a href="inquiries.php">Cancel</a>
+        <a href="inquiries.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

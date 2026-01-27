@@ -59,7 +59,7 @@ if ($_SESSION['user']['role'] !== 'admin') {
 
       <div class="form-actions">
         <button class="btn">Create User</button>
-        <a href="users.php">Cancel</a>
+        <a href="users.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

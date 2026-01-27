@@ -91,7 +91,7 @@ $clients = json_decode(
 
       <div class="form-actions">
         <button class="btn" type="submit">Update Candidate</button>
-        <a href="candidates.php">Cancel</a>
+        <a href="candidates.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

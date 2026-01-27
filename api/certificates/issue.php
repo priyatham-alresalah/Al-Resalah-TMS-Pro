@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="card" style="max-width:400px;">
     <form method="post">
       <button type="submit">Generate Certificate</button>
-      <a class="link" href="../trainings.php">Cancel</a>
+      <a class="btn-cancel" href="../trainings.php">Cancel</a>
     </form>
   </div>
 </main>

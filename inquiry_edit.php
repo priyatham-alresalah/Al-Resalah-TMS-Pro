@@ -61,7 +61,7 @@ $inq = json_decode(
 
       <div class="form-actions">
         <button>Update Inquiry</button>
-        <a href="inquiries.php" class="btn-secondary">Cancel</a>
+        <a href="inquiries.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

@@ -85,7 +85,7 @@ if ($role !== 'admin' && ($client['created_by'] ?? null) !== $userId) {
 
       <div class="form-actions">
         <button type="submit">Update Client</button>
-        <a href="clients.php">Cancel</a>
+        <a href="clients.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

@@ -117,7 +117,7 @@ $courses = json_decode(
       </select>
 
       <button type="submit">Update</button>
-      <a href="training_master.php" style="margin-left:10px;">Cancel</a>
+      <a href="training_master.php" class="btn-cancel" style="margin-left:10px;">Cancel</a>
     </form>
   <?php endif; endif; ?>
 

@@ -72,7 +72,7 @@ $trainers = json_decode(
     </div>
 
     <button type="submit">Create Training</button>
-    <a href="inquiries.php" class="link">Cancel</a>
+    <a href="inquiries.php" class="btn-cancel">Cancel</a>
   </form>
 </main>
 

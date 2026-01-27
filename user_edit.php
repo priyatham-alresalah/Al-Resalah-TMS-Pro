@@ -79,7 +79,7 @@ $user = $userResponse[0];
 
       <div class="form-actions">
         <button class="btn">Update User</button>
-        <a href="users.php">Cancel</a>
+        <a href="users.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>

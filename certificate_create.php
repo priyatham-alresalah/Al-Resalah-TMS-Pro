@@ -30,7 +30,7 @@ $training_id = $_GET['training_id'] ?? '';
 
       <div class="form-actions">
         <button type="submit">Generate Certificate</button>
-        <a href="trainings.php">Cancel</a>
+        <a href="trainings.php" class="btn-cancel">Cancel</a>
       </div>
     </form>
   </div>
