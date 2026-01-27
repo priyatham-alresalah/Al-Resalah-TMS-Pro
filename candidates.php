@@ -97,24 +97,22 @@ $candidates = json_decode(
   <p class="muted">Master list of training participants</p>
 
   <!-- CREATE -->
-  <?php if (in_array($role, ['admin','accounts','bdm','bdo'])): ?>
-    <form method="post" class="form-inline" style="margin-bottom:20px;">
-      <select name="client_id" required>
-        <option value="">Select Client *</option>
-        <?php foreach ($clients as $cl): ?>
-          <option value="<?= $cl['id'] ?>">
-            <?= htmlspecialchars($cl['company_name']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
+  <form method="post" class="form-inline" style="margin-bottom:20px;">
+    <select name="client_id">
+      <option value="">Select Client (Optional)</option>
+      <?php foreach ($clients as $cl): ?>
+        <option value="<?= $cl['id'] ?>">
+          <?= htmlspecialchars($cl['company_name']) ?>
+        </option>
+      <?php endforeach; ?>
+    </select>
 
-      <input name="full_name" placeholder="Full Name *" required>
-      <input name="email" placeholder="Email">
-      <input name="phone" placeholder="Phone">
+    <input name="full_name" placeholder="Full Name *" required>
+    <input name="email" placeholder="Email">
+    <input name="phone" placeholder="Phone">
 
-      <button type="submit">Add Candidate</button>
-    </form>
-  <?php endif; ?>
+    <button type="submit">Add Candidate</button>
+  </form>
 
   <!-- LIST -->
   <table class="table">
@@ -125,6 +123,7 @@ $candidates = json_decode(
         <th>Email</th>
         <th>Phone</th>
         <th>Created</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -145,7 +144,7 @@ $candidates = json_decode(
       <?php endforeach; ?>
     <?php else: ?>
       <tr>
-        <td colspan="5">No candidates found</td>
+        <td colspan="6">No candidates found</td>
       </tr>
     <?php endif; ?>
 

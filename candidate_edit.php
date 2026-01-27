@@ -24,13 +24,23 @@ $candidate = json_decode(
 )[0] ?? null;
 
 if (!$candidate) die('Candidate not found');
+
+/* Fetch clients for dropdown */
+$clients = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/clients?order=company_name.asc",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
   <title>Edit Candidate</title>
-  <link rel="stylesheet" href="assets/css/layout.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
@@ -38,25 +48,53 @@ if (!$candidate) die('Candidate not found');
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
-  <h2>Edit Candidate</h2>
-  <p class="muted">Update candidate details</p>
+  <div class="page-header">
+    <div>
+      <h2>Edit Candidate</h2>
+      <p class="muted">Update candidate details and company</p>
+    </div>
+    <div class="actions">
+      <a href="candidates.php" class="btn btn-sm btn-secondary">Back to Candidates</a>
+    </div>
+  </div>
 
-  <form method="post" action="api/candidates/update.php" class="card-form">
-    <input type="hidden" name="id" value="<?= $candidate['id'] ?>">
+  <div class="form-card">
+    <form method="post" action="api/candidates/update.php">
+      <input type="hidden" name="id" value="<?= $candidate['id'] ?>">
 
-    <label>Full Name *</label>
-    <input name="full_name" required value="<?= htmlspecialchars($candidate['full_name']) ?>">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input type="text" name="full_name" required value="<?= htmlspecialchars($candidate['full_name']) ?>">
+      </div>
 
-    <label>Email</label>
-    <input name="email" value="<?= htmlspecialchars($candidate['email'] ?? '') ?>">
+      <div class="form-group">
+        <label>Company</label>
+        <select name="client_id">
+          <option value="">No Company</option>
+          <?php foreach ($clients as $cl): ?>
+            <option value="<?= $cl['id'] ?>" <?= ($candidate['client_id'] ?? null) === $cl['id'] ? 'selected' : '' ?>>
+              <?= htmlspecialchars($cl['company_name']) ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
 
-    <label>Phone</label>
-    <input name="phone" value="<?= htmlspecialchars($candidate['phone'] ?? '') ?>">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" value="<?= htmlspecialchars($candidate['email'] ?? '') ?>">
+      </div>
 
-    <br><br>
-    <button>Update Candidate</button>
-    <a href="candidates.php" class="link">Cancel</a>
-  </form>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" name="phone" value="<?= htmlspecialchars($candidate['phone'] ?? '') ?>">
+      </div>
+
+      <div class="form-actions">
+        <button class="btn" type="submit">Update Candidate</button>
+        <a href="candidates.php">Cancel</a>
+      </div>
+    </form>
+  </div>
 </main>
 
 <?php include 'layout/footer.php'; ?>
