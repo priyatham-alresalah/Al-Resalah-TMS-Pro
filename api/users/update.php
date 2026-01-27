@@ -3,38 +3,30 @@ require '../../includes/config.php';
 require '../../includes/auth_check.php';
 
 if ($_SESSION['user']['role'] !== 'admin') {
-  die('Access denied');
+    die('Unauthorized');
 }
 
-$id = $_POST['id'] ?? '';
-$role = $_POST['role'] ?? '';
-$is_active = $_POST['is_active'] ?? '';
+$id = $_POST['id'];
 
-if ($id === '' || $role === '' || $is_active === '') {
-  die('Invalid request');
-}
-
-$payload = json_encode([
-  'role' => $role,
-  'is_active' => (bool)$is_active
-]);
-
-$ctx = stream_context_create([
-  'http' => [
-    'method' => 'PATCH',
-    'header' =>
-      "Content-Type: application/json\r\n" .
-      "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => $payload
-  ]
-]);
+$payload = [
+  'full_name' => $_POST['full_name'],
+  'role'      => $_POST['role']
+];
 
 file_get_contents(
-  SUPABASE_URL . "/rest/v1/profiles?id=eq." . $id,
+  SUPABASE_URL . "/rest/v1/profiles?id=eq.$id",
   false,
-  $ctx
+  stream_context_create([
+    'http' => [
+      'method'  => 'PATCH',
+      'header'  =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode($payload)
+    ]
+  ])
 );
 
-header("Location: /training-management-system/users.php");
+header("Location: ../../users.php");
 exit;

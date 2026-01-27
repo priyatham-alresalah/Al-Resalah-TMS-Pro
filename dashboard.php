@@ -18,6 +18,8 @@ $user = $_SESSION['user'];
   <meta charset="UTF-8">
   <title>Dashboard | <?= APP_NAME ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/training-management-system/favicon.ico">
+
 
   <!-- GLOBAL CSS -->
   <link rel="stylesheet" href="assets/css/style.css">

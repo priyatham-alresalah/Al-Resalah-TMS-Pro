@@ -2,76 +2,55 @@
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
 
-/* Admin only */
 if ($_SESSION['user']['role'] !== 'admin') {
-  die('Access denied');
+    die('Unauthorized');
 }
 
-$full_name = trim($_POST['full_name'] ?? '');
-$email = trim($_POST['email'] ?? '');
-$role = $_POST['role'] ?? '';
+$data = [
+  'email'    => $_POST['email'],
+  'password' => $_POST['password']
+];
 
-if ($full_name === '' || $email === '' || $role === '') {
-  die('All fields required');
-}
-
-/* ---------- CREATE USER (SUPABASE INVITE) ---------- */
-$payload = json_encode([
-  "email" => $email,
-  "email_confirm" => true
-]);
-
+/* Create Auth User */
 $ctx = stream_context_create([
   'http' => [
-    'method' => 'POST',
-    'header' =>
+    'method'  => 'POST',
+    'header'  =>
       "Content-Type: application/json\r\n" .
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
       "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => $payload,
-    'ignore_errors' => true
+    'content' => json_encode($data)
   ]
 ]);
 
-$response = file_get_contents(
-  SUPABASE_URL . "/auth/v1/admin/users",
-  false,
-  $ctx
+$response = json_decode(
+  file_get_contents(SUPABASE_URL . "/auth/v1/admin/users", false, $ctx),
+  true
 );
 
-$data = json_decode($response, true);
+$userId = $response['id'];
 
-if (!isset($data['id'])) {
-  die('Failed to create user');
-}
-
-$user_id = $data['id'];
-
-/* ---------- INSERT PROFILE ---------- */
-$profilePayload = json_encode([
-  'id' => $user_id,
-  'full_name' => $full_name,
-  'role' => $role,
-  'is_active' => true
-]);
-
-$profileCtx = stream_context_create([
-  'http' => [
-    'method' => 'POST',
-    'header' =>
-      "Content-Type: application/json\r\n" .
-      "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => $profilePayload
-  ]
-]);
+/* Insert profile */
+$profile = [
+  'id'        => $userId,
+  'full_name' => $_POST['full_name'],
+  'role'      => $_POST['role']
+];
 
 file_get_contents(
   SUPABASE_URL . "/rest/v1/profiles",
   false,
-  $profileCtx
+  stream_context_create([
+    'http' => [
+      'method'  => 'POST',
+      'header'  =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode($profile)
+    ]
+  ])
 );
 
-/* ---------- DONE ---------- */
-header("Location: /training-management-system/users.php");
+header("Location: ../../users.php");
 exit;

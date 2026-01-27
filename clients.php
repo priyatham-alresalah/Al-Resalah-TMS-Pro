@@ -28,6 +28,7 @@ $clients = json_decode($response, true);
 <head>
   <title>Clients</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="/training-management-system/favicon.ico">
 </head>
 <body>
 

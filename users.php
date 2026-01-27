@@ -2,12 +2,10 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
-/* Admin only */
 if ($_SESSION['user']['role'] !== 'admin') {
-  die('Access denied');
+    die('Access denied');
 }
 
-/* ---------- FETCH USERS ---------- */
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
@@ -17,24 +15,22 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$response = file_get_contents(
-  SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,role,is_active",
-  false,
-  $ctx
+$users = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,role,is_active,created_at&order=created_at.desc",
+    false,
+    $ctx
+  ),
+  true
 );
-
-$users = json_decode($response, true);
-
-/* Allowed roles */
-$roles = ['admin', 'bdm', 'bdo', 'coordinator', 'trainer', 'accounts'];
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Users | Training Management System</title>
+  <title>Users</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="/training-management-system/favicon.ico">
 </head>
 <body>
 
@@ -42,89 +38,50 @@ $roles = ['admin', 'bdm', 'bdo', 'coordinator', 'trainer', 'accounts'];
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
+  <h2>Users</h2>
+  <p class="muted">Manage system users</p>
 
-  <h2>Users Management</h2>
+  <a href="user_create.php">
+    <button>Add User</button>
+  </a>
 
-  <!-- ================= CREATE USER ================= -->
-  <section style="margin-bottom:30px;">
-    <h3>Create User (Invite)</h3>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
 
-    <form method="post" action="api/users/create.php" class="form-inline">
-      <input type="text" name="full_name" placeholder="Full Name" required>
+    <?php foreach ($users as $u): ?>
+      <tr>
+        <td><?= htmlspecialchars($u['full_name']) ?></td>
+        <td><?= strtoupper($u['role']) ?></td>
+        <td>
+          <?php if ($u['is_active']): ?>
+            <span class="badge-success">Active</span>
+          <?php else: ?>
+            <span class="badge-danger">Inactive</span>
+          <?php endif; ?>
+        </td>
+        <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+        <td>
+          <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a> |
+          <a href="user_toggle.php?id=<?= $u['id'] ?>">
+            <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
+          </a>
+        </td>
+      </tr>
+    <?php endforeach; ?>
 
-      <input type="email" name="email" placeholder="Email" required>
-
-      <select name="role" required>
-        <option value="">Select Role</option>
-        <?php foreach ($roles as $r): ?>
-          <option value="<?= $r ?>"><?= strtoupper($r) ?></option>
-        <?php endforeach; ?>
-      </select>
-
-      <button type="submit">Create & Send Invite</button>
-    </form>
-  </section>
-
-  <!-- ================= USERS LIST ================= -->
-  <section>
-    <h3>Existing Users</h3>
-
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Full Name</th>
-          <th>Role</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-
-      <?php if (!empty($users)): ?>
-        <?php foreach ($users as $u): ?>
-          <tr>
-            <form method="post" action="api/users/update.php">
-
-              <td><?= htmlspecialchars($u['full_name'] ?? '-') ?></td>
-
-              <td>
-                <select name="role" required>
-                  <?php foreach ($roles as $r): ?>
-                    <option value="<?= $r ?>" <?= $u['role'] === $r ? 'selected' : '' ?>>
-                      <?= strtoupper($r) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </td>
-
-              <td>
-                <select name="is_active" required>
-                  <option value="1" <?= $u['is_active'] ? 'selected' : '' ?>>Active</option>
-                  <option value="0" <?= !$u['is_active'] ? 'selected' : '' ?>>Inactive</option>
-                </select>
-              </td>
-
-              <td>
-                <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                <button type="submit">Save</button>
-              </td>
-
-            </form>
-          </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="4">No users found</td>
-        </tr>
-      <?php endif; ?>
-
-      </tbody>
-    </table>
-  </section>
-
+    </tbody>
+  </table>
 </main>
 
 <?php include 'layout/footer.php'; ?>
-
 </body>
 </html>
