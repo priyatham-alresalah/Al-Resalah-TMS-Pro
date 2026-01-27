@@ -2,11 +2,8 @@
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
 
-$role = $_SESSION['user']['role'];
-
-if (!in_array($role, ['admin','bdm','bdo','accounts'])) {
-  die('Access denied');
-}
+$userId = $_SESSION['user']['id'];
+$role   = $_SESSION['user']['role'];
 
 $ctx = stream_context_create([
   'http' => [
@@ -17,10 +14,12 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$response = file_get_contents(
-  SUPABASE_URL . "/rest/v1/clients?order=created_at.desc",
-  false,
-  $ctx
-);
+$baseUrl = SUPABASE_URL . "/rest/v1/clients?order=created_at.desc";
+
+if ($role !== 'admin') {
+  $baseUrl .= "&created_by=eq.$userId";
+}
+
+$response = file_get_contents($baseUrl, false, $ctx);
 
 echo $response;

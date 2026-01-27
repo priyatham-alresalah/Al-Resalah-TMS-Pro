@@ -2,11 +2,6 @@
 require 'includes/config.php';
 require 'includes/auth_check.php';
 
-/* Admin + Accounts only */
-if (!in_array($_SESSION['user']['role'], ['admin','accounts'])) {
-  die('Access denied');
-}
-
 $id = $_GET['id'] ?? '';
 
 $ctx = stream_context_create([
@@ -28,6 +23,14 @@ $client = json_decode($response, true)[0] ?? null;
 
 if (!$client) {
   die('Client not found');
+}
+
+/* Only admin or creator can access edit page */
+$userId = $_SESSION['user']['id'];
+$role   = $_SESSION['user']['role'];
+
+if ($role !== 'admin' && ($client['created_by'] ?? null) !== $userId) {
+  die('Access denied');
 }
 ?>
 
