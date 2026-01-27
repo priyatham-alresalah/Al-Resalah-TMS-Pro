@@ -48,59 +48,63 @@ $users = json_decode(
     </div>
   </div>
 
-  <table class="table zebra">
-    <thead>
-      <tr>
-        <th class="sortable">Full Name</th>
-        <th>User ID</th>
-        <th class="sortable">Role</th>
-        <th class="sortable">Status</th>
-        <th class="sortable">Created</th>
-        <th width="260">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
+  <div class="table-card">
+    <div class="table-card-inner">
+      <table class="table zebra">
+        <thead>
+          <tr>
+            <th class="sortable">Full Name</th>
+            <th>User ID</th>
+            <th class="sortable">Role</th>
+            <th class="sortable">Status</th>
+            <th class="sortable">Created</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
 
-    <?php if (!empty($users)): foreach ($users as $u): ?>
-      <tr>
-        <td><?= htmlspecialchars($u['full_name']) ?></td>
-        <td style="font-size:12px;color:#6b7280;"><?= $u['id'] ?></td>
-        <td><?= ucfirst($u['role']) ?></td>
-        <td>
-          <?= $u['is_active']
-            ? '<span class="badge-success">Active</span>'
-            : '<span class="badge-danger">Inactive</span>' ?>
-        </td>
-        <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
-        <td>
-          <div class="action-links">
-            <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
+        <?php if (!empty($users)): foreach ($users as $u): ?>
+          <tr>
+            <td><?= htmlspecialchars($u['full_name']) ?></td>
+            <td style="font-size:12px;color:#6b7280;"><?= $u['id'] ?></td>
+            <td><?= ucfirst($u['role']) ?></td>
+            <td>
+              <?= $u['is_active']
+                ? '<span class="badge-success">Active</span>'
+                : '<span class="badge-danger">Inactive</span>' ?>
+            </td>
+            <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+            <td class="col-actions">
+              <div class="action-links">
+                <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
 
-            <form action="api/users/toggle_status.php" method="post">
-              <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-              <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
-              <button type="submit" class="danger">
-                <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
-              </button>
-            </form>
+                <form action="api/users/toggle_status.php" method="post">
+                  <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                  <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
+                  <button type="submit" class="danger">
+                    <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
+                  </button>
+                </form>
 
-            <form action="api/users/reset_password.php" method="post">
-              <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-              <button type="submit" class="danger">
-                Reset Password
-              </button>
-            </form>
-          </div>
-        </td>
-      </tr>
-    <?php endforeach; else: ?>
-      <tr>
-        <td colspan="6" class="empty-state">No users found</td>
-      </tr>
-    <?php endif; ?>
+                <form action="api/users/reset_password.php" method="post">
+                  <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                  <button type="submit" class="danger">
+                    Reset Password
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <?php endforeach; else: ?>
+          <tr>
+            <td colspan="6" class="empty-state">No users found</td>
+          </tr>
+        <?php endif; ?>
 
-    </tbody>
-  </table>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </main>
 
 <?php include 'layout/footer.php'; ?>

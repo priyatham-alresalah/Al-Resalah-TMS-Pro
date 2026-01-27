@@ -272,6 +272,19 @@ button:hover {
 /* =========================================================
    TABLES
 ========================================================= */
+.table-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.table-card-inner {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -289,6 +302,12 @@ button:hover {
   padding: 12px;
   font-size: 14px;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.table td.col-actions,
+.table th.col-actions {
+  white-space: nowrap;
+  width: 1%;
 }
 
 .table tr:hover {
