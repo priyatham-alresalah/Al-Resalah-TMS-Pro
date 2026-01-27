@@ -61,7 +61,7 @@ foreach ($clients as $c) {
       <th>Course</th>
       <th>Date</th>
       <th>Status</th>
-      <th width="340">Actions</th>
+      <th style="width: 60px;">Actions</th>
     </tr>
   </thead>
   <tbody>
@@ -76,39 +76,32 @@ foreach ($clients as $c) {
       <?= strtoupper($t['status']) ?>
     </span>
   </td>
-  <td>
-
-    <!-- Candidates -->
-    <a class="btn small"
-       href="training_candidates.php?training_id=<?= $t['id'] ?>">
-       Candidates
-    </a>
-
-    <!-- Status transitions -->
-    <?php if ($t['status'] === 'scheduled'): ?>
-      <form method="post" action="api/trainings/update_status.php" style="display:inline">
-        <input type="hidden" name="id" value="<?= $t['id'] ?>">
-        <input type="hidden" name="status" value="ongoing">
-        <button class="btn small">Start</button>
-      </form>
-    <?php endif; ?>
-
-    <?php if ($t['status'] === 'ongoing'): ?>
-      <form method="post" action="api/trainings/update_status.php" style="display:inline">
-        <input type="hidden" name="id" value="<?= $t['id'] ?>">
-        <input type="hidden" name="status" value="completed">
-        <button class="btn small btn-success">Complete</button>
-      </form>
-    <?php endif; ?>
-
-    <!-- Certificates -->
-    <?php if ($t['status'] === 'completed'): ?>
-      <a class="btn small btn-warning"
-         href="issue_certificates.php?training_id=<?= $t['id'] ?>">
-         Issue Certificates
-      </a>
-    <?php endif; ?>
-
+  <td class="col-actions">
+    <div class="action-menu-wrapper">
+      <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+        &#8942;
+      </button>
+      <div class="action-menu">
+        <a href="training_candidates.php?training_id=<?= $t['id'] ?>">Candidates</a>
+        <?php if ($t['status'] === 'scheduled'): ?>
+          <form method="post" action="api/trainings/update_status.php">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <input type="hidden" name="status" value="ongoing">
+            <button type="submit">Start</button>
+          </form>
+        <?php endif; ?>
+        <?php if ($t['status'] === 'ongoing'): ?>
+          <form method="post" action="api/trainings/update_status.php">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <input type="hidden" name="status" value="completed">
+            <button type="submit">Complete</button>
+          </form>
+        <?php endif; ?>
+        <?php if ($t['status'] === 'completed'): ?>
+          <a href="issue_certificates.php?training_id=<?= $t['id'] ?>">Issue Certificates</a>
+        <?php endif; ?>
+      </div>
+    </div>
   </td>
 </tr>
 <?php endforeach; else: ?>
@@ -117,6 +110,30 @@ foreach ($clients as $c) {
 
   </tbody>
 </table>
+
+<script>
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+</script>
 
 </main>
 

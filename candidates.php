@@ -123,7 +123,7 @@ $candidates = json_decode(
         <th>Email</th>
         <th>Phone</th>
         <th>Created</th>
-        <th>Actions</th>
+        <th style="width: 60px;">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -140,6 +140,16 @@ $candidates = json_decode(
           <td><?= htmlspecialchars($c['email'] ?? '-') ?></td>
           <td><?= htmlspecialchars($c['phone'] ?? '-') ?></td>
           <td><?= date('d M Y', strtotime($c['created_at'])) ?></td>
+          <td class="col-actions">
+            <div class="action-menu-wrapper">
+              <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+                &#8942;
+              </button>
+              <div class="action-menu">
+                <a href="candidate_edit.php?id=<?= $c['id'] ?>">Edit</a>
+              </div>
+            </div>
+          </td>
         </tr>
       <?php endforeach; ?>
     <?php else: ?>
@@ -150,6 +160,30 @@ $candidates = json_decode(
 
     </tbody>
   </table>
+
+<script>
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+</script>
 
 </main>
 

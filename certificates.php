@@ -79,7 +79,7 @@ foreach ($clients as $c) $clientMap[$c['id']] = $c;
         <th>Training Date</th>
         <th>Issued Date</th>
         <th>Status</th>
-        <th width="260">Action</th>
+        <th style="width: 60px;">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -138,6 +138,30 @@ foreach ($clients as $c) $clientMap[$c['id']] = $c;
 
     </tbody>
   </table>
+
+<script>
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+</script>
 </main>
 
 <?php include 'layout/footer.php'; ?>

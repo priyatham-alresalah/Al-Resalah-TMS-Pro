@@ -9,7 +9,7 @@ if (!isset($_SESSION['candidate'])) {
 
 $candidate = $_SESSION['candidate'];
 $candidateId = $candidate['id'];
-$clientId = $candidate['client_id'];
+$clientId = $candidate['client_id'] ?? null;
 
 $ctx = stream_context_create([
   'http' => [
@@ -73,6 +73,8 @@ if ($clientId) {
   <div style="background: #1f2937; color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
     <h2 style="margin: 0;">Candidate Portal</h2>
     <div>
+      <a href="dashboard.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Dashboard</a>
+      <a href="inquiry.php" style="color: #fff; margin-right: 15px; text-decoration: none;">New Inquiry</a>
       <span><?= htmlspecialchars($candidate['full_name']) ?></span>
       <a href="logout.php" style="color: #fff; margin-left: 15px; text-decoration: none;">Logout</a>
     </div>

@@ -3,6 +3,7 @@ require 'includes/config.php';
 require 'includes/auth_check.php';
 
 $role = $_SESSION['user']['role'];
+$userId = $_SESSION['user']['id'];
 
 /* ---------------------------
    FETCH CLIENTS (for map + dropdown)
@@ -16,10 +17,15 @@ $ctx = stream_context_create([
   ]
 ]);
 
+/* Fetch clients - admin sees all, others see only their own */
+$baseUrl = SUPABASE_URL . "/rest/v1/clients?select=id,company_name";
+if ($role !== 'admin') {
+  $baseUrl .= "&created_by=eq.$userId";
+}
 $clients = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/clients?select=id,company_name", false, $ctx),
+  file_get_contents($baseUrl, false, $ctx),
   true
-);
+) ?: [];
 
 $clientMap = [];
 foreach ($clients as $c) {
@@ -32,7 +38,7 @@ foreach ($clients as $c) {
 $inquiries = json_decode(
   file_get_contents(SUPABASE_URL . "/rest/v1/inquiries?order=created_at.desc", false, $ctx),
   true
-);
+) ?: [];
 ?>
 
 <!DOCTYPE html>
@@ -48,65 +54,215 @@ $inquiries = json_decode(
 <?php include 'layout/sidebar.php'; ?>
 
 <main class="content">
-  <h2>Inquiries</h2>
-  <p class="muted">Client training inquiries and conversion</p>
+  <div class="page-header">
+    <div>
+      <h2>Inquiries</h2>
+      <p class="muted">Client training inquiries and conversion</p>
+    </div>
+    <div class="actions">
+      <a href="inquiry_create.php" class="btn">+ Create Inquiry</a>
+    </div>
+  </div>
 
-  <!-- ADD INQUIRY -->
-  <?php if (in_array($role, ['admin','bdm','bdo','accounts'])): ?>
-    <form method="post" action="api/inquiries/create.php" class="form-inline" style="margin-bottom:20px;">
-      <select name="client_id" required>
-        <option value="">Select Client *</option>
-        <?php foreach ($clients as $c): ?>
-          <option value="<?= $c['id'] ?>">
-            <?= htmlspecialchars($c['company_name']) ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
-      <input name="course_name" placeholder="Course Name *" required>
-      <button type="submit">Add Inquiry</button>
-    </form>
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
   <?php endif; ?>
 
   <!-- INQUIRIES LIST -->
   <table class="table">
     <thead>
       <tr>
-        <th>Client</th>
+        <th style="width: 200px;">Client</th>
         <th>Course</th>
         <th>Status</th>
+        <th>Quote Amount</th>
         <th>Date</th>
-        <th>Action</th>
+        <th style="width: 60px;">Actions</th>
       </tr>
     </thead>
     <tbody>
 
-    <?php if ($inquiries): foreach ($inquiries as $i): ?>
-      <tr>
+    <?php if ($inquiries): 
+      /* Group inquiries by client */
+      $groupedInquiries = [];
+      foreach ($inquiries as $i) {
+        $clientId = $i['client_id'];
+        if (!isset($groupedInquiries[$clientId])) {
+          $groupedInquiries[$clientId] = [];
+        }
+        $groupedInquiries[$clientId][] = $i;
+      }
+      
+      foreach ($groupedInquiries as $clientId => $clientInquiries): 
+        $clientName = $clientMap[$clientId] ?? 'Unknown Client';
+        $firstInquiry = $clientInquiries[0];
+        $totalCount = count($clientInquiries);
+        $remainingCount = $totalCount - 1;
+        $rowId = 'client_' . $clientId;
+    ?>
+      <tr class="client-row" data-client-id="<?= $clientId ?>">
         <td>
-          <?= htmlspecialchars($clientMap[$i['client_id']] ?? 'Unknown Client') ?>
+          <strong><?= htmlspecialchars($clientName) ?></strong>
         </td>
-        <td><?= htmlspecialchars($i['course_name']) ?></td>
         <td>
-          <span class="<?= $i['status']==='CLOSED'?'badge-success':'badge-warning' ?>">
-            <?= strtoupper($i['status']) ?>
+          <span><?= htmlspecialchars($firstInquiry['course_name']) ?></span>
+          <?php if ($remainingCount > 0): ?>
+            <span style="color: #2563eb; font-weight: 600; margin-left: 6px;">+<?= $remainingCount ?></span>
+            <button type="button" onclick="toggleClientInquiries('<?= $rowId ?>')" 
+                    style="margin-left: 8px; background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; text-decoration: underline;">
+              <span class="toggle-text-<?= $rowId ?>">Show</span>
+            </button>
+          <?php endif; ?>
+        </td>
+        <td>
+          <?php
+            $status = strtolower($firstInquiry['status'] ?? 'new');
+            $badgeClass = 'badge-info';
+            if ($status === 'quoted') $badgeClass = 'badge-warning';
+            elseif ($status === 'accepted') $badgeClass = 'badge-success';
+            elseif ($status === 'rejected') $badgeClass = 'badge-danger';
+            elseif ($status === 'closed') $badgeClass = 'badge-success';
+          ?>
+          <span class="badge <?= $badgeClass ?>">
+            <?= strtoupper($status) ?>
           </span>
         </td>
-        <td><?= date('d M Y', strtotime($i['created_at'])) ?></td>
         <td>
-          <?php if ($i['status'] === 'CLOSED'): ?>
-            <a href="convert_to_training.php?id=<?= $i['id'] ?>">Convert</a>
+          <?php if (!empty($firstInquiry['quote_total'])): ?>
+            <?= number_format($firstInquiry['quote_total'], 2) ?>
           <?php else: ?>
             —
           <?php endif; ?>
         </td>
+        <td><?= date('d M Y', strtotime($firstInquiry['created_at'])) ?></td>
+        <td class="col-actions">
+          <div class="action-menu-wrapper">
+            <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+              &#8942;
+            </button>
+            <div class="action-menu">
+              <?php if ($status === 'new'): ?>
+                <a href="inquiry_quote.php?id=<?= $firstInquiry['id'] ?>">Quote</a>
+              <?php elseif ($status === 'quoted'): ?>
+                <a href="inquiry_view.php?id=<?= $firstInquiry['id'] ?>">View</a>
+                <?php if (!empty($firstInquiry['quote_pdf'])): ?>
+                  <a href="api/inquiries/download_quote.php?file=<?= urlencode($firstInquiry['quote_pdf']) ?>">Download PDF</a>
+                  <form action="api/inquiries/send_quote_email.php" method="post">
+                    <input type="hidden" name="inquiry_id" value="<?= $firstInquiry['id'] ?>">
+                    <button type="submit" class="danger">Send Email</button>
+                  </form>
+                <?php endif; ?>
+              <?php elseif ($status === 'accepted'): ?>
+                <a href="convert_to_training.php?inquiry_id=<?= $firstInquiry['id'] ?>">Create Training</a>
+              <?php endif; ?>
+              <a href="inquiry_view.php?id=<?= $firstInquiry['id'] ?>">View Details</a>
+            </div>
+          </div>
+        </td>
       </tr>
+      <?php foreach (array_slice($clientInquiries, 1) as $idx => $i): ?>
+        <tr class="client-detail-<?= $rowId ?>" style="display: none;">
+          <td></td>
+          <td><?= htmlspecialchars($i['course_name']) ?></td>
+          <td>
+            <?php
+              $s = strtolower($i['status'] ?? 'new');
+              $bc = 'badge-info';
+              if ($s === 'quoted') $bc = 'badge-warning';
+              elseif ($s === 'accepted') $bc = 'badge-success';
+              elseif ($s === 'rejected') $bc = 'badge-danger';
+              elseif ($s === 'closed') $bc = 'badge-success';
+            ?>
+            <span class="badge <?= $bc ?>"><?= strtoupper($s) ?></span>
+          </td>
+          <td>
+            <?php if (!empty($i['quote_total'])): ?>
+              <?= number_format($i['quote_total'], 2) ?>
+            <?php else: ?>
+              —
+            <?php endif; ?>
+          </td>
+          <td><?= date('d M Y', strtotime($i['created_at'])) ?></td>
+          <td class="col-actions">
+            <div class="action-menu-wrapper">
+              <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+                &#8942;
+              </button>
+              <div class="action-menu">
+                <?php
+                  $s = strtolower($i['status'] ?? 'new');
+                  if ($s === 'new'): ?>
+                  <a href="inquiry_quote.php?id=<?= $i['id'] ?>">Quote</a>
+                <?php elseif ($s === 'quoted'): ?>
+                  <a href="inquiry_view.php?id=<?= $i['id'] ?>">View</a>
+                  <?php if (!empty($i['quote_pdf'])): ?>
+                    <a href="api/inquiries/download_quote.php?file=<?= urlencode($i['quote_pdf']) ?>">Download PDF</a>
+                    <form action="api/inquiries/send_quote_email.php" method="post">
+                      <input type="hidden" name="inquiry_id" value="<?= $i['id'] ?>">
+                      <button type="submit" class="danger">Send Email</button>
+                    </form>
+                  <?php endif; ?>
+                <?php elseif ($s === 'accepted'): ?>
+                  <a href="convert_to_training.php?inquiry_id=<?= $i['id'] ?>">Create Training</a>
+                <?php endif; ?>
+                <a href="inquiry_view.php?id=<?= $i['id'] ?>">View Details</a>
+              </div>
+            </div>
+          </td>
+        </tr>
+      <?php endforeach; ?>
     <?php endforeach; else: ?>
-      <tr><td colspan="5">No inquiries found</td></tr>
+      <tr><td colspan="6">No inquiries found</td></tr>
     <?php endif; ?>
 
     </tbody>
   </table>
+
+<script>
+  function toggleClientInquiries(rowId) {
+    const rows = document.querySelectorAll('.client-detail-' + rowId);
+    const toggleText = document.querySelector('.toggle-text-' + rowId);
+    const isHidden = rows[0].style.display === 'none';
+    
+    rows.forEach(row => {
+      row.style.display = isHidden ? 'table-row' : 'none';
+    });
+    
+    if (toggleText) {
+      toggleText.textContent = isHidden ? 'Hide' : 'Show';
+    }
+  }
+
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+</script>
 </main>
 
 <?php include 'layout/footer.php'; ?>

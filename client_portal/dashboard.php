@@ -104,6 +104,9 @@ if (!empty($trainings)) {
   <div style="background: #1f2937; color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
     <h2 style="margin: 0;">Client Portal - <?= htmlspecialchars($client['company_name']) ?></h2>
     <div>
+      <a href="dashboard.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Dashboard</a>
+      <a href="inquiry.php" style="color: #fff; margin-right: 15px; text-decoration: none;">New Inquiry</a>
+      <a href="quotes.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Quotes</a>
       <span><?= htmlspecialchars($client['email']) ?></span>
       <a href="logout.php" style="color: #fff; margin-left: 15px; text-decoration: none;">Logout</a>
     </div>
