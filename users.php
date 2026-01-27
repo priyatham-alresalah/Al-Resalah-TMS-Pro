@@ -19,7 +19,7 @@ $ctx = stream_context_create([
 
 $users = json_decode(
   file_get_contents(
-    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,role,is_active,created_at&order=created_at.desc",
+    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,is_active,created_at&order=created_at.desc",
     false,
     $ctx
   ),
@@ -50,7 +50,7 @@ $users = json_decode(
     <thead>
       <tr>
         <th>Full Name</th>
-        <th>User ID</th>
+        <th>Email</th>
         <th>Role</th>
         <th>Status</th>
         <th>Created</th>
@@ -62,7 +62,7 @@ $users = json_decode(
     <?php if (!empty($users)): foreach ($users as $u): ?>
       <tr>
         <td><?= htmlspecialchars($u['full_name']) ?></td>
-        <td style="font-size:12px;color:#6b7280;"><?= $u['id'] ?></td>
+        <td style="font-size:12px;color:#6b7280;"><?= htmlspecialchars($u['email'] ?? '-') ?></td>
         <td><?= ucfirst($u['role']) ?></td>
         <td>
           <?= $u['is_active']
