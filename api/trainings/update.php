@@ -106,4 +106,5 @@ if ($current['status'] !== 'completed' && $newStatus === 'completed') {
   }
 }
 
-header('Location: /training-management-system/pages/trainings.php');
+header('Location: ' . BASE_PATH . '/pages/trainings.php');
+exit;

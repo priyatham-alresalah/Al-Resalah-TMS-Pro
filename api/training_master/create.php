@@ -25,4 +25,5 @@ file_get_contents(
   $ctx
 );
 
-header('Location: /training-management-system/pages/training_master.php');
+header('Location: ' . BASE_PATH . '/pages/training_master.php');
+exit;

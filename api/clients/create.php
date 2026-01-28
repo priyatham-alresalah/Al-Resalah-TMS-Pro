@@ -1,19 +1,37 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+/* CSRF Protection */
+requireCSRF();
+
+/* Input Validation */
+$companyName = trim($_POST['company_name'] ?? '');
+$contactPerson = trim($_POST['contact_person'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$phone = trim($_POST['phone'] ?? '');
+$address = trim($_POST['address'] ?? '');
+
+if (empty($companyName)) {
+  header('Location: ' . BASE_PATH . '/pages/client_create.php?error=' . urlencode('Company name is required'));
+  exit;
+}
+
+/* Validate email if provided */
+if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+  header('Location: ' . BASE_PATH . '/pages/client_create.php?error=' . urlencode('Invalid email address'));
+  exit;
+}
 
 $data = [
-  'company_name'   => trim($_POST['company_name'] ?? ''),
-  'contact_person' => trim($_POST['contact_person'] ?? ''),
-  'email'          => trim($_POST['email'] ?? ''),
-  'phone'          => trim($_POST['phone'] ?? ''),
-  'address'        => trim($_POST['address'] ?? ''),
+  'company_name'   => $companyName,
+  'contact_person' => $contactPerson,
+  'email'          => $email ?: null,
+  'phone'          => $phone ?: null,
+  'address'        => $address ?: null,
   'created_by'     => $_SESSION['user']['id']
 ];
-
-if ($data['company_name'] === '') {
-  die('Company name is required');
-}
 
 /* Check for existing client with same company name */
 $checkCtx = stream_context_create([
@@ -56,7 +74,8 @@ if (!empty($existing)) {
     }
   }
 
-  die("Client already exists - created by {$creatorLabel}");
+  header('Location: ' . BASE_PATH . '/pages/client_create.php?error=' . urlencode("Client already exists - created by {$creatorLabel}"));
+  exit;
 }
 
 $ctx = stream_context_create([
@@ -70,11 +89,17 @@ $ctx = stream_context_create([
   ]
 ]);
 
-file_get_contents(
+$response = @file_get_contents(
   SUPABASE_URL . "/rest/v1/clients",
   false,
   $ctx
 );
 
-header("Location: /training-management-system/pages/clients.php");
+if ($response === false) {
+  error_log("Failed to create client: " . print_r($data, true));
+  header('Location: ' . BASE_PATH . '/pages/client_create.php?error=' . urlencode('Failed to create client. Please try again.'));
+  exit;
+}
+
+header("Location: " . BASE_PATH . "/pages/clients.php?success=" . urlencode("Client created successfully"));
 exit;

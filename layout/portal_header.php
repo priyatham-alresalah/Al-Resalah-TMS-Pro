@@ -41,7 +41,7 @@ if ($isClientPortal) {
 
 <header class="main-header">
   <div class="header-left">
-    <img src="/training-management-system/assets/images/logo.png" alt="Logo">
+    <img src="<?= BASE_PATH ?>/assets/images/logo.png" alt="Logo">
     <span><?= htmlspecialchars(APP_NAME) ?></span>
   </div>
 

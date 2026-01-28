@@ -34,14 +34,18 @@ foreach ($clients as $cl) {
 /* =========================
    FETCH CANDIDATES
 ========================= */
-$candidates = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/candidates?order=created_at.desc",
-    false,
-    $ctx
-  ),
-  true
-) ?: [];
+$candidatesResponse = @file_get_contents(
+  SUPABASE_URL . "/rest/v1/candidates?order=created_at.desc",
+  false,
+  $ctx
+);
+
+if ($candidatesResponse === false) {
+  error_log("Failed to fetch candidates from Supabase");
+  $candidates = [];
+} else {
+  $candidates = json_decode($candidatesResponse, true) ?: [];
+}
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +68,18 @@ $candidates = json_decode(
     </div>
     <a href="candidate_create.php" class="btn">+ Create Candidate</a>
   </div>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
   <table class="table">
     <thead>

@@ -10,46 +10,7 @@ if (isset($_SESSION['client'])) {
 
 $error = $_GET['error'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $password = $_POST['password'] ?? '';
-
-  if ($email && $password) {
-    /* Check if client exists */
-    $ctx = stream_context_create([
-      'http' => [
-        'method' => 'GET',
-        'header' =>
-          "apikey: " . SUPABASE_SERVICE . "\r\n" .
-          "Authorization: Bearer " . SUPABASE_SERVICE
-      ]
-    ]);
-
-    $clients = json_decode(
-      file_get_contents(
-        SUPABASE_URL . "/rest/v1/clients?email=eq.$email&select=id,company_name,email",
-        false,
-        $ctx
-      ),
-      true
-    );
-
-    if (!empty($clients[0])) {
-      $client = $clients[0];
-      $_SESSION['client'] = [
-        'id' => $client['id'],
-        'company_name' => $client['company_name'],
-        'email' => $client['email']
-      ];
-      header('Location: dashboard.php');
-      exit;
-    } else {
-      $error = 'Invalid email or password';
-    }
-  } else {
-    $error = 'Please enter email and password';
-  }
-}
+// Authentication handled by separate API endpoint
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endif; ?>
 
-    <form method="post">
+    <form method="post" action="../api/portal/auth_client.php">
       <input
         type="email"
         name="email"

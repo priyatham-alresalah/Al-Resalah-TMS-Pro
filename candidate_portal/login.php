@@ -10,47 +10,7 @@ if (isset($_SESSION['candidate'])) {
 
 $error = $_GET['error'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $password = $_POST['password'] ?? '';
-
-  if ($email && $password) {
-    /* Check if candidate exists */
-    $ctx = stream_context_create([
-      'http' => [
-        'method' => 'GET',
-        'header' =>
-          "apikey: " . SUPABASE_SERVICE . "\r\n" .
-          "Authorization: Bearer " . SUPABASE_SERVICE
-      ]
-    ]);
-
-    $candidates = json_decode(
-      file_get_contents(
-        SUPABASE_URL . "/rest/v1/candidates?email=eq.$email&select=id,full_name,email,client_id",
-        false,
-        $ctx
-      ),
-      true
-    );
-
-    if (!empty($candidates[0])) {
-      $candidate = $candidates[0];
-      $_SESSION['candidate'] = [
-        'id' => $candidate['id'],
-        'full_name' => $candidate['full_name'],
-        'email' => $candidate['email'],
-        'client_id' => $candidate['client_id']
-      ];
-      header('Location: dashboard.php');
-      exit;
-    } else {
-      $error = 'Invalid email or password';
-    }
-  } else {
-    $error = 'Please enter email and password';
-  }
-}
+// Authentication handled by separate API endpoint
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     <?php endif; ?>
 
-    <form method="post">
+    <form method="post" action="../api/portal/auth_candidate.php">
       <input
         type="email"
         name="email"

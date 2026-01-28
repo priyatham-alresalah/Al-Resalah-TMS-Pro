@@ -30,5 +30,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: /training-management-system/pages/inquiries.php");
+header("Location: " . BASE_PATH . "/pages/inquiries.php");
 exit;

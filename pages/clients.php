@@ -26,10 +26,15 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$response = file_get_contents($baseUrl, false, $ctx);
+$response = @file_get_contents($baseUrl, false, $ctx);
 
 /* Safety check */
-$clients = $response ? json_decode($response, true) : [];
+if ($response === false) {
+  error_log("Failed to fetch clients from Supabase");
+  $clients = [];
+} else {
+  $clients = json_decode($response, true) ?: [];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -51,6 +56,18 @@ $clients = $response ? json_decode($response, true) : [];
     </div>
     <a href="client_create.php" class="btn">+ Create Client</a>
   </div>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
   <table class="table">
     <thead>

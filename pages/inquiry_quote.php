@@ -111,7 +111,8 @@ $allInquiries = json_decode(
                   <input type="checkbox" id="select_all" onchange="toggleAll()">
                 </th>
                 <th style="padding: 10px; text-align: left;">Course Name</th>
-                <th style="padding: 10px; text-align: left; width: 150px;">Amount</th>
+                <th style="padding: 10px; text-align: left; width: 120px;">No. of Candidates</th>
+                <th style="padding: 10px; text-align: left; width: 150px;">Amount (per candidate)</th>
                 <th style="padding: 10px; text-align: left; width: 100px;">VAT %</th>
                 <th style="padding: 10px; text-align: left; width: 150px;">Total</th>
               </tr>
@@ -147,7 +148,7 @@ $allInquiries = json_decode(
             </tbody>
             <tfoot>
               <tr style="border-top: 2px solid #e5e7eb; font-weight: bold;">
-                <td colspan="4" style="padding: 10px; text-align: right;">Grand Total:</td>
+                <td colspan="5" style="padding: 10px; text-align: right;">Grand Total:</td>
                 <td style="padding: 10px;">
                   <span id="grand_total">0.00</span>
                 </td>
@@ -211,19 +212,24 @@ $allInquiries = json_decode(
       return false;
     }
     
-    // Validate amounts
+    // Validate amounts and candidates
     let hasError = false;
     selected.forEach(cb => {
       const id = cb.value;
       const amount = document.querySelector(`input[name="amount[${id}]"]`).value;
+      const candidates = document.querySelector(`input[name="candidates[${id}]"]`).value;
+      
       if (!amount || parseFloat(amount) <= 0) {
+        hasError = true;
+      }
+      if (!candidates || parseInt(candidates) < 1) {
         hasError = true;
       }
     });
     
     if (hasError) {
       e.preventDefault();
-      alert('Please enter valid amounts for all selected courses');
+      alert('Please enter valid amounts and number of candidates (minimum 1) for all selected courses');
       return false;
     }
   });

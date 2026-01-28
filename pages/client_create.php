@@ -24,8 +24,15 @@ require '../includes/auth_check.php';
     </div>
   </div>
 
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
+
   <div class="form-card">
     <form action="../api/clients/create.php" method="post">
+      <?php require '../includes/csrf.php'; echo csrfField(); ?>
       <div class="form-group">
         <label>Company Name *</label>
         <input type="text" name="company_name" required autocomplete="organization">

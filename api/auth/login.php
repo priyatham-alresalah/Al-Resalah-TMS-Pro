@@ -98,6 +98,11 @@ $_SESSION['user'] = [
 ];
 
 /* =========================
+   REGENERATE SESSION ID (Security)
+========================= */
+session_regenerate_id(true);
+
+/* =========================
    SUCCESS
 ========================= */
 header('Location: ' . BASE_PATH . '/pages/dashboard.php');

@@ -11,14 +11,16 @@ if (session_status() === PHP_SESSION_NONE) {
 ========================= */
 /*
   This makes paths work on:
-  - localhost
-  - cPanel
-  - subfolder hosting
+  - localhost: '/training-management-system'
+  - cPanel subdomain: '' (empty for root)
+  - subfolder hosting: '/subfolder-name'
 
-  Example:
-  https://reports.alresalahct.com/training-management-system/
+  For subdomain https://reports.alresalahct.com/, use empty string
+  For localhost, use '/training-management-system'
 */
-define('BASE_PATH', '/training-management-system');
+// PRODUCTION: Set to '' for subdomain root
+// DEVELOPMENT: Set to '/training-management-system' for localhost
+define('BASE_PATH', '');
 
 /* =========================
    SUPABASE CONFIG
@@ -41,10 +43,12 @@ define('SUPABASE_SERVICE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXB
 define('APP_NAME', 'AI Resalah Consultancies & Training');
 
 /* =========================
-   ERROR REPORTING (DEV ONLY)
+   ERROR REPORTING (PRODUCTION)
 ========================= */
 /*
-  TURN OFF IN PRODUCTION
+  PRODUCTION: Errors logged but not displayed
+  DEVELOPMENT: Set to E_ALL and display_errors = 1
 */
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);

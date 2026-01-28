@@ -149,90 +149,26 @@ $courses = json_decode(
       </form>
     </div>
     <script>
-      const selectedCourses = {};
-      
-      function addCourse() {
-        const dropdown = document.getElementById('course_dropdown');
-        const courseName = dropdown.value;
-        
-        if (!courseName) {
-          alert('Please select a course first');
-          return;
-        }
-        
-        if (selectedCourses[courseName]) {
-          selectedCourses[courseName]++;
-        } else {
-          selectedCourses[courseName] = 1;
-        }
-        
-        updateSelectedCoursesDisplay();
-        dropdown.value = '';
-      }
-      
-      function removeCourse(courseName) {
-        if (selectedCourses[courseName]) {
-          selectedCourses[courseName]--;
-          if (selectedCourses[courseName] <= 0) {
-            delete selectedCourses[courseName];
-          }
-        }
-        updateSelectedCoursesDisplay();
-      }
-      
-      function updateSelectedCoursesDisplay() {
-        const container = document.getElementById('selected_courses');
-        const courseNames = Object.keys(selectedCourses);
-        
-        if (courseNames.length === 0) {
-          container.innerHTML = '<p style="color: #6b7280; margin: 0; font-size: 14px;">No courses selected yet</p>';
-          return;
-        }
-        
-        let html = '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
-        courseNames.forEach(courseName => {
-          const count = selectedCourses[courseName];
-          html += `
-            <div style="display: inline-flex; align-items: center; background: #fff; border: 1px solid #d1d5db; border-radius: 20px; padding: 6px 12px; font-size: 14px;">
-              <span style="font-weight: 500;">${courseName}</span>
-              ${count > 1 ? `<span style="margin-left: 6px; color: #2563eb; font-weight: 600;">+${count - 1}</span>` : ''}
-              <button type="button" onclick="removeCourse('${courseName.replace(/'/g, "\\'")}')" 
-                      style="margin-left: 8px; background: #fee2e2; color: #991b1b; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 12px; line-height: 1;">×</button>
-            </div>
-          `;
+      // Toggle all course checkboxes
+      function toggleAllCourses() {
+        const selectAll = document.getElementById('select_all_courses');
+        const checkboxes = document.querySelectorAll('input[name="courses[]"]');
+        checkboxes.forEach(cb => {
+          cb.checked = selectAll.checked;
         });
-        html += '</div>';
-        container.innerHTML = html;
       }
       
+      // Form validation on submit
       document.getElementById('inquiryForm')?.addEventListener('submit', function(e) {
-        const courseNames = Object.keys(selectedCourses);
+        // Check checkboxes
+        const checkedBoxes = document.querySelectorAll('input[name="courses[]"]:checked');
         const customCourses = document.getElementById('custom_courses').value.trim();
         
-        if (courseNames.length === 0 && !customCourses) {
+        // Validation: must have at least one checkbox selected OR custom courses
+        if (checkedBoxes.length === 0 && !customCourses) {
           e.preventDefault();
           alert('Please select at least one course or enter a custom course name');
           return false;
-        }
-        
-        // Add hidden inputs for selected courses
-        courseNames.forEach(courseName => {
-          const count = selectedCourses[courseName];
-          for (let i = 0; i < count; i++) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'courses[]';
-            input.value = courseName;
-            this.appendChild(input);
-          }
-        });
-      });
-      
-      // Allow Enter key to add course
-      document.getElementById('course_dropdown')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          addCourse();
         }
       });
     </script>

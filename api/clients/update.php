@@ -69,6 +69,6 @@ file_get_contents(
   $ctx
 );
 
-header("Location: /training-management-system/pages/clients.php");
+header("Location: " . BASE_PATH . "/pages/clients.php");
 exit;
 ?>

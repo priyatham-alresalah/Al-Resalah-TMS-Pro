@@ -61,22 +61,28 @@ function generateQuotePDF(
 
   /* Courses Table */
   $pdf->SetFont('Arial', 'B', 11);
-  $pdf->Cell(100, 8, 'Course Name', 1, 0, 'L');
+  $pdf->Cell(70, 8, 'Course Name', 1, 0, 'L');
+  $pdf->Cell(25, 8, 'Candidates', 1, 0, 'C');
   $pdf->Cell(30, 8, 'Amount', 1, 0, 'R');
-  $pdf->Cell(30, 8, 'VAT', 1, 0, 'R');
+  $pdf->Cell(25, 8, 'VAT', 1, 0, 'R');
   $pdf->Cell(30, 8, 'Total', 1, 1, 'R');
 
   $pdf->SetFont('Arial', '', 10);
   foreach ($courses as $course) {
-    $pdf->Cell(100, 8, $course['course_name'], 1, 0, 'L');
-    $pdf->Cell(30, 8, number_format($course['amount'], 2), 1, 0, 'R');
-    $pdf->Cell(30, 8, number_format($course['vat'], 2) . '%', 1, 0, 'R');
+    $candidates = $course['candidates'] ?? 1;
+    $amountPerCandidate = $course['amount_per_candidate'] ?? $course['amount'];
+    $amount = $course['amount'] ?? 0;
+    
+    $pdf->Cell(70, 8, substr($course['course_name'], 0, 35), 1, 0, 'L');
+    $pdf->Cell(25, 8, $candidates, 1, 0, 'C');
+    $pdf->Cell(30, 8, number_format($amount, 2), 1, 0, 'R');
+    $pdf->Cell(25, 8, number_format($course['vat'], 2) . '%', 1, 0, 'R');
     $pdf->Cell(30, 8, number_format($course['total'], 2), 1, 1, 'R');
   }
 
   /* Grand Total */
   $pdf->SetFont('Arial', 'B', 12);
-  $pdf->Cell(160, 8, 'Grand Total:', 1, 0, 'R');
+  $pdf->Cell(150, 8, 'Grand Total:', 1, 0, 'R');
   $pdf->Cell(30, 8, number_format($grandTotal, 2), 1, 1, 'R');
   $pdf->Ln(10);
 

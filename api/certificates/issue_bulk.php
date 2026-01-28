@@ -1,14 +1,32 @@
 <?php
+/**
+ * Issue Certificates in Bulk
+ * Enforces: Training completed + Documents uploaded → Certificate
+ */
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+require '../../includes/rbac.php';
+require '../../includes/workflow.php';
+require '../../includes/audit_log.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  die('Invalid request');
-}
+/* CSRF Protection */
+requireCSRF();
+
+/* Permission Check */
+requirePermission('certificates', 'create');
 
 $training_id = $_POST['training_id'] ?? null;
 if (!$training_id) {
-  die('Training ID missing');
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('Training ID missing'));
+  exit;
+}
+
+// Enforce workflow - check prerequisites
+$workflowCheck = canIssueCertificate($training_id);
+if (!$workflowCheck['allowed']) {
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode($workflowCheck['reason']));
+  exit;
 }
 
 $headers =
@@ -16,9 +34,7 @@ $headers =
   "apikey: " . SUPABASE_SERVICE . "\r\n" .
   "Authorization: Bearer " . SUPABASE_SERVICE;
 
-/* ===============================
-   FETCH CANDIDATES FOR TRAINING
-================================ */
+/* Fetch candidates for training */
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
@@ -27,7 +43,7 @@ $ctx = stream_context_create([
 ]);
 
 $candidates = json_decode(
-  file_get_contents(
+  @file_get_contents(
     SUPABASE_URL . "/rest/v1/training_candidates?training_id=eq.$training_id&select=candidate_id",
     false,
     $ctx
@@ -36,74 +52,209 @@ $candidates = json_decode(
 );
 
 if (!$candidates) {
-  header("Location: ../../pages/issue_certificates.php?training_id=$training_id&error=" . urlencode('No candidates found'));
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('No candidates found'));
   exit;
 }
 
 $selectedCandidates = $_POST['candidates'] ?? [];
 if (empty($selectedCandidates)) {
-  header("Location: ../../pages/issue_certificates.php?training_id=$training_id&error=" . urlencode('Please select at least one candidate'));
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('Please select at least one candidate'));
   exit;
 }
 
-/* ===============================
-   FETCH EXISTING CERTIFICATES
-================================ */
+/* Fetch existing certificates */
 $existing = json_decode(
-  file_get_contents(
+  @file_get_contents(
     SUPABASE_URL . "/rest/v1/certificates?training_id=eq.$training_id&select=candidate_id",
     false,
     $ctx
   ),
   true
-);
+) ?: [];
 
 $issuedMap = [];
 foreach ($existing as $e) {
   $issuedMap[$e['candidate_id']] = true;
 }
 
-/* ===============================
-   ISSUE CERTIFICATES
-================================ */
+/* Generate certificate number using counter */
+$year = date('Y');
+$counterCtx = stream_context_create([
+  'http' => [
+    'method' => 'GET',
+    'header' => $headers
+  ]
+]);
+
+$counter = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=last_number",
+    false,
+    $counterCtx
+  ),
+  true
+);
+
+$lastNumber = !empty($counter) ? intval($counter[0]['last_number']) : 0;
+$newNumber = $lastNumber + 1;
+
+/* Issue certificates */
+$issuedCount = 0;
+$userId = $_SESSION['user']['id'];
+
 foreach ($candidates as $c) {
   $cid = $c['candidate_id'];
+  
+  if (!in_array($cid, $selectedCandidates)) {
+    continue; // Skip unselected candidates
+  }
 
   if (isset($issuedMap[$cid])) {
     continue; // already issued
   }
 
-  $cert_no = 'CERT-' . date('Y') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
+  // Generate unique certificate number
+  $cert_no = "AR-$year-" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+  $newNumber++;
 
   $payload = json_encode([
-    'training_id'    => $training_id,
-    'candidate_id'   => $cid,
+    'training_id' => $training_id,
+    'candidate_id' => $cid,
     'certificate_no' => $cert_no,
-    'issued_date'    => date('Y-m-d'),
-    'issued_by'      => $_SESSION['user']['id']
+    'issued_date' => date('Y-m-d'),
+    'issued_by' => $userId,
+    'status' => 'active'
   ]);
 
   $ctxInsert = stream_context_create([
     'http' => [
-      'method'  => 'POST',
-      'header'  => $headers,
+      'method' => 'POST',
+      'header' => $headers,
       'content' => $payload
     ]
   ]);
 
-  $result = file_get_contents(
+  $result = @file_get_contents(
     SUPABASE_URL . "/rest/v1/certificates",
     false,
     $ctxInsert
   );
   
   if ($result !== false) {
-    $issuedCount++;
+    $certData = json_decode($result, true);
+    $certId = $certData['id'] ?? null;
+    
+    if ($certId) {
+      // Log certificate issuance
+      $logData = [
+        'certificate_id' => $certId,
+        'action' => 'issued',
+        'performed_by' => $userId
+      ];
+      
+      $logCtx = stream_context_create([
+        'http' => [
+          'method' => 'POST',
+          'header' => $headers,
+          'content' => json_encode($logData)
+        ]
+      ]);
+      
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/certificate_issuance_logs",
+        false,
+        $logCtx
+      );
+      
+      // Audit log
+      auditLog('certificates', 'issue', $certId, [
+        'certificate_no' => $cert_no,
+        'candidate_id' => $cid,
+        'training_id' => $training_id
+      ]);
+      
+      $issuedCount++;
+    }
   }
 }
 
-/* ===============================
-   REDIRECT
-================================ */
-header("Location: ../../pages/issue_certificates.php?training_id=$training_id&success=" . urlencode("Successfully issued $issuedCount certificate(s)"));
+// Update certificate counter
+if ($issuedCount > 0) {
+  $updateCounterData = [
+    'last_number' => $newNumber - 1
+  ];
+  
+  $updateCounterCtx = stream_context_create([
+    'http' => [
+      'method' => 'POST',
+      'header' => $headers,
+      'content' => json_encode($updateCounterData)
+    ]
+  ]);
+  
+  // Try to update, if doesn't exist, create
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year",
+    false,
+    stream_context_create([
+      'http' => [
+        'method' => 'PATCH',
+        'header' => $headers,
+        'content' => json_encode($updateCounterData)
+      ]
+    ])
+  );
+  
+  // If update failed, create new counter
+  $counterCheck = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=year",
+      false,
+      $counterCtx
+    ),
+    true
+  );
+  
+  if (empty($counterCheck)) {
+    $createCounterData = [
+      'year' => $year,
+      'last_number' => $newNumber - 1
+    ];
+    
+    $createCounterCtx = stream_context_create([
+      'http' => [
+        'method' => 'POST',
+        'header' => $headers,
+        'content' => json_encode($createCounterData)
+      ]
+    ]);
+    
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/certificate_counters",
+      false,
+      $createCounterCtx
+    );
+  }
+  
+  // Update training checkpoint
+  $checkpointCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' => $headers,
+      'content' => json_encode([
+        'completed' => true,
+        'completed_by' => $userId,
+        'completed_at' => date('Y-m-d H:i:s')
+      ])
+    ]
+  ]);
+  
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/training_checkpoints?training_id=eq.$training_id&checkpoint=eq.certificate_ready",
+    false,
+    $checkpointCtx
+  );
+}
+
+header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&success=' . urlencode("Successfully issued $issuedCount certificate(s)"));
 exit;

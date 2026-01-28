@@ -17,14 +17,18 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$users = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,is_active,created_at&order=created_at.desc",
-    false,
-    $ctx
-  ),
-  true
+$usersResponse = @file_get_contents(
+  SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,is_active,created_at&order=created_at.desc",
+  false,
+  $ctx
 );
+
+if ($usersResponse === false) {
+  error_log("Failed to fetch users from Supabase");
+  $users = [];
+} else {
+  $users = json_decode($usersResponse, true) ?: [];
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -45,6 +49,18 @@ $users = json_decode(
     </div>
     <a href="user_create.php" class="btn">+ Create User</a>
   </div>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
   <table class="table">
     <thead>
@@ -79,6 +95,7 @@ $users = json_decode(
               <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
 
               <form action="../api/users/toggle_status.php" method="post">
+                <?php require '../includes/csrf.php'; echo csrfField(); ?>
                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                 <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
                 <button type="submit" class="danger">
@@ -87,6 +104,7 @@ $users = json_decode(
               </form>
 
               <form action="../api/users/reset_password.php" method="post">
+                <?php require '../includes/csrf.php'; echo csrfField(); ?>
                 <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                 <button type="submit" class="danger">
                   Reset Password

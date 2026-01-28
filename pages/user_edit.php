@@ -55,9 +55,15 @@ $user = $userResponse[0];
     </div>
   </div>
 
-  <div class="form-card">
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
+  <div class="form-card">
     <form action="../api/users/update.php" method="post">
+      <?php require '../includes/csrf.php'; echo csrfField(); ?>
       <input type="hidden" name="id" value="<?= $user['id'] ?>">
 
       <div class="form-group">
