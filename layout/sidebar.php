@@ -1,6 +1,18 @@
 <?php
 $role = $_SESSION['user']['role'] ?? '';
 $current = basename($_SERVER['PHP_SELF']);
+$currentPath = $_SERVER['PHP_SELF'];
+$isInPages = strpos($currentPath, '/pages/') !== false;
+$isInApi = strpos($currentPath, '/api/') !== false;
+
+// Determine base path for links
+if ($isInPages) {
+  $basePath = ''; // Relative to pages folder
+} elseif ($isInApi) {
+  $basePath = '../../pages/'; // From api folder to pages
+} else {
+  $basePath = 'pages/'; // From root to pages
+}
 ?>
 
 <aside class="sidebar">
@@ -8,7 +20,7 @@ $current = basename($_SERVER['PHP_SELF']);
 
     <!-- DASHBOARD -->
     <li>
-      <a href="dashboard.php" class="<?= $current=='dashboard.php'?'active':'' ?>">
+      <a href="<?= $basePath ?>dashboard.php" class="<?= ($current=='dashboard.php' && $isInPages)?'active':'' ?>">
         <span class="icon">🏠</span> Dashboard
       </a>
     </li>
@@ -18,19 +30,19 @@ $current = basename($_SERVER['PHP_SELF']);
       <li class="menu-title">Masters</li>
 
       <li>
-        <a href="users.php" class="<?= $current=='users.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>users.php" class="<?= ($current=='users.php' && $isInPages)?'active':'' ?>">
           <span class="icon">👤</span> Users
         </a>
       </li>
 
       <li>
-        <a href="clients.php" class="<?= $current=='clients.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>clients.php" class="<?= ($current=='clients.php' && $isInPages)?'active':'' ?>">
           <span class="icon">🏢</span> Clients
         </a>
       </li>
 
       <li>
-        <a href="candidates.php" class="<?= $current=='candidates.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>candidates.php" class="<?= ($current=='candidates.php' && $isInPages)?'active':'' ?>">
           <span class="icon">🧑‍🎓</span> Candidates
         </a>
       </li>
@@ -41,13 +53,13 @@ $current = basename($_SERVER['PHP_SELF']);
       <li class="menu-title">Operations</li>
 
       <li>
-        <a href="inquiries.php" class="<?= $current=='inquiries.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>inquiries.php" class="<?= ($current=='inquiries.php' && $isInPages)?'active':'' ?>">
           <span class="icon">📩</span> Inquiries
         </a>
       </li>
 
       <li>
-        <a href="trainings.php" class="<?= $current=='trainings.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>trainings.php" class="<?= ($current=='trainings.php' && $isInPages)?'active':'' ?>">
           <span class="icon">🎓</span> Trainings
         </a>
       </li>
@@ -58,7 +70,7 @@ $current = basename($_SERVER['PHP_SELF']);
       <li class="menu-title">Certificates</li>
 
       <li>
-        <a href="certificates.php" class="<?= $current=='certificates.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>certificates.php" class="<?= ($current=='certificates.php' && $isInPages)?'active':'' ?>">
           <span class="icon">📜</span> Certificates
         </a>
       </li>
@@ -69,7 +81,7 @@ $current = basename($_SERVER['PHP_SELF']);
       <li class="menu-title">Finance</li>
 
       <li>
-        <a href="invoices.php" class="<?= $current=='invoices.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>invoices.php" class="<?= ($current=='invoices.php' && $isInPages)?'active':'' ?>">
           <span class="icon">💰</span> Invoices
         </a>
       </li>
@@ -80,7 +92,7 @@ $current = basename($_SERVER['PHP_SELF']);
       <li class="menu-title">Reports</li>
 
       <li>
-        <a href="reports.php" class="<?= $current=='reports.php'?'active':'' ?>">
+        <a href="<?= $basePath ?>reports.php" class="<?= ($current=='reports.php' && $isInPages)?'active':'' ?>">
           <span class="icon">📊</span> Reports
         </a>
       </li>

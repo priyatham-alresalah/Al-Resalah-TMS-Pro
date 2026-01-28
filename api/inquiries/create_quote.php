@@ -10,7 +10,7 @@ $vats = $_POST['vat'] ?? [];
 $notes = trim($_POST['notes'] ?? '');
 
 if (empty($inquiryIds) || empty($clientId)) {
-  header('Location: ../../inquiry_quote.php?id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Please select at least one course'));
+  header('Location: ../../pages/inquiry_quote.php?id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Please select at least one course'));
   exit;
 }
 
@@ -34,7 +34,7 @@ $client = json_decode(
 )[0] ?? null;
 
 if (!$client) {
-  header('Location: ../../inquiries.php?error=' . urlencode('Client not found'));
+  header('Location: ../../pages/inquiries.php?error=' . urlencode('Client not found'));
   exit;
 }
 
@@ -133,5 +133,5 @@ foreach ($quoteCourses as $qc) {
   );
 }
 
-header('Location: ../../inquiries.php?success=' . urlencode("Quote created successfully! Quote No: $quoteNo" . ($pdfFileName ? ' (PDF generated)' : ' (Note: Install FPDF for PDF generation)')));
+header('Location: ../../pages/inquiries.php?success=' . urlencode("Quote created successfully! Quote No: $quoteNo" . ($pdfFileName ? ' (PDF generated)' : ' (Note: Install FPDF for PDF generation)')));
 exit;

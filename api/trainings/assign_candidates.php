@@ -44,5 +44,5 @@ foreach ($candidates as $cid) {
   );
 }
 
-header("Location: ../../trainings.php");
+header("Location: ../../pages/trainings.php");
 exit;

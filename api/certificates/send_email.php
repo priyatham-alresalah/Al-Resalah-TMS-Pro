@@ -87,5 +87,5 @@ try {
   die("Mail error: {$mail->ErrorInfo}");
 }
 
-header('Location: ../../certificates.php');
+header('Location: ../../pages/certificates.php');
 exit;

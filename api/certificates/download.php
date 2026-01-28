@@ -1,12 +1,39 @@
 <?php
-$file = $_GET['file'] ?? null;
-if (!$file) die("File not found");
+require '../../includes/config.php';
+require '../../includes/auth_check.php';
 
-$path = "../uploads/certificates/" . basename($file);
+$id = $_GET['id'] ?? null;
+if (!$id) die("Certificate ID missing");
 
-if (!file_exists($path)) die("File missing");
+$ctx = stream_context_create([
+  'http' => [
+    'method' => 'GET',
+    'header' =>
+      "apikey: " . SUPABASE_SERVICE . "\r\n" .
+      "Authorization: Bearer " . SUPABASE_SERVICE
+  ]
+]);
+
+$cert = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificates?id=eq.$id&limit=1",
+    false,
+    $ctx
+  ),
+  true
+)[0] ?? null;
+
+if (!$cert || empty($cert['file_path'])) {
+  die("Certificate file not found");
+}
+
+$path = __DIR__ . "/../../uploads/certificates/" . basename($cert['file_path']);
+
+if (!file_exists($path)) {
+  die("File missing");
+}
 
 header('Content-Type: application/pdf');
-header('Content-Disposition: attachment; filename="'.basename($path).'"');
+header('Content-Disposition: attachment; filename="' . basename($cert['file_path']) . '"');
 readfile($path);
 exit;

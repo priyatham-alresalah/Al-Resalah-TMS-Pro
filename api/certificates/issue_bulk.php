@@ -36,7 +36,13 @@ $candidates = json_decode(
 );
 
 if (!$candidates) {
-  header("Location: ../../issue_certificates.php?training_id=$training_id");
+  header("Location: ../../pages/issue_certificates.php?training_id=$training_id&error=" . urlencode('No candidates found'));
+  exit;
+}
+
+$selectedCandidates = $_POST['candidates'] ?? [];
+if (empty($selectedCandidates)) {
+  header("Location: ../../pages/issue_certificates.php?training_id=$training_id&error=" . urlencode('Please select at least one candidate'));
   exit;
 }
 
@@ -85,15 +91,19 @@ foreach ($candidates as $c) {
     ]
   ]);
 
-  file_get_contents(
+  $result = file_get_contents(
     SUPABASE_URL . "/rest/v1/certificates",
     false,
     $ctxInsert
   );
+  
+  if ($result !== false) {
+    $issuedCount++;
+  }
 }
 
 /* ===============================
    REDIRECT
 ================================ */
-header("Location: ../../issue_certificates.php?training_id=$training_id");
+header("Location: ../../pages/issue_certificates.php?training_id=$training_id&success=" . urlencode("Successfully issued $issuedCount certificate(s)"));
 exit;

@@ -24,12 +24,19 @@ $ctx = stream_context_create([
 /* Fetch quoted inquiries */
 $quotedInquiries = json_decode(
   file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.$clientId&status=eq.quoted&order=quoted_at.desc",
+    // Some environments don't have quoted_at; avoid PostgREST 400 and sort in PHP
+    SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.$clientId&status=eq.quoted",
     false,
     $ctx
   ),
   true
 ) ?: [];
+
+usort($quotedInquiries, function ($a, $b) {
+  $aTs = strtotime($a['quoted_at'] ?? $a['created_at'] ?? '1970-01-01');
+  $bTs = strtotime($b['quoted_at'] ?? $b['created_at'] ?? '1970-01-01');
+  return $bTs <=> $aTs;
+});
 
 /* Group by quote_no */
 $quotes = [];
@@ -90,12 +97,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Refresh quotes
   $quotedInquiries = json_decode(
     file_get_contents(
-      SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.$clientId&status=eq.quoted&order=quoted_at.desc",
+      SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.$clientId&status=eq.quoted",
       false,
       $ctx
     ),
     true
   ) ?: [];
+  usort($quotedInquiries, function ($a, $b) {
+    $aTs = strtotime($a['quoted_at'] ?? $a['created_at'] ?? '1970-01-01');
+    $bTs = strtotime($b['quoted_at'] ?? $b['created_at'] ?? '1970-01-01');
+    return $bTs <=> $aTs;
+  });
   
   $quotes = [];
   foreach ($quotedInquiries as $inq) {
@@ -121,16 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-  <div style="background: #1f2937; color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-    <h2 style="margin: 0;">Client Portal - <?= htmlspecialchars($client['company_name']) ?></h2>
-    <div>
-      <a href="dashboard.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Dashboard</a>
-      <a href="inquiry.php" style="color: #fff; margin-right: 15px; text-decoration: none;">New Inquiry</a>
-      <a href="quotes.php" style="color: #fff; margin-right: 15px; text-decoration: none; font-weight: bold;">Quotes</a>
-      <span><?= htmlspecialchars($client['email']) ?></span>
-      <a href="logout.php" style="color: #fff; margin-left: 15px; text-decoration: none;">Logout</a>
-    </div>
-  </div>
+  <?php $portalNavActive = 'quotes'; include '../layout/portal_header.php'; ?>
 
   <main class="content" style="margin-left: 0; margin-top: 0; padding: 25px;">
     <h2>Training Quotes</h2>
@@ -216,5 +219,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <p class="empty-state">No quotes available</p>
     <?php endif; ?>
   </main>
+<?php include '../layout/footer.php'; ?>
 </body>
 </html>

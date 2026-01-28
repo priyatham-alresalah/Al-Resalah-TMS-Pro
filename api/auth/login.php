@@ -100,5 +100,5 @@ $_SESSION['user'] = [
 /* =========================
    SUCCESS
 ========================= */
-header('Location: ' . BASE_PATH . '/dashboard.php');
+header('Location: ' . BASE_PATH . '/pages/dashboard.php');
 exit;

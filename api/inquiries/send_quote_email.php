@@ -89,8 +89,8 @@ try {
   ";
 
   $mail->send();
-  header('Location: ../../inquiries.php?success=' . urlencode('Quote email sent successfully'));
+  header('Location: ../../pages/inquiries.php?success=' . urlencode('Quote email sent successfully'));
 } catch (Exception $e) {
-  header('Location: ../../inquiries.php?error=' . urlencode('Failed to send email: ' . $mail->ErrorInfo));
+  header('Location: ../../pages/inquiries.php?error=' . urlencode('Failed to send email: ' . $mail->ErrorInfo));
 }
 exit;

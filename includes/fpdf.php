@@ -64,5 +64,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: ../certificates.php");
+header("Location: ../pages/certificates.php");
 exit;

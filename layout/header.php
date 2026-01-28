@@ -9,7 +9,17 @@
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 
   <div class="header-right">
-    <span><?= htmlspecialchars($_SESSION['user']['email']) ?></span>
+    <?php
+    // Always use absolute app path so it's clickable from anywhere
+    $profilePath = BASE_PATH . '/pages/profile.php';
+    $displayName = trim((string)($_SESSION['user']['name'] ?? ''));
+    if ($displayName === '') {
+      $displayName = 'My Profile';
+    }
+    ?>
+    <a href="<?= $profilePath ?>" style="color: #ffffff; text-decoration: none; cursor: pointer;">
+      <?= htmlspecialchars($displayName) ?>
+    </a>
     <a href="/training-management-system/logout.php">Logout</a>
   </div>
 </header>

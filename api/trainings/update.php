@@ -106,4 +106,4 @@ if ($current['status'] !== 'completed' && $newStatus === 'completed') {
   }
 }
 
-header('Location: /trainings.php');
+header('Location: /training-management-system/pages/trainings.php');

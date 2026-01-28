@@ -28,5 +28,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: ../../candidates.php");
+header("Location: ../../pages/candidates.php");
 exit;

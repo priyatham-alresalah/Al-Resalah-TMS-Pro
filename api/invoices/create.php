@@ -34,5 +34,5 @@ file_get_contents(
   ])
 );
 
-header("Location: ../../invoices.php");
+header("Location: ../../pages/invoices.php");
 exit;

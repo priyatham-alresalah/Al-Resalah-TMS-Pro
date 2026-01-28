@@ -42,7 +42,7 @@ $existing = json_decode(
 );
 
 if (!empty($existing)) {
-  header("Location: ../../issue_certificates.php?training_id=$training_id");
+  header("Location: ../../pages/issue_certificates.php?training_id=$training_id");
   exit;
 }
 
@@ -79,5 +79,5 @@ file_get_contents(
 /* ===============================
    REDIRECT BACK
 ================================ */
-header("Location: ../../issue_certificates.php?training_id=$training_id");
+header("Location: ../../pages/issue_certificates.php?training_id=$training_id");
 exit;

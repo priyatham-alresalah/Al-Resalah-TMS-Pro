@@ -35,5 +35,5 @@ $response = file_get_contents(
 );
 
 /* Supabase returns empty body on success */
-header("Location: ../../training_candidates.php?training_id=$training_id");
+header("Location: ../../pages/training_candidates.php?training_id=$training_id");
 exit;

@@ -101,16 +101,7 @@ if (!empty($trainings)) {
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-  <div style="background: #1f2937; color: #fff; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-    <h2 style="margin: 0;">Client Portal - <?= htmlspecialchars($client['company_name']) ?></h2>
-    <div>
-      <a href="dashboard.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Dashboard</a>
-      <a href="inquiry.php" style="color: #fff; margin-right: 15px; text-decoration: none;">New Inquiry</a>
-      <a href="quotes.php" style="color: #fff; margin-right: 15px; text-decoration: none;">Quotes</a>
-      <span><?= htmlspecialchars($client['email']) ?></span>
-      <a href="logout.php" style="color: #fff; margin-left: 15px; text-decoration: none;">Logout</a>
-    </div>
-  </div>
+  <?php $portalNavActive = 'dashboard'; include '../layout/portal_header.php'; ?>
 
   <main class="content" style="margin-left: 0; margin-top: 0; padding: 25px;">
     <h2>Invoices</h2>
@@ -191,5 +182,6 @@ if (!empty($trainings)) {
       <p class="empty-state">No certificates found</p>
     <?php endif; ?>
   </main>
+<?php include '../layout/footer.php'; ?>
 </body>
 </html>

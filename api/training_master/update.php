@@ -27,4 +27,4 @@ file_get_contents(
   $ctx
 );
 
-header('Location: /training_master.php');
+header('Location: /training-management-system/pages/training_master.php');

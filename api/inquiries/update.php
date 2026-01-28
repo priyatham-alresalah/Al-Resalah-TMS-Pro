@@ -30,5 +30,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: /training-management-system/inquiries.php");
+header("Location: /training-management-system/pages/inquiries.php");
 exit;

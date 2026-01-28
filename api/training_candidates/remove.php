@@ -29,5 +29,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: ../../training_candidates.php?training_id=$training_id");
+header("Location: ../../pages/training_candidates.php?training_id=$training_id");
 exit;

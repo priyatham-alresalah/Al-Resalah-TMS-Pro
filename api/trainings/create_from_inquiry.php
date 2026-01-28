@@ -25,5 +25,5 @@ $ctx = stream_context_create([
 file_get_contents(SUPABASE_URL . "/rest/v1/trainings", false, $ctx);
 
 // redirect
-header('Location: ../../trainings.php');
+header('Location: ../../pages/trainings.php');
 exit;

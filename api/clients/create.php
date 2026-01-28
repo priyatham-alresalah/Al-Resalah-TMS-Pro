@@ -76,5 +76,5 @@ file_get_contents(
   $ctx
 );
 
-header("Location: /training-management-system/clients.php");
+header("Location: /training-management-system/pages/clients.php");
 exit;

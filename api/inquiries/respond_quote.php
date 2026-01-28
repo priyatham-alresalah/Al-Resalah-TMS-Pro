@@ -52,5 +52,5 @@ file_get_contents(
   $ctx
 );
 
-header('Location: ../../inquiry_view.php?id=' . $inquiryId . '&success=' . urlencode("Response submitted successfully"));
+header('Location: ../../pages/inquiry_view.php?id=' . $inquiryId . '&success=' . urlencode("Response submitted successfully"));
 exit;

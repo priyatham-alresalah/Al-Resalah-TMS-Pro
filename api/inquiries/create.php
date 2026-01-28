@@ -51,7 +51,7 @@ if (!empty($customCoursesText)) {
 $allCourses = array_merge($selectedCourses, $customCourses);
 
 if (empty($allCourses)) {
-  header('Location: ../../inquiries.php?error=' . urlencode('Please select at least one course or enter a custom course name'));
+  header('Location: ../../pages/inquiries.php?error=' . urlencode('Please select at least one course or enter a custom course name'));
   exit;
 }
 
@@ -86,8 +86,8 @@ foreach ($allCourses as $courseName) {
 }
 
 if ($successCount > 0) {
-  header('Location: ../../inquiries.php?success=' . urlencode("Successfully created $successCount inquiry(ies)!"));
+  header('Location: ../../pages/inquiries.php?success=' . urlencode("Successfully created $successCount inquiry(ies)!"));
 } else {
-  header('Location: ../../inquiry_create.php?error=' . urlencode('Failed to create inquiries. Please try again.'));
+  header('Location: ../../pages/inquiry_create.php?error=' . urlencode('Failed to create inquiries. Please try again.'));
 }
 exit;

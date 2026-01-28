@@ -21,4 +21,4 @@ file_get_contents(
   $ctx
 );
 
-header('Location: ../../users.php');
+header('Location: ../../pages/users.php');

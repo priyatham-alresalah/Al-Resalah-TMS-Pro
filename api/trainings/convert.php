@@ -90,5 +90,5 @@ file_get_contents(
 /* Get created training */
 $newTraining = json_decode($response, true)[0];
 
-header("Location: /training-management-system/training_edit.php?id=".$newTraining['id']);
+header("Location: /training-management-system/pages/training_edit.php?id=".$newTraining['id']);
 exit;

@@ -1,0 +1,453 @@
+<?php
+require '../includes/config.php';
+require '../includes/auth_check.php';
+
+$ctx = stream_context_create([
+  'http' => [
+    'method' => 'GET',
+    'header' =>
+      "apikey: " . SUPABASE_SERVICE . "\r\n" .
+      "Authorization: Bearer " . SUPABASE_SERVICE
+  ]
+]);
+
+/* FETCH TRAININGS */
+$trainings = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainings?order=training_date.desc",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+/* FETCH CLIENTS */
+$clients = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/clients?select=id,company_name",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+$clientMap = [];
+foreach ($clients as $c) {
+  $clientMap[$c['id']] = $c['company_name'];
+}
+
+/* FETCH TRAINERS */
+$trainers = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/profiles?role=eq.trainer&select=id,full_name",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+$trainerMap = [];
+foreach ($trainers as $t) {
+  $trainerMap[$t['id']] = $t['full_name'];
+}
+
+/* FETCH ALL CANDIDATES (for assignment modal) */
+$allCandidates = json_decode(
+  file_get_contents(
+    SUPABASE_URL . "/rest/v1/candidates?order=full_name.asc",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+// Filter to only needed fields
+$allCandidates = array_map(function($c) {
+  return [
+    'id' => $c['id'] ?? null,
+    'full_name' => $c['full_name'] ?? '',
+    'client_id' => $c['client_id'] ?? null,
+    'email' => $c['email'] ?? null
+  ];
+}, $allCandidates);
+
+// Group candidates by client_id for modal
+$candidatesByClient = [];
+$individualCandidates = [];
+foreach ($allCandidates as $c) {
+  if (!empty($c['client_id']) && isset($clientMap[$c['client_id']])) {
+    if (!isset($candidatesByClient[$c['client_id']])) {
+      $candidatesByClient[$c['client_id']] = [];
+    }
+    $candidatesByClient[$c['client_id']][] = $c;
+  } else {
+    $individualCandidates[] = $c;
+  }
+}
+
+/* FETCH TRAINING CANDIDATES */
+$trainingIds = array_column($trainings, 'id');
+$trainingCandidatesMap = [];
+if (!empty($trainingIds)) {
+  // Fetch all training_candidates for these trainings (Supabase uses in.(id1,id2) format)
+  $trainingIdsStr = implode(',', $trainingIds);
+  $trainingCandidates = json_decode(
+    file_get_contents(
+      SUPABASE_URL . "/rest/v1/training_candidates?training_id=in.(" . $trainingIdsStr . ")&select=training_id,candidate_id",
+      false,
+      $ctx
+    ),
+    true
+  ) ?: [];
+  
+  // Get unique candidate IDs
+  $candidateIds = array_unique(array_filter(array_column($trainingCandidates, 'candidate_id')));
+  
+  if (!empty($candidateIds)) {
+    // Fetch candidate details
+    $candidateIdsStr = implode(',', $candidateIds);
+    $candidates = json_decode(
+      file_get_contents(
+        SUPABASE_URL . "/rest/v1/candidates?id=in.(" . $candidateIdsStr . ")&select=id,full_name,client_id",
+        false,
+        $ctx
+      ),
+      true
+    ) ?: [];
+    
+    // Create candidate map
+    $candidateMap = [];
+    foreach ($candidates as $c) {
+      $candidateMap[$c['id']] = $c;
+    }
+    
+    // Group candidates by training_id
+    foreach ($trainingCandidates as $tc) {
+      $tid = $tc['training_id'];
+      $cid = $tc['candidate_id'];
+      if (!isset($trainingCandidatesMap[$tid])) {
+        $trainingCandidatesMap[$tid] = [];
+      }
+      if (isset($candidateMap[$cid])) {
+        $trainingCandidatesMap[$tid][] = $candidateMap[$cid];
+      }
+    }
+  }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trainings</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="icon" href="/training-management-system/favicon.ico">
+</head>
+<body>
+
+<?php include '../layout/header.php'; ?>
+<?php include '../layout/sidebar.php'; ?>
+
+<main class="content">
+  <div class="page-header">
+    <div>
+      <h2>Trainings</h2>
+      <p class="muted">Manage training lifecycle</p>
+    </div>
+  </div>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Client / Candidates</th>
+      <th>Course</th>
+      <th>Trainer</th>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Status</th>
+      <th style="width: 60px;">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+
+<?php if ($trainings): foreach ($trainings as $t): 
+  $trainingCandidates = $trainingCandidatesMap[$t['id']] ?? [];
+  $hasClient = !empty($t['client_id']) && isset($clientMap[$t['client_id']]);
+  $rowId = 'training_' . $t['id'];
+?>
+<tr class="training-row" data-training-id="<?= $t['id'] ?>">
+  <td>
+    <?php if ($hasClient): ?>
+      <strong><?= htmlspecialchars($clientMap[$t['client_id']]) ?></strong>
+      <?php if (!empty($trainingCandidates)): ?>
+        <?php 
+          $candidateCount = count($trainingCandidates);
+          $firstCandidate = $trainingCandidates[0];
+          $remainingCount = $candidateCount - 1;
+        ?>
+        <div style="margin-top: 4px;">
+          <span style="color: #6b7280; font-size: 13px;">
+            <?= htmlspecialchars($firstCandidate['full_name']) ?>
+            <?php if ($remainingCount > 0): ?>
+              <span class="candidate-count-badge">+<?= $remainingCount ?></span>
+            <?php endif; ?>
+          </span>
+          <?php if ($candidateCount > 1): ?>
+            <button type="button" class="btn-toggle-candidates" onclick="toggleTrainingCandidates('<?= $rowId ?>')">
+              <span class="toggle-text-<?= $rowId ?>">Show</span>
+            </button>
+          <?php endif; ?>
+        </div>
+      <?php else: ?>
+        <span style="color: #9ca3af; font-style: italic; font-size: 13px;">No candidates</span>
+      <?php endif; ?>
+    <?php else: ?>
+      <!-- Direct candidates (no client) -->
+      <?php if (!empty($trainingCandidates)): ?>
+        <?php 
+          $candidateCount = count($trainingCandidates);
+          $firstCandidate = $trainingCandidates[0];
+          $remainingCount = $candidateCount - 1;
+        ?>
+        <span style="color: #6b7280;">
+          <?= htmlspecialchars($firstCandidate['full_name']) ?>
+          <?php if ($remainingCount > 0): ?>
+            <span style="color: #2563eb; font-weight: 600;">+<?= $remainingCount ?></span>
+          <?php endif; ?>
+        </span>
+        <?php if ($candidateCount > 1): ?>
+          <button type="button" onclick="toggleTrainingCandidates('<?= $rowId ?>')" 
+                  style="margin-left: 8px; background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; text-decoration: underline;">
+            <span class="toggle-text-<?= $rowId ?>">Show</span>
+          </button>
+        <?php endif; ?>
+        <!-- Hidden candidate rows -->
+        <?php if ($candidateCount > 1): ?>
+          <?php foreach (array_slice($trainingCandidates, 1) as $cand): ?>
+            <tr class="candidate-row candidate-row-<?= $rowId ?>" style="display: none;">
+              <td style="padding-left: 30px; color: #6b7280;">
+                <?= htmlspecialchars($cand['full_name']) ?>
+              </td>
+              <td colspan="6"></td>
+            </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      <?php else: ?>
+        <span style="color: #6b7280; font-style: italic;">Individual</span>
+      <?php endif; ?>
+    <?php endif; ?>
+  </td>
+  <td><?= htmlspecialchars($t['course_name']) ?></td>
+  <td><?= date('d M Y', strtotime($t['training_date'])) ?></td>
+  <td>
+    <?php if (!empty($t['training_time'])): ?>
+      <?= date('g:i A', strtotime($t['training_time'])) ?>
+    <?php else: ?>
+      —
+    <?php endif; ?>
+  </td>
+  <td>
+    <span class="badge badge-<?= strtolower($t['status']) ?>">
+      <?= strtoupper($t['status']) ?>
+    </span>
+  </td>
+  <td class="col-actions">
+    <div class="action-menu-wrapper">
+      <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
+        &#8942;
+      </button>
+      <div class="action-menu">
+        <a href="training_candidates.php?training_id=<?= $t['id'] ?>">Candidates</a>
+        <a href="#" onclick="assignCandidates(<?= $t['id'] ?>, '<?= htmlspecialchars(addslashes($t['course_name'])) ?>', <?= $t['client_id'] ? 'true' : 'false' ?>); return false;">Assign Candidates</a>
+        <a href="#" onclick="assignTrainer(<?= $t['id'] ?>, '<?= htmlspecialchars(addslashes($t['course_name'])) ?>', '<?= $t['trainer_id'] ?? '' ?>'); return false;">Assign Trainer</a>
+        <?php if ($t['status'] === 'scheduled'): ?>
+          <form method="post" action="../api/trainings/update_status.php">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <input type="hidden" name="status" value="ongoing">
+            <button type="submit">Start</button>
+          </form>
+        <?php endif; ?>
+        <?php if ($t['status'] === 'ongoing'): ?>
+          <form method="post" action="../api/trainings/update_status.php">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <input type="hidden" name="status" value="completed">
+            <button type="submit">Complete</button>
+          </form>
+        <?php endif; ?>
+        <?php if ($t['status'] === 'completed'): ?>
+          <a href="issue_certificates.php?training_id=<?= $t['id'] ?>">Issue Certificates</a>
+        <?php endif; ?>
+      </div>
+    </div>
+  </td>
+</tr>
+<?php 
+  // Add hidden candidate rows after the main training row
+  if (!empty($trainingCandidates) && count($trainingCandidates) > 1):
+    foreach (array_slice($trainingCandidates, 1) as $cand): 
+?>
+<tr class="candidate-row candidate-row-<?= $rowId ?>" style="display: none;">
+  <td style="padding-left: 30px; color: #6b7280;">
+    <?= htmlspecialchars($cand['full_name']) ?>
+  </td>
+  <td colspan="6"></td>
+</tr>
+<?php 
+    endforeach;
+  endif;
+endforeach; else: ?>
+<tr><td colspan="7">No trainings found</td></tr>
+<?php endif; ?>
+
+  </tbody>
+</table>
+
+<!-- Trainer Assignment Modal -->
+<div id="trainerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 25px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <h3 style="margin-bottom: 15px;">Assign Trainer</h3>
+    <p id="modalCourseName" style="color: #6b7280; margin-bottom: 15px;"></p>
+    <form id="trainerForm" method="post" action="../api/trainings/assign_trainer.php">
+      <input type="hidden" name="training_id" id="modalTrainingId">
+      <div class="form-group">
+        <label>Select Trainer</label>
+        <select name="trainer_id" id="modalTrainerId" style="width: 100%; padding: 8px;">
+          <option value="">Not assigned</option>
+          <?php foreach ($trainers as $trainer): ?>
+            <option value="<?= $trainer['id'] ?>"><?= htmlspecialchars($trainer['full_name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">Assign</button>
+        <button type="button" class="btn-cancel" onclick="closeTrainerModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function assignTrainer(trainingId, courseName, currentTrainerId) {
+    document.getElementById('modalTrainingId').value = trainingId;
+    document.getElementById('modalCourseName').textContent = 'Course: ' + courseName;
+    
+    // Set current trainer if exists
+    document.getElementById('modalTrainerId').value = currentTrainerId || '';
+    
+    document.getElementById('trainerModal').style.display = 'flex';
+    
+    // Close all action menus
+    document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+      openMenu.classList.remove('open');
+    });
+  }
+
+  function closeTrainerModal() {
+    document.getElementById('trainerModal').style.display = 'none';
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('trainerModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeTrainerModal();
+    }
+  });
+
+  document.addEventListener('click', function (event) {
+    const isToggle = event.target.closest('.action-menu-toggle');
+    const wrappers = document.querySelectorAll('.action-menu-wrapper');
+
+    wrappers.forEach(function (wrapper) {
+      const menu = wrapper.querySelector('.action-menu');
+      if (!menu) return;
+
+      if (isToggle && wrapper.contains(isToggle)) {
+        const isOpen = menu.classList.contains('open');
+        document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+          openMenu.classList.remove('open');
+        });
+        if (!isOpen) {
+          menu.classList.add('open');
+        }
+      } else {
+        menu.classList.remove('open');
+      }
+    });
+  });
+
+  function toggleTrainingCandidates(rowId) {
+    const candidateRows = document.querySelectorAll('.candidate-row-' + rowId);
+    const toggleText = document.querySelector('.toggle-text-' + rowId);
+    
+    if (!candidateRows.length || !toggleText) return;
+    
+    const isHidden = candidateRows[0].style.display === 'none';
+    
+    candidateRows.forEach(function(row) {
+      row.style.display = isHidden ? 'table-row' : 'none';
+    });
+    
+    toggleText.textContent = isHidden ? 'Hide' : 'Show';
+  }
+
+  function assignCandidates(trainingId, courseName, hasClient) {
+    document.getElementById('modalCandidateTrainingId').value = trainingId;
+    document.getElementById('modalCandidateCourseName').textContent = 'Course: ' + courseName;
+    
+    // Fetch current assigned candidates and pre-check them
+    fetch('api/trainings/get_assigned_candidates.php?training_id=' + trainingId)
+      .then(response => response.json())
+      .then(data => {
+        const checkboxes = document.querySelectorAll('#candidateForm input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+          checkbox.checked = data.includes(checkbox.value);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching assigned candidates:', error);
+      });
+    
+    document.getElementById('candidateModal').style.display = 'flex';
+    
+    // Close all action menus
+    document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+      openMenu.classList.remove('open');
+    });
+  }
+
+  function closeCandidateModal() {
+    document.getElementById('candidateModal').style.display = 'none';
+    // Uncheck all checkboxes
+    document.querySelectorAll('#candidateForm input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = false;
+    });
+  }
+
+  // Close candidate modal when clicking outside
+  document.getElementById('candidateModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeCandidateModal();
+    }
+  });
+</script>
+
+</main>
+
+<?php include '../layout/footer.php'; ?>
+</body>
+</html>
+
+
+

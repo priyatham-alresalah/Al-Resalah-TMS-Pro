@@ -41,4 +41,4 @@ file_get_contents(
   $closeCtx
 );
 
-header('Location: ../../trainings.php');
+header('Location: ../../pages/trainings.php');
