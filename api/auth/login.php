@@ -1,5 +1,9 @@
 <?php
 require '../../includes/config.php';
+require '../../includes/api_middleware.php';
+
+// Initialize API middleware (rate limiting for auth endpoints)
+initAPIMiddleware('/auth/login');
 
 /* =========================
    ALLOW POST ONLY
@@ -96,6 +100,12 @@ $_SESSION['user'] = [
   'role'  => $profile['role'],
   'name'  => $profile['full_name']
 ];
+
+/* =========================
+   SESSION SECURITY
+========================= */
+$_SESSION['last_activity'] = time();
+$_SESSION['last_status_check'] = time();
 
 /* =========================
    REGENERATE SESSION ID (Security)

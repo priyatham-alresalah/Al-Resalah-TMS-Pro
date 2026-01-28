@@ -1,6 +1,15 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('inquiries', 'create');
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('inquiries', 'create');
 
 $role = $_SESSION['user']['role'];
 $userId = $_SESSION['user']['id'];
@@ -78,6 +87,7 @@ $courses = json_decode(
   <?php if (!empty($clients)): ?>
     <div class="form-card" style="max-width: 100%;">
       <form method="post" action="../api/inquiries/create.php" id="inquiryForm">
+        <?= csrfField() ?>
         <div class="form-group">
           <label>Select Client *</label>
           <select name="client_id" required>

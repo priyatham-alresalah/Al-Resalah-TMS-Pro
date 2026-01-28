@@ -1,6 +1,15 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+require '../../includes/rbac.php';
+require '../../includes/audit_log.php';
+
+/* CSRF Protection */
+requireCSRF();
+
+/* Permission Check */
+requirePermission('certificates', 'update');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   header('Location: ../../pages/certificates.php?error=' . urlencode('Invalid request'));
@@ -34,11 +43,23 @@ $ctx = stream_context_create([
   ]
 ]);
 
-file_get_contents(
+$updateResponse = @file_get_contents(
   SUPABASE_URL . "/rest/v1/certificates?id=eq.$id",
   false,
   $ctx
 );
+
+if ($updateResponse === false) {
+  error_log("Failed to update certificate: $id");
+  header('Location: ../../pages/certificate_edit.php?id=' . $id . '&error=' . urlencode('Failed to update certificate. Please try again.'));
+  exit;
+}
+
+// Audit log
+auditLog('certificates', 'update', $id, [
+  'certificate_no' => $certificate_no,
+  'status' => $status
+]);
 
 header('Location: ../../pages/certificates.php?success=' . urlencode('Certificate updated successfully'));
 exit;

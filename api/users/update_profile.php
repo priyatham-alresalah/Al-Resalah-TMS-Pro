@@ -1,6 +1,10 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+/* CSRF Protection */
+requireCSRF();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   header('Location: ../../pages/profile.php?error=' . urlencode('Invalid request'));

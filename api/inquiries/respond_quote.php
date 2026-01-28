@@ -1,6 +1,10 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+/* CSRF Protection */
+requireCSRF();
 
 $inquiryId = $_POST['inquiry_id'] ?? '';
 $action = $_POST['action'] ?? '';

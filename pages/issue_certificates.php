@@ -1,6 +1,10 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('certificates', 'create');
 
 $training_id = $_GET['training_id'] ?? null;
 if (!$training_id) {
@@ -138,6 +142,7 @@ $success = $_GET['success'] ?? '';
   <?php else: ?>
     <div class="card">
       <form method="post" action="../api/certificates/issue_bulk.php">
+        <?= csrfField() ?>
         <input type="hidden" name="training_id" value="<?= $training_id ?>">
         
         <table class="table">

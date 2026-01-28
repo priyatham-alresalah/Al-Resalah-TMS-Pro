@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('quotations', 'create');
 
 $id = $_GET['id'] ?? '';
 if (!$id) die('Inquiry ID missing');
@@ -91,6 +96,7 @@ $allInquiries = json_decode(
 
   <div class="form-card" style="max-width: 100%;">
     <form method="post" action="../api/inquiries/create_quote.php">
+      <?= csrfField() ?>
       <input type="hidden" name="client_id" value="<?= $inquiry['client_id'] ?>">
       
       <div class="form-group">

@@ -1,6 +1,17 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+require '../../includes/rbac.php';
+require '../../includes/workflow.php';
+require '../../includes/audit_log.php';
+require '../../includes/branch.php';
+
+/* CSRF Protection */
+requireCSRF();
+
+/* Permission Check */
+requirePermission('trainings', 'create');
 
 $inquiryIds = $_POST['inquiry_ids'] ?? [];
 $clientId = $_POST['client_id'] ?? '';
@@ -13,6 +24,15 @@ $trainerId = $_POST['trainer_id'] ?? null;
 if (empty($inquiryIds) || empty($clientId) || empty($days) || empty($trainingTime) || empty($startDate)) {
   header('Location: ../../pages/schedule_training.php?inquiry_id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Please fill all required fields'));
   exit;
+}
+
+// Enforce workflow - validate ALL inquiries have quotation + LPO
+foreach ($inquiryIds as $inqId) {
+  $workflowCheck = canCreateTraining($inqId);
+  if (!$workflowCheck['allowed']) {
+    header('Location: ../../pages/schedule_training.php?inquiry_id=' . $inqId . '&error=' . urlencode($workflowCheck['reason']));
+    exit;
+  }
 }
 
 $ctx = stream_context_create([
@@ -98,6 +118,8 @@ $createCtx = stream_context_create([
 ]);
 
 $createdCount = 0;
+$branchId = getUserBranchId();
+
 foreach ($inquiries as $inq) {
   foreach ($trainingDates as $date) {
     $data = [
@@ -109,6 +131,11 @@ foreach ($inquiries as $inq) {
       'trainer_id' => $trainerId ?: null,
       'status' => 'scheduled'
     ];
+
+    // Add branch_id if user is branch-restricted
+    if ($branchId !== null) {
+      $data['branch_id'] = $branchId;
+    }
     
     $createCtx['http']['content'] = json_encode($data);
     $response = file_get_contents(
@@ -123,8 +150,35 @@ foreach ($inquiries as $inq) {
   }
 }
 
-/* Update inquiry status to 'scheduled' */
+// Audit log for each training created
 if ($createdCount > 0) {
+  require '../../includes/audit_log.php';
+  
+  // Get created training IDs for audit logging
+  $createdTrainings = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/trainings?inquiry_id=eq.{$inquiryIds[0]}&order=created_at.desc&limit=$createdCount&select=id",
+      false,
+      stream_context_create([
+        'http' => [
+          'method' => 'GET',
+          'header' =>
+            "apikey: " . SUPABASE_SERVICE . "\r\n" .
+            "Authorization: Bearer " . SUPABASE_SERVICE
+        ]
+      ])
+    ),
+    true
+  );
+
+  foreach ($createdTrainings as $training) {
+    auditLog('trainings', 'create', $training['id'], [
+      'inquiry_id' => $inquiryIds[0],
+      'method' => 'schedule',
+      'sessions' => $sessions
+    ]);
+  }
+
   $updateCtx = stream_context_create([
     'http' => [
       'method' => 'PATCH',
@@ -137,7 +191,7 @@ if ($createdCount > 0) {
   ]);
   
   foreach ($inquiryIds as $inqId) {
-    file_get_contents(
+    @file_get_contents(
       SUPABASE_URL . "/rest/v1/inquiries?id=eq.$inqId",
       false,
       $updateCtx

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../includes/config.php';
+require '../includes/csrf.php';
 
 if (!isset($_SESSION['candidate'])) {
   header('Location: login.php');
@@ -124,6 +125,7 @@ if ($clientId) {
     <?php else: ?>
       <div class="form-card">
         <form method="post" action="../api/inquiries/create_candidate.php" id="inquiryForm">
+          <?= csrfField() ?>
           <div class="form-group">
             <label>Select Courses *</label>
             <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 15px; background: #f9fafb;">

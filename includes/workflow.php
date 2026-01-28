@@ -253,10 +253,24 @@ function canCreateInvoice($trainingId) {
     ]
   ]);
 
-  // Check if certificate exists
+  // Check if training exists and is completed
+  $training = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/trainings?id=eq.$trainingId&select=id,status",
+      false,
+      $ctx
+    ),
+    true
+  );
+
+  if (empty($training)) {
+    return ['allowed' => false, 'reason' => 'Training not found'];
+  }
+
+  // Check if certificate exists and is active
   $certificate = json_decode(
     @file_get_contents(
-      SUPABASE_URL . "/rest/v1/certificates?training_id=eq.$trainingId&select=id",
+      SUPABASE_URL . "/rest/v1/certificates?training_id=eq.$trainingId&status=eq.active&select=id",
       false,
       $ctx
     ),
@@ -264,7 +278,7 @@ function canCreateInvoice($trainingId) {
   );
 
   if (empty($certificate)) {
-    return ['allowed' => false, 'reason' => 'Certificate must be issued before creating invoice'];
+    return ['allowed' => false, 'reason' => 'Active certificate must be issued before creating invoice'];
   }
 
   // Check if invoice already exists
@@ -279,6 +293,38 @@ function canCreateInvoice($trainingId) {
 
   if (!empty($existingInvoice)) {
     return ['allowed' => false, 'reason' => 'Invoice already exists for this training'];
+  }
+
+  return ['allowed' => true, 'reason' => ''];
+}
+
+/**
+ * Check if training can be completed (attendance verified)
+ * @param string $trainingId
+ * @return array ['allowed' => bool, 'reason' => string]
+ */
+function canCompleteTraining($trainingId) {
+  $ctx = stream_context_create([
+    'http' => [
+      'method' => 'GET',
+      'header' =>
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE
+    ]
+  ]);
+
+  // Check if attendance checkpoint is completed
+  $attendanceCheckpoint = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/training_checkpoints?training_id=eq.$trainingId&checkpoint=eq.attendance_verified&select=completed",
+      false,
+      $ctx
+    ),
+    true
+  );
+
+  if (empty($attendanceCheckpoint) || !($attendanceCheckpoint[0]['completed'] ?? false)) {
+    return ['allowed' => false, 'reason' => 'Attendance must be verified before completing training'];
   }
 
   return ['allowed' => true, 'reason' => ''];

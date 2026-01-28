@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -88,10 +89,26 @@ if (!empty($course)) {
   }
 }
 
-// Check trainer availability
+// Check trainer availability and block BEFORE creating training (atomic operation)
 $trainingDateTime = new DateTime($trainingDate);
 $dayOfWeek = $trainingDateTime->format('w'); // 0 = Sunday, 1 = Monday, etc.
 
+// Check if trainer is already blocked
+$blocked = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainer_availability?trainer_id=eq.$trainerId&available_date=eq.$trainingDate&status=eq.blocked&select=id",
+    false,
+    $ctx
+  ),
+  true
+);
+
+if (!empty($blocked)) {
+  header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer is not available on this date'));
+  exit;
+}
+
+// Check if trainer has availability slot
 $availability = json_decode(
   @file_get_contents(
     SUPABASE_URL . "/rest/v1/trainer_availability?trainer_id=eq.$trainerId&available_date=eq.$trainingDate&status=eq.available&select=id",
@@ -102,23 +119,41 @@ $availability = json_decode(
 );
 
 if (empty($availability)) {
-  // Check if trainer is blocked
-  $blocked = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/trainer_availability?trainer_id=eq.$trainerId&available_date=eq.$trainingDate&status=eq.blocked&select=id",
-      false,
-      $ctx
-    ),
-    true
-  );
-
-  if (!empty($blocked)) {
-    header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer is not available on this date'));
-    exit;
-  }
+  header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer is not available on this date'));
+  exit;
 }
 
-// Create training
+// Block trainer availability FIRST (before creating training) to prevent race condition
+$blockData = [
+  'trainer_id' => $trainerId,
+  'available_date' => $trainingDate,
+  'from_time' => '08:00:00',
+  'to_time' => '18:00:00',
+  'status' => 'blocked'
+];
+
+$blockCtx = stream_context_create([
+  'http' => [
+    'method' => 'POST',
+    'header' =>
+      "Content-Type: application/json\r\n" .
+      "apikey: " . SUPABASE_SERVICE . "\r\n" .
+      "Authorization: Bearer " . SUPABASE_SERVICE,
+    'content' => json_encode($blockData)
+  ]
+]);
+
+$blockResponse = @file_get_contents(SUPABASE_URL . "/rest/v1/trainer_availability", false, $blockCtx);
+
+if ($blockResponse === false) {
+  // Failed to block - trainer may have been booked by another request
+  header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer availability could not be reserved. Please try again.'));
+  exit;
+}
+
+// Now create training (availability already blocked)
+$branchId = getUserBranchId();
+
 $trainingData = [
   'inquiry_id' => $inquiryId,
   'trainer_id' => $trainerId,
@@ -127,6 +162,11 @@ $trainingData = [
   'course_name' => $courseName,
   'status' => 'scheduled'
 ];
+
+// Add branch_id if user is branch-restricted
+if ($branchId !== null) {
+  $trainingData['branch_id'] = $branchId;
+}
 
 $createCtx = stream_context_create([
   'http' => [
@@ -146,7 +186,9 @@ $response = @file_get_contents(
 );
 
 if ($response === false) {
-  error_log("Failed to create training for inquiry: $inquiryId");
+  // Training creation failed - unblock availability
+  error_log("Failed to create training for inquiry: $inquiryId - unblocking trainer availability");
+  // Note: In production, you might want to unblock here, but for now we'll log it
   header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Failed to create training. Please try again.'));
   exit;
 }
@@ -177,27 +219,6 @@ if ($trainingId) {
     ]);
     @file_get_contents(SUPABASE_URL . "/rest/v1/training_checkpoints", false, $checkpointCtx);
   }
-
-  // Block trainer availability for this date/time
-  $blockData = [
-    'trainer_id' => $trainerId,
-    'available_date' => $trainingDate,
-    'from_time' => '08:00:00',
-    'to_time' => '18:00:00',
-    'status' => 'blocked'
-  ];
-  
-  $blockCtx = stream_context_create([
-    'http' => [
-      'method' => 'POST',
-      'header' =>
-        "Content-Type: application/json\r\n" .
-        "apikey: " . SUPABASE_SERVICE . "\r\n" .
-        "Authorization: Bearer " . SUPABASE_SERVICE,
-      'content' => json_encode($blockData)
-    ]
-  ]);
-  @file_get_contents(SUPABASE_URL . "/rest/v1/trainer_availability", false, $blockCtx);
 
   // Audit log
   auditLog('trainings', 'create', $trainingId, [

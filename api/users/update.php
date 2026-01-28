@@ -54,5 +54,22 @@ if ($response === false) {
   exit;
 }
 
+// If updating own account and role/is_active changed, force logout
+if ($id === $_SESSION['user']['id']) {
+  $oldRole = $_SESSION['user']['role'] ?? null;
+  $newRole = strtolower($role);
+  if ($oldRole !== $newRole) {
+    // Role changed - destroy session to force re-login
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+      $params = session_get_cookie_params();
+      setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
+    }
+    session_destroy();
+    header('Location: ' . BASE_PATH . '/?error=session_invalidated');
+    exit;
+  }
+}
+
 header('Location: ' . BASE_PATH . '/pages/users.php?success=' . urlencode('User updated successfully'));
 exit;

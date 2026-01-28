@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('trainings', 'create');
 
 $inquiryId = $_GET['inquiry_id'] ?? '';
 if (!$inquiryId) die('Inquiry ID missing');
@@ -111,6 +116,7 @@ $allInquiries = json_decode(
     </div>
 
     <form method="post" action="../api/trainings/schedule.php" id="scheduleForm">
+      <?= csrfField() ?>
       <input type="hidden" name="inquiry_id" value="<?= $inquiryId ?>">
       <input type="hidden" name="client_id" value="<?= $inquiry['client_id'] ?>">
       

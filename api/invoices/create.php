@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -39,8 +40,50 @@ if (!$workflowCheck['allowed']) {
   exit;
 }
 
-// Generate invoice number
-$invoiceNo = 'INV-' . date('Ymd-His');
+// Generate unique invoice number (check for duplicates)
+$year = date('Y');
+$datePrefix = date('Ymd');
+$invoiceNo = null;
+$maxAttempts = 100;
+$attempt = 0;
+
+while ($attempt < $maxAttempts) {
+  $timeSuffix = date('His') . ($attempt > 0 ? '-' . $attempt : '');
+  $candidateNo = "INV-$datePrefix-$timeSuffix";
+  
+  // Check if invoice number already exists
+  $existing = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/invoices?invoice_no=eq.$candidateNo&select=id",
+      false,
+      stream_context_create([
+        'http' => [
+          'method' => 'GET',
+          'header' =>
+            "apikey: " . SUPABASE_SERVICE . "\r\n" .
+            "Authorization: Bearer " . SUPABASE_SERVICE
+        ]
+      ])
+    ),
+    true
+  );
+  
+  if (empty($existing)) {
+    $invoiceNo = $candidateNo;
+    break;
+  }
+  
+  $attempt++;
+  usleep(10000); // Wait 10ms before retry
+}
+
+if ($invoiceNo === null) {
+  error_log("Failed to generate unique invoice number after $maxAttempts attempts");
+  header('Location: ' . BASE_PATH . '/pages/invoices.php?error=' . urlencode('Failed to generate invoice number. Please try again.'));
+  exit;
+}
+
+$branchId = getUserBranchId();
 
 $invoiceData = [
   'invoice_no' => $invoiceNo,
@@ -53,6 +96,11 @@ $invoiceData = [
   'issued_date' => date('Y-m-d'),
   'due_date' => date('Y-m-d', strtotime('+14 days'))
 ];
+
+// Add branch_id if user is branch-restricted
+if ($branchId !== null) {
+  $invoiceData['branch_id'] = $branchId;
+}
 
 $ctx = stream_context_create([
   'http' => [

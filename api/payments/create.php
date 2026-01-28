@@ -8,6 +8,7 @@ require '../../includes/auth_check.php';
 require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -47,6 +48,26 @@ $ctx = stream_context_create([
   ]
 ]);
 
+// Branch isolation: Verify all invoices belong to user's branch
+$branchId = getUserBranchId();
+if ($branchId !== null) {
+  foreach ($invoiceIds as $invoiceId) {
+    $invoice = json_decode(
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId&select=branch_id",
+        false,
+        $ctx
+      ),
+      true
+    );
+
+    if (!empty($invoice) && isset($invoice[0]['branch_id']) && $invoice[0]['branch_id'] !== $branchId) {
+      header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Cannot process payment: Invoice $invoiceId belongs to another branch"));
+      exit;
+    }
+  }
+}
+
 // Create payment record
 $paymentData = [
   'payment_mode' => $paymentMode,
@@ -55,6 +76,11 @@ $paymentData = [
   'paid_on' => $paidOn,
   'invoice_id' => $invoiceIds[0] // Primary invoice
 ];
+
+// Add branch_id if user is branch-restricted
+if ($branchId !== null) {
+  $paymentData['branch_id'] = $branchId;
+}
 
 $createCtx = stream_context_create([
   'http' => [
@@ -99,6 +125,53 @@ foreach ($invoiceIds as $index => $invoiceId) {
     continue;
   }
 
+  // Validate invoice exists and get total
+  $invoice = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId&select=id,total,status",
+      false,
+      $ctx
+    ),
+    true
+  );
+
+  if (empty($invoice)) {
+    header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Invoice $invoiceId not found"));
+    exit;
+  }
+
+  $invoiceTotal = floatval($invoice[0]['total']);
+  $invoiceStatus = $invoice[0]['status'] ?? 'unpaid';
+
+  // Get existing allocations BEFORE adding new one
+  $existingAllocations = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/payment_allocations?invoice_id=eq.$invoiceId&select=allocated_amount",
+      false,
+      $ctx
+    ),
+    true
+  );
+
+  $existingAllocatedSum = 0;
+  foreach ($existingAllocations as $alloc) {
+    $existingAllocatedSum += floatval($alloc['allocated_amount']);
+  }
+
+  // Prevent overpayment: new allocation + existing allocations must not exceed invoice total
+  $newTotalAllocated = $existingAllocatedSum + $allocatedAmount;
+  if ($newTotalAllocated > $invoiceTotal) {
+    $overpayment = $newTotalAllocated - $invoiceTotal;
+    header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Overpayment detected: Allocation would exceed invoice total by " . number_format($overpayment, 2) . ". Maximum allocation allowed: " . number_format($invoiceTotal - $existingAllocatedSum, 2)));
+    exit;
+  }
+
+  // Prevent allocation to already paid invoices
+  if ($invoiceStatus === 'paid' && $existingAllocatedSum >= $invoiceTotal) {
+    header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Invoice $invoiceId is already fully paid"));
+    exit;
+  }
+
   $allocationData = [
     'payment_id' => $paymentId,
     'invoice_id' => $invoiceId,
@@ -113,57 +186,33 @@ foreach ($invoiceIds as $index => $invoiceId) {
     ]
   ]);
 
-  @file_get_contents(
+  $allocationResponse = @file_get_contents(
     SUPABASE_URL . "/rest/v1/payment_allocations",
     false,
     $allocationCtx
   );
 
-  // Check if invoice is fully paid
-  $invoice = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId&select=id,total",
-      false,
-      $ctx
-    ),
-    true
-  );
-
-  if (!empty($invoice)) {
-    $invoiceTotal = floatval($invoice[0]['total']);
-    
-    // Get total allocated for this invoice
-    $totalAllocated = json_decode(
-      @file_get_contents(
-        SUPABASE_URL . "/rest/v1/payment_allocations?invoice_id=eq.$invoiceId&select=allocated_amount",
-        false,
-        $ctx
-      ),
-      true
-    );
-
-    $allocatedSum = 0;
-    foreach ($totalAllocated as $alloc) {
-      $allocatedSum += floatval($alloc['allocated_amount']);
-    }
-
-    // Update invoice status
-    $newStatus = ($allocatedSum >= $invoiceTotal) ? 'paid' : 'unpaid';
-    
-    $updateInvoiceCtx = stream_context_create([
-      'http' => [
-        'method' => 'PATCH',
-        'header' => $headers,
-        'content' => json_encode(['status' => $newStatus])
-      ]
-    ]);
-
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId",
-      false,
-      $updateInvoiceCtx
-    );
+  if ($allocationResponse === false) {
+    error_log("Failed to create payment allocation for invoice: $invoiceId");
+    continue; // Continue with other allocations
   }
+
+  // Update invoice status based on new total allocated
+  $newStatus = ($newTotalAllocated >= $invoiceTotal) ? 'paid' : 'unpaid';
+  
+  $updateInvoiceCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' => $headers,
+      'content' => json_encode(['status' => $newStatus])
+    ]
+  ]);
+
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId",
+    false,
+    $updateInvoiceCtx
+  );
 }
 
 // Audit log

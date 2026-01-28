@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('training_master', 'view');
 
 $role = $_SESSION['user']['role'];
 
@@ -60,7 +65,8 @@ $courses = json_decode(
   <!-- ADD COURSE -->
   <form method="post"
         action="../api/training_master/create.php"
-        class="form-inline"
+        class="form-inline">
+    <?= csrfField() ?>
         style="margin-bottom:20px;">
     <input name="course_name" placeholder="Course Name *" required>
     <input name="duration" placeholder="Duration (e.g. 1 Day)">
@@ -113,6 +119,7 @@ $courses = json_decode(
     <form method="post"
           action="../api/training_master/update.php"
           class="form-inline">
+      <?= csrfField() ?>
 
       <input type="hidden" name="id" value="<?= $edit['id'] ?>">
 

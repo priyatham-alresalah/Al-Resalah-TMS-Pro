@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('certificates', 'create');
 
 $training_id = $_GET['training_id'] ?? '';
 ?>
@@ -21,6 +26,7 @@ $training_id = $_GET['training_id'] ?? '';
 
   <div class="form-card">
     <form method="post" action="../api/certificates/create.php">
+      <?= csrfField() ?>
       <input type="hidden" name="training_id" value="<?= $training_id ?>">
 
       <div class="form-group">

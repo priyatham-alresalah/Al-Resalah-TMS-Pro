@@ -1,6 +1,10 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('clients', 'view');
 
 $userId = $_SESSION['user']['id'];
 $role   = $_SESSION['user']['role'];

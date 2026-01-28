@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('clients', 'update');
 
 $id = $_GET['id'] ?? '';
 
@@ -51,6 +56,7 @@ if ($role !== 'admin' && ($client['created_by'] ?? null) !== $userId) {
 
   <div class="form-card">
     <form method="post" action="../api/clients/update.php">
+      <?= csrfField() ?>
       <input type="hidden" name="id" value="<?= $client['id'] ?>">
 
       <div class="form-group">

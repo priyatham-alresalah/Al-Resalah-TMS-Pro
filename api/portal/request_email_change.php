@@ -1,5 +1,6 @@
 <?php
 require '../../includes/config.php';
+require '../../includes/csrf.php';
 
 session_start();
 
@@ -7,6 +8,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   header('Location: ' . BASE_PATH . '/index.php');
   exit;
 }
+
+/* CSRF Protection */
+requireCSRF();
 
 require '../../includes/PHPMailer/PHPMailer.php';
 require '../../includes/PHPMailer/SMTP.php';

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../includes/config.php';
+require '../includes/csrf.php';
 
 if (!isset($_SESSION['client'])) {
   header('Location: login.php');
@@ -192,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </table>
 
           <form method="post" style="border-top: 1px solid #e5e7eb; padding-top: 15px;">
+            <?= csrfField() ?>
             <input type="hidden" name="inquiry_id" value="<?= $quote['courses'][0]['id'] ?>">
             
             <div class="form-group">

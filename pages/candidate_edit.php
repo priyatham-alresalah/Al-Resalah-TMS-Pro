@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('candidates', 'update');
 
 $id = $_GET['id'] ?? '';
 if (!$id) die('Missing candidate ID');
@@ -60,6 +65,7 @@ $clients = json_decode(
 
   <div class="form-card">
     <form method="post" action="../api/candidates/update.php">
+      <?= csrfField() ?>
       <input type="hidden" name="id" value="<?= $candidate['id'] ?>">
 
       <div class="form-group">

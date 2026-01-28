@@ -1,6 +1,10 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+/* CSRF Protection */
+requireCSRF();
 
 require '../../includes/PHPMailer/src/PHPMailer.php';
 require '../../includes/PHPMailer/src/SMTP.php';

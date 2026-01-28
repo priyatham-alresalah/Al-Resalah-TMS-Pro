@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('inquiries', 'update');
 
 if (!in_array($_SESSION['user']['role'], ['admin','accounts'])) {
   die('Access denied');
@@ -41,6 +46,7 @@ $inq = json_decode(
     </div>
 
     <form method="post" action="../api/inquiries/update.php">
+      <?= csrfField() ?>
       <input type="hidden" name="id" value="<?= $inq['id'] ?>">
 
       <div class="form-grid">

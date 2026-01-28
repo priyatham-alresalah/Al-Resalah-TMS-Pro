@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../includes/config.php';
+require '../includes/csrf.php';
 
 if (!isset($_SESSION['candidate'])) {
   header('Location: login.php');
@@ -71,6 +72,7 @@ if (!$candidateRow) {
 
   <div class="form-card">
     <form method="post" action="../api/portal/update_phone.php">
+      <?= csrfField() ?>
       <input type="hidden" name="type" value="candidate">
       <input type="hidden" name="id" value="<?= htmlspecialchars($candidateId) ?>">
 
@@ -97,6 +99,7 @@ if (!$candidateRow) {
 
   <div class="form-card" style="margin-top: 18px;">
     <form method="post" action="../api/portal/request_email_change.php">
+      <?= csrfField() ?>
       <input type="hidden" name="type" value="candidate">
       <input type="hidden" name="id" value="<?= htmlspecialchars($candidateId) ?>">
 

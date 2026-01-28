@@ -1,55 +1,104 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/app_log.php';
+
+/* RBAC Check - Dashboard accessible to all authenticated users */
+// No specific permission required for dashboard
+
+// Performance timing
+$dashboardStartTime = microtime(true);
 
 $user = $_SESSION['user'];
 $role = $user['role'];
 $userId = $user['id'];
 
 /* =========================
-   FETCH ALL DATA
+   OPTIMIZED DASHBOARD DATA FETCHING
+   Uses aggregates and filters instead of loading all records
 ========================= */
+require '../includes/cache.php';
+
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
     'header' =>
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE
+      "Authorization: Bearer " . SUPABASE_SERVICE . "\r\n" .
+      "Prefer: count=exact"
   ]
 ]);
 
-// Fetch all data needed for dashboards
-$inquiries = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/inquiries", false, $ctx),
-  true
-) ?: [];
+$currentMonth = date('Y-m');
+$currentYear = date('Y');
 
-$trainings = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/trainings", false, $ctx),
-  true
-) ?: [];
+// Use cached data where possible, or fetch aggregates
+$cacheKey = 'dashboard_data_' . $role . '_' . $userId . '_' . $currentMonth;
+$cachedData = getCache($cacheKey, 300); // Cache for 5 minutes
 
-$invoices = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/invoices", false, $ctx),
-  true
-) ?: [];
+if ($cachedData === null) {
+  // Fetch only what's needed for dashboard - use filters and aggregates
+  // This Month Inquiries
+  $thisMonthInquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?created_at=gte.$currentMonth-01&created_at=lt." . date('Y-m-d', strtotime('+1 month')) . "&select=id,status,created_at,created_by";
+  $thisMonthInquiries = json_decode(@file_get_contents($thisMonthInquiriesUrl, false, $ctx), true) ?: [];
+  
+  // This Month Trainings
+  $thisMonthTrainingsUrl = SUPABASE_URL . "/rest/v1/trainings?training_date=gte.$currentMonth-01&training_date=lt." . date('Y-m-d', strtotime('+1 month')) . "&select=id,status,training_date";
+  $thisMonthTrainings = json_decode(@file_get_contents($thisMonthTrainingsUrl, false, $ctx), true) ?: [];
+  
+  // This Month Invoices (for revenue)
+  $thisMonthInvoicesUrl = SUPABASE_URL . "/rest/v1/invoices?issued_date=gte.$currentMonth-01&issued_date=lt." . date('Y-m-d', strtotime('+1 month')) . "&select=id,total,status,issued_date";
+  $thisMonthInvoices = json_decode(@file_get_contents($thisMonthInvoicesUrl, false, $ctx), true) ?: [];
+  
+  // Outstanding Invoices (unpaid)
+  $outstandingInvoicesUrl = SUPABASE_URL . "/rest/v1/invoices?status=eq.unpaid&select=id,total";
+  $outstandingInvoices = json_decode(@file_get_contents($outstandingInvoicesUrl, false, $ctx), true) ?: [];
+  
+  // Completed Trainings (for bottleneck check)
+  $completedTrainingsUrl = SUPABASE_URL . "/rest/v1/trainings?status=eq.completed&select=id,training_date";
+  $completedTrainings = json_decode(@file_get_contents($completedTrainingsUrl, false, $ctx), true) ?: [];
+  
+  // Certificates (for bottleneck check)
+  $certificatesUrl = SUPABASE_URL . "/rest/v1/certificates?select=id,training_id,issued_date";
+  $certificates = json_decode(@file_get_contents($certificatesUrl, false, $ctx), true) ?: [];
+  
+  // Overdue Invoices
+  $overdueDate = date('Y-m-d', strtotime('-30 days'));
+  $overdueInvoicesUrl = SUPABASE_URL . "/rest/v1/invoices?due_date=lt.$overdueDate&status=eq.unpaid&select=id";
+  $overdueInvoices = json_decode(@file_get_contents($overdueInvoicesUrl, false, $ctx), true) ?: [];
+  
+  // Users (for team metrics) - only fetch needed fields
+  $usersUrl = SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,created_at";
+  $users = json_decode(@file_get_contents($usersUrl, false, $ctx), true) ?: [];
+  
+  // All Inquiries (for conversion rate - but limit to recent)
+  $recentInquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?created_at=gte." . date('Y-m-d', strtotime('-90 days')) . "&select=id,status,created_by";
+  $inquiries = json_decode(@file_get_contents($recentInquiriesUrl, false, $ctx), true) ?: [];
+  
+  // Clients (minimal data)
+  $clientsUrl = SUPABASE_URL . "/rest/v1/clients?select=id,created_by,created_at";
+  $clients = json_decode(@file_get_contents($clientsUrl, false, $ctx), true) ?: [];
+  
+  $cachedData = [
+    'thisMonthInquiries' => $thisMonthInquiries,
+    'thisMonthTrainings' => $thisMonthTrainings,
+    'thisMonthInvoices' => $thisMonthInvoices,
+    'outstandingInvoices' => $outstandingInvoices,
+    'completedTrainings' => $completedTrainings,
+    'certificates' => $certificates,
+    'overdueInvoices' => $overdueInvoices,
+    'users' => $users,
+    'inquiries' => $inquiries,
+    'clients' => $clients
+  ];
+  
+  setCache($cacheKey, $cachedData);
+}
 
-$certificates = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/certificates", false, $ctx),
-  true
-) ?: [];
+extract($cachedData);
 
-$clients = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/clients", false, $ctx),
-  true
-) ?: [];
-
-$users = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,created_at", false, $ctx),
-  true
-) ?: [];
-
-// Build maps
+// Build minimal maps
 $clientMap = [];
 foreach ($clients as $c) {
   $clientMap[$c['id']] = $c;
@@ -85,24 +134,9 @@ $metrics = [];
 
 if ($role === 'admin') {
   // ADMIN DASHBOARD - "CONTROL TOWER"
-  $thisMonthInquiries = array_filter($inquiries, function($i) {
-    return isThisMonth($i['created_at'] ?? null);
-  });
-  
-  $thisMonthTrainings = array_filter($trainings, function($t) {
-    return isThisMonth($t['training_date'] ?? null);
-  });
-  
-  $thisMonthInvoices = array_filter($invoices, function($inv) {
-    return isThisMonth($inv['issued_date'] ?? null);
-  });
-  
+  // Data already filtered by month from optimized queries
   $revenueGenerated = array_sum(array_column($thisMonthInvoices, 'total'));
-  
-  $outstandingPayments = array_filter($invoices, function($inv) {
-    return ($inv['status'] ?? 'unpaid') === 'unpaid';
-  });
-  $outstandingAmount = array_sum(array_column($outstandingPayments, 'total'));
+  $outstandingAmount = array_sum(array_column($outstandingInvoices, 'total'));
   
   // Process bottlenecks
   $completedTrainings = array_filter($trainings, function($t) {
@@ -186,7 +220,7 @@ if ($role === 'admin') {
     }
   }
   
-  // Conversion rate
+  // Conversion rate (using recent inquiries only)
   $acceptedInquiries = array_filter($inquiries, function($i) {
     return strtolower($i['status'] ?? '') === 'accepted';
   });
@@ -216,17 +250,15 @@ if ($role === 'admin') {
   
 } elseif ($role === 'bdm') {
   // BDM DASHBOARD - "SALES COMMAND"
-  $newInquiries = array_filter($inquiries, function($i) {
-    return strtolower($i['status'] ?? '') === 'new';
-  });
+  // Fetch inquiries by status (optimized)
+  $newInquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?status=eq.new&select=id,created_at";
+  $newInquiries = json_decode(@file_get_contents($newInquiriesUrl, false, $ctx), true) ?: [];
   
-  $quotedInquiries = array_filter($inquiries, function($i) {
-    return strtolower($i['status'] ?? '') === 'quoted';
-  });
+  $quotedInquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?status=eq.quoted&select=id,created_at";
+  $quotedInquiries = json_decode(@file_get_contents($quotedInquiriesUrl, false, $ctx), true) ?: [];
   
-  $acceptedInquiries = array_filter($inquiries, function($i) {
-    return strtolower($i['status'] ?? '') === 'accepted';
-  });
+  $acceptedInquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?status=eq.accepted&select=id,created_at";
+  $acceptedInquiries = json_decode(@file_get_contents($acceptedInquiriesUrl, false, $ctx), true) ?: [];
   
   $confirmedTrainings = array_filter($trainings, function($t) {
     return in_array(strtolower($t['status'] ?? ''), ['scheduled', 'ongoing', 'completed']);
@@ -1200,6 +1232,17 @@ if ($role === 'admin') {
       </div>
 
   <?php endif; ?>
+
+<?php
+// Log dashboard performance
+$dashboardEndTime = microtime(true);
+$dashboardLoadTime = round(($dashboardEndTime - $dashboardStartTime) * 1000, 2); // milliseconds
+logInfo('dashboard_load', [
+  'load_time_ms' => $dashboardLoadTime,
+  'role' => $role,
+  'user_id' => $userId
+]);
+?>
 
 </main>
 

@@ -47,11 +47,17 @@ function csrfField() {
 
 /**
  * Require CSRF token validation (for API endpoints)
+ * Handles POST, PUT, DELETE, PATCH methods
  */
 function requireCSRF() {
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['csrf_token'] ?? '';
-    if (!validateCSRFToken($token)) {
+  $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+  
+  // Only validate for state-changing methods
+  if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+    // Get token from POST data or headers (for AJAX)
+    $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    
+    if (empty($token) || !validateCSRFToken($token)) {
       http_response_code(403);
       die('Invalid CSRF token. Please refresh the page and try again.');
     }

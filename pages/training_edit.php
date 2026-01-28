@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('trainings', 'update');
 
 $id = $_GET['id'] ?? '';
 
@@ -54,6 +59,7 @@ $locked = in_array($training['status'], ['completed','cancelled']);
 
   <div class="card" style="max-width:700px;">
     <form method="post" action="../api/trainings/update.php">
+      <?= csrfField() ?>
 
       <input type="hidden" name="id" value="<?= $training['id'] ?>">
 

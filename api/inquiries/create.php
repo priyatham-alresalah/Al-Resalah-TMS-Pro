@@ -1,6 +1,14 @@
 <?php
 require '../../includes/config.php';
+require '../../includes/api_middleware.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+// Initialize API middleware (rate limiting for write endpoints)
+initAPIMiddleware('/inquiries/create');
+
+/* CSRF Protection */
+requireCSRF();
 
 $userId = $_SESSION['user']['id'];
 $role   = $_SESSION['user']['role'];

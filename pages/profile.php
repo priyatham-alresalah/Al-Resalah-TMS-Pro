@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check - Profile accessible to all authenticated users */
+// No specific permission required for profile
 
 // Get user ID from session - this is the source of truth
 $userId = $_SESSION['user']['id'] ?? null;
@@ -139,6 +144,7 @@ if (isset($profile['id']) && $profile['id'] !== $userId) {
 
   <div class="card">
     <form method="post" action="../api/users/update_profile.php" id="profileForm">
+      <?= csrfField() ?>
       <input type="hidden" name="user_id" value="<?= htmlspecialchars($userId) ?>">
 
       <div class="form-group">

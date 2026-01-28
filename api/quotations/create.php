@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -54,6 +55,26 @@ if ($userRole === 'bdm' && $status === 'draft') {
   $status = 'pending_approval';
 }
 
+// Get inquiry to determine branch
+$inquiry = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/inquiries?id=eq.$inquiryId&select=client_id",
+    false,
+    stream_context_create([
+      'http' => [
+        'method' => 'GET',
+        'header' =>
+          "apikey: " . SUPABASE_SERVICE . "\r\n" .
+          "Authorization: Bearer " . SUPABASE_SERVICE
+      ]
+    ])
+  ),
+  true
+);
+
+$clientId = !empty($inquiry) ? ($inquiry[0]['client_id'] ?? null) : null;
+$branchId = getUserBranchId();
+
 $quotationData = [
   'inquiry_id' => $inquiryId,
   'quotation_no' => $quotationNo,
@@ -64,6 +85,11 @@ $quotationData = [
   'status' => $status,
   'created_by' => $userId
 ];
+
+// Add branch_id if user is branch-restricted
+if ($branchId !== null) {
+  $quotationData['branch_id'] = $branchId;
+}
 
 $ctx = stream_context_create([
   'http' => [

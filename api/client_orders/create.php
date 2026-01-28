@@ -4,10 +4,16 @@
  * Links LPO to approved quotation
  */
 require '../../includes/config.php';
+require '../../includes/api_middleware.php';
 require '../../includes/auth_check.php';
 require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
+require '../../includes/file_upload.php';
+
+// Initialize API middleware (rate limiting for write endpoints)
+initAPIMiddleware('/client_orders/create');
 
 /* CSRF Protection */
 requireCSRF();
@@ -55,19 +61,42 @@ if ($quotation['status'] !== 'approved' && $quotation['status'] !== 'accepted') 
   exit;
 }
 
-// Handle file upload if provided
+// Branch isolation: Check if quotation belongs to user's branch
+$branchId = getUserBranchId();
+if ($branchId !== null) {
+  $quotationBranch = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/quotations?id=eq.$quotationId&select=branch_id",
+      false,
+      $ctx
+    ),
+    true
+  );
+
+  if (!empty($quotationBranch) && isset($quotationBranch[0]['branch_id']) && $quotationBranch[0]['branch_id'] !== $branchId) {
+    header('Location: ' . BASE_PATH . '/pages/client_orders.php?error=' . urlencode('Cannot upload LPO: Quotation belongs to another branch'));
+    exit;
+  }
+}
+
+// Handle file upload if provided (with validation)
 $lpoFilePath = null;
 if (!empty($_FILES['lpo_file']['tmp_name'])) {
-  $uploadDir = __DIR__ . '/../../uploads/lpos/';
-  if (!is_dir($uploadDir)) {
-    mkdir($uploadDir, 0755, true);
+  $uploadValidation = validateFileUpload($_FILES['lpo_file']);
+  
+  if (!$uploadValidation['valid']) {
+    header('Location: ' . BASE_PATH . '/pages/client_orders.php?error=' . urlencode($uploadValidation['error']));
+    exit;
   }
   
-  $fileName = 'lpo_' . $quotationId . '_' . time() . '_' . basename($_FILES['lpo_file']['name']);
-  $targetPath = $uploadDir . $fileName;
+  $uploadDir = __DIR__ . '/../../uploads/lpos/';
+  $moveResult = moveUploadedFileSafe($_FILES['lpo_file'], $uploadDir, $uploadValidation['safe_name']);
   
-  if (move_uploaded_file($_FILES['lpo_file']['tmp_name'], $targetPath)) {
-    $lpoFilePath = 'uploads/lpos/' . $fileName;
+  if ($moveResult['success']) {
+    $lpoFilePath = 'uploads/lpos/' . basename($moveResult['path']);
+  } else {
+    header('Location: ' . BASE_PATH . '/pages/client_orders.php?error=' . urlencode($moveResult['error']));
+    exit;
   }
 }
 
@@ -78,6 +107,11 @@ $orderData = [
   'status' => 'pending',
   'lpo_file_path' => $lpoFilePath
 ];
+
+// Add branch_id if user is branch-restricted
+if ($branchId !== null) {
+  $orderData['branch_id'] = $branchId;
+}
 
 $createCtx = stream_context_create([
   'http' => [

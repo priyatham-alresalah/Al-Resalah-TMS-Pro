@@ -1,31 +1,51 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/pagination.php';
+require '../includes/cache.php';
+
+/* RBAC Check */
+requirePermission('inquiries', 'view');
 
 $role = $_SESSION['user']['role'];
 $userId = $_SESSION['user']['id'];
 
 /* ---------------------------
-   FETCH CLIENTS (for map + dropdown)
+   PAGINATION
 ---------------------------- */
-$ctx = stream_context_create([
-  'http' => [
-    'method' => 'GET',
-    'header' =>
-      "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE
-  ]
-]);
+$pagination = getPaginationParams();
+$page = $pagination['page'];
+$limit = $pagination['limit'];
+$offset = $pagination['offset'];
 
-/* Fetch clients - admin sees all, others see only their own */
-$baseUrl = SUPABASE_URL . "/rest/v1/clients?select=id,company_name";
-if ($role !== 'admin') {
-  $baseUrl .= "&created_by=eq.$userId";
+/* ---------------------------
+   FETCH CLIENTS (cached)
+---------------------------- */
+$cacheKey = 'clients_' . ($role === 'admin' ? 'all' : $userId);
+$clients = getCache($cacheKey, 600); // Cache for 10 minutes
+
+if ($clients === null) {
+  $ctx = stream_context_create([
+    'http' => [
+      'method' => 'GET',
+      'header' =>
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE
+    ]
+  ]);
+
+  $baseUrl = SUPABASE_URL . "/rest/v1/clients?select=id,company_name";
+  if ($role !== 'admin') {
+    $baseUrl .= "&created_by=eq.$userId";
+  }
+  $clients = json_decode(
+    @file_get_contents($baseUrl, false, $ctx),
+    true
+  ) ?: [];
+  
+  setCache($cacheKey, $clients);
 }
-$clients = json_decode(
-  file_get_contents($baseUrl, false, $ctx),
-  true
-) ?: [];
 
 $clientMap = [];
 foreach ($clients as $c) {
@@ -33,12 +53,35 @@ foreach ($clients as $c) {
 }
 
 /* ---------------------------
-   FETCH INQUIRIES
+   FETCH INQUIRIES (paginated)
 ---------------------------- */
-$inquiries = json_decode(
-  file_get_contents(SUPABASE_URL . "/rest/v1/inquiries?order=created_at.desc", false, $ctx),
-  true
-) ?: [];
+$ctx = stream_context_create([
+  'http' => [
+    'method' => 'GET',
+    'header' =>
+      "apikey: " . SUPABASE_SERVICE . "\r\n" .
+      "Authorization: Bearer " . SUPABASE_SERVICE . "\r\n" .
+      "Prefer: count=exact"
+  ]
+]);
+
+$inquiriesUrl = SUPABASE_URL . "/rest/v1/inquiries?order=created_at.desc&limit=$limit&offset=$offset";
+$inquiriesResponse = @file_get_contents($inquiriesUrl, false, $ctx);
+
+// Get total count from headers
+$totalCount = 0;
+if ($inquiriesResponse !== false) {
+  $responseHeaders = $http_response_header ?? [];
+  foreach ($responseHeaders as $header) {
+    if (preg_match('/Content-Range:\s*\d+-\d+\/(\d+)/i', $header, $matches)) {
+      $totalCount = intval($matches[1]);
+      break;
+    }
+  }
+}
+
+$inquiries = json_decode($inquiriesResponse, true) ?: [];
+$totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
 ?>
 
 <!DOCTYPE html>
@@ -226,7 +269,12 @@ $inquiries = json_decode(
         </tr>
       <?php endforeach; ?>
     <?php endforeach; else: ?>
-      <tr><td colspan="6">No inquiries found</td></tr>
+      <tr>
+        <td colspan="6" style="text-align: center; padding: 40px; color: #6b7280;">
+          <div style="font-size: 16px; margin-bottom: 8px;">No inquiries found</div>
+          <div style="font-size: 14px;">Create your first inquiry to get started</div>
+        </td>
+      </tr>
     <?php endif; ?>
 
     </tbody>

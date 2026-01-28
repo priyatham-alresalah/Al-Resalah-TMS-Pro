@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -32,6 +33,31 @@ $workflowCheck = canApproveQuotation($quotationId);
 if (!$workflowCheck['allowed'] && $action === 'approve') {
   header('Location: ' . BASE_PATH . '/pages/quotations.php?error=' . urlencode($workflowCheck['reason']));
   exit;
+}
+
+// Branch isolation: Check if quotation belongs to user's branch
+$branchId = getUserBranchId();
+if ($branchId !== null) {
+  $quotation = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/quotations?id=eq.$quotationId&select=branch_id",
+      false,
+      stream_context_create([
+        'http' => [
+          'method' => 'GET',
+          'header' =>
+            "apikey: " . SUPABASE_SERVICE . "\r\n" .
+            "Authorization: Bearer " . SUPABASE_SERVICE
+        ]
+      ])
+    ),
+    true
+  );
+
+  if (!empty($quotation) && isset($quotation[0]['branch_id']) && $quotation[0]['branch_id'] !== $branchId) {
+    http_response_code(403);
+    die('Access denied: Cannot approve quotation from another branch');
+  }
 }
 
 $newStatus = $action === 'approve' ? 'approved' : 'rejected';

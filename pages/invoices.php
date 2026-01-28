@@ -1,35 +1,58 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/pagination.php';
+require '../includes/cache.php';
+
+/* RBAC Check */
+requirePermission('invoices', 'view');
+
+/* PAGINATION */
+$pagination = getPaginationParams();
+$page = $pagination['page'];
+$limit = $pagination['limit'];
+$offset = $pagination['offset'];
 
 $ctx = stream_context_create([
   'http' => [
     'method' => 'GET',
     'header' =>
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE
+      "Authorization: Bearer " . SUPABASE_SERVICE . "\r\n" .
+      "Prefer: count=exact"
   ]
 ]);
 
-/* FETCH INVOICES */
-$invoices = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/invoices?order=created_at.desc",
-    false,
-    $ctx
-  ),
-  true
-);
+/* FETCH INVOICES (paginated) */
+$invoicesUrl = SUPABASE_URL . "/rest/v1/invoices?order=created_at.desc&limit=$limit&offset=$offset";
+$invoicesResponse = @file_get_contents($invoicesUrl, false, $ctx);
 
-/* FETCH CLIENTS */
-$clients = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/clients",
-    false,
-    $ctx
-  ),
-  true
-);
+// Get total count from headers
+$totalCount = 0;
+if ($invoicesResponse !== false) {
+  $responseHeaders = $http_response_header ?? [];
+  foreach ($responseHeaders as $header) {
+    if (preg_match('/Content-Range:\s*\d+-\d+\/(\d+)/i', $header, $matches)) {
+      $totalCount = intval($matches[1]);
+      break;
+    }
+  }
+}
+
+$invoices = json_decode($invoicesResponse, true) ?: [];
+$totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
+
+/* FETCH CLIENTS (cached) */
+$clientsCacheKey = 'clients_all';
+$clients = getCache($clientsCacheKey, 600);
+if ($clients === null) {
+  $clients = json_decode(
+    @file_get_contents(SUPABASE_URL . "/rest/v1/clients?select=id,company_name", false, $ctx),
+    true
+  ) ?: [];
+  setCache($clientsCacheKey, $clients);
+}
 
 $clientMap = [];
 foreach ($clients as $c) {
@@ -107,11 +130,23 @@ foreach ($clients as $c) {
         </td>
       </tr>
     <?php endforeach; else: ?>
-      <tr><td colspan="8">No invoices found</td></tr>
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 40px; color: #6b7280;">
+          <div style="font-size: 16px; margin-bottom: 8px;">No invoices found</div>
+          <div style="font-size: 14px;">Invoices will appear here once created</div>
+        </td>
+      </tr>
     <?php endif; ?>
 
     </tbody>
   </table>
+
+  <?php
+  // Render pagination
+  if ($totalPages > 1) {
+    renderPagination($page, $totalPages);
+  }
+  ?>
 
 <script>
   document.addEventListener('click', function (event) {

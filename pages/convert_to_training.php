@@ -1,6 +1,10 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('trainings', 'create');
 
 $id = $_GET['id'] ?? null;
 if (!$id) die('Invalid inquiry');
@@ -42,6 +46,7 @@ $trainers = json_decode(
   <p class="muted">Schedule training for confirmed inquiry</p>
 
   <form method="post" action="../api/trainings/create_from_inquiry.php">
+    <?= csrfField() ?>
     <input type="hidden" name="inquiry_id" value="<?= $inq['id'] ?>">
     <input type="hidden" name="client_id" value="<?= $inq['client_id'] ?>">
     <input type="hidden" name="course_name" value="<?= htmlspecialchars($inq['course_name']) ?>">

@@ -1,6 +1,7 @@
 <?php
 session_start();
 require '../includes/config.php';
+require '../includes/csrf.php';
 
 if (!isset($_SESSION['client'])) {
   header('Location: login.php');
@@ -85,6 +86,7 @@ $inquiries = json_decode(
 
     <div class="form-card">
       <form method="post" action="../api/inquiries/create_client.php" id="inquiryForm">
+        <?= csrfField() ?>
           <div class="form-group">
             <label>Select Courses *</label>
             <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 15px; background: #f9fafb;">

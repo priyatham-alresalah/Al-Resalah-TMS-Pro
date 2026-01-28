@@ -1,6 +1,10 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('users', 'view');
 
 /* Admin only */
 if ($_SESSION['user']['role'] !== 'admin') {

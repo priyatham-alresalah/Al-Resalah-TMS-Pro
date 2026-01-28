@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('certificates', 'update');
 
 $id = $_GET['id'] ?? '';
 if (!$id) {
@@ -90,6 +95,7 @@ $success = $_GET['success'] ?? '';
 
   <div class="card">
     <form method="post" action="../api/certificates/update.php">
+      <?= csrfField() ?>
       <input type="hidden" name="id" value="<?= $cert['id'] ?>">
       
       <div class="form-group">

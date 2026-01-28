@@ -1,6 +1,10 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+
+/* RBAC Check */
+requirePermission('inquiries', 'view');
 
 $id = $_GET['id'] ?? '';
 if (!$id) die('Inquiry ID missing');

@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('invoices', 'update');
 
 $id = $_GET['id'] ?? '';
 if (!$id) {
@@ -80,6 +85,7 @@ $success = $_GET['success'] ?? '';
 
   <div class="card">
     <form method="post" action="../api/invoices/update.php" id="invoiceForm">
+      <?= csrfField() ?>
       <input type="hidden" name="id" value="<?= $invoice['id'] ?>">
       
       <div class="form-group">

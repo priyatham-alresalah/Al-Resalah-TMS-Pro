@@ -1,6 +1,10 @@
 <?php
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
+require '../../includes/csrf.php';
+
+/* CSRF Protection */
+requireCSRF();
 
 // Try to require quote PDF function, but don't fail if it doesn't exist
 if (file_exists('../../includes/quote_pdf.php')) {

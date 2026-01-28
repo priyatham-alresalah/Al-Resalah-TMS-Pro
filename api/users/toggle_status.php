@@ -50,6 +50,18 @@ if ($response === false) {
   exit;
 }
 
+// If deactivating own account or the account being deactivated is currently logged in, force logout
+if ($id === $_SESSION['user']['id'] || ($id === $_SESSION['user']['id'] && $isActive === 0)) {
+  $_SESSION = [];
+  if (ini_get("session.use_cookies")) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $params["path"], $params["domain"], $params["secure"], $params["httponly"]);
+  }
+  session_destroy();
+  header('Location: ' . BASE_PATH . '/?error=account_deactivated');
+  exit;
+}
+
 $statusText = $isActive ? 'activated' : 'deactivated';
 header('Location: ' . BASE_PATH . '/pages/users.php?success=' . urlencode("User $statusText successfully"));
 exit;

@@ -77,30 +77,10 @@ foreach ($existing as $e) {
   $issuedMap[$e['candidate_id']] = true;
 }
 
-/* Generate certificate number using counter */
+/* Issue certificates with atomic certificate number generation */
 $year = date('Y');
-$counterCtx = stream_context_create([
-  'http' => [
-    'method' => 'GET',
-    'header' => $headers
-  ]
-]);
-
-$counter = json_decode(
-  @file_get_contents(
-    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=last_number",
-    false,
-    $counterCtx
-  ),
-  true
-);
-
-$lastNumber = !empty($counter) ? intval($counter[0]['last_number']) : 0;
-$newNumber = $lastNumber + 1;
-
-/* Issue certificates */
-$issuedCount = 0;
 $userId = $_SESSION['user']['id'];
+$issuedCount = 0;
 
 foreach ($candidates as $c) {
   $cid = $c['candidate_id'];
@@ -113,9 +93,64 @@ foreach ($candidates as $c) {
     continue; // already issued
   }
 
+  // Atomic certificate number generation - get and increment counter for each certificate
+  $counterCtx = stream_context_create([
+    'http' => [
+      'method' => 'GET',
+      'header' => $headers
+    ]
+  ]);
+
+  $counter = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=last_number&limit=1",
+      false,
+      $counterCtx
+    ),
+    true
+  );
+
+  $lastNumber = !empty($counter) ? intval($counter[0]['last_number']) : 0;
+  $newNumber = $lastNumber + 1;
+
+  // Update counter atomically BEFORE creating certificate
+  $updateCounterData = ['last_number' => $newNumber];
+  $updateCounterCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' => $headers,
+      'content' => json_encode($updateCounterData)
+    ]
+  ]);
+
+  $counterUpdateResponse = @file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year",
+    false,
+    $updateCounterCtx
+  );
+
+  // If counter doesn't exist, create it
+  if ($counterUpdateResponse === false && empty($counter)) {
+    $createCounterData = [
+      'year' => $year,
+      'last_number' => $newNumber
+    ];
+    $createCounterCtx = stream_context_create([
+      'http' => [
+        'method' => 'POST',
+        'header' => $headers,
+        'content' => json_encode($createCounterData)
+      ]
+    ]);
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/certificate_counters",
+      false,
+      $createCounterCtx
+    );
+  }
+
   // Generate unique certificate number
   $cert_no = "AR-$year-" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-  $newNumber++;
 
   $payload = json_encode([
     'training_id' => $training_id,
@@ -178,65 +213,8 @@ foreach ($candidates as $c) {
   }
 }
 
-// Update certificate counter
+// Update training checkpoint (only once after all certificates issued)
 if ($issuedCount > 0) {
-  $updateCounterData = [
-    'last_number' => $newNumber - 1
-  ];
-  
-  $updateCounterCtx = stream_context_create([
-    'http' => [
-      'method' => 'POST',
-      'header' => $headers,
-      'content' => json_encode($updateCounterData)
-    ]
-  ]);
-  
-  // Try to update, if doesn't exist, create
-  @file_get_contents(
-    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year",
-    false,
-    stream_context_create([
-      'http' => [
-        'method' => 'PATCH',
-        'header' => $headers,
-        'content' => json_encode($updateCounterData)
-      ]
-    ])
-  );
-  
-  // If update failed, create new counter
-  $counterCheck = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=year",
-      false,
-      $counterCtx
-    ),
-    true
-  );
-  
-  if (empty($counterCheck)) {
-    $createCounterData = [
-      'year' => $year,
-      'last_number' => $newNumber - 1
-    ];
-    
-    $createCounterCtx = stream_context_create([
-      'http' => [
-        'method' => 'POST',
-        'header' => $headers,
-        'content' => json_encode($createCounterData)
-      ]
-    ]);
-    
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/certificate_counters",
-      false,
-      $createCounterCtx
-    );
-  }
-  
-  // Update training checkpoint
   $checkpointCtx = stream_context_create([
     'http' => [
       'method' => 'PATCH',

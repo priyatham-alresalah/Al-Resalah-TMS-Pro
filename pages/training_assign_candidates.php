@@ -1,6 +1,11 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/rbac.php';
+require '../includes/csrf.php';
+
+/* RBAC Check */
+requirePermission('trainings', 'update');
 
 $training_id = $_GET['id'] ?? '';
 if (!$training_id) die('Missing training ID');
@@ -63,6 +68,7 @@ $assigned_ids = array_column($assigned, 'candidate_id');
   <p class="muted">Select candidates attending this training</p>
 
   <form method="post" action="../api/trainings/assign_candidates.php">
+    <?= csrfField() ?>
     <input type="hidden" name="training_id" value="<?= $training_id ?>">
 
     <table class="table">

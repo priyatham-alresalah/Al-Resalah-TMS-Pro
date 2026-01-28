@@ -1,10 +1,14 @@
 <?php
 session_start();
 require '../../includes/config.php';
+require '../../includes/csrf.php';
 
 if (!isset($_SESSION['candidate'])) {
   die('Access denied');
 }
+
+/* CSRF Protection */
+requireCSRF();
 
 $candidate = $_SESSION['candidate'];
 $clientId = $candidate['client_id'] ?? null;
