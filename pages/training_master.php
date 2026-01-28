@@ -32,7 +32,7 @@ $courses = json_decode(
 <html>
 <head>
   <title>Training Master</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 
@@ -44,6 +44,18 @@ $courses = json_decode(
   <p style="margin-bottom:15px;color:#6b7280;">
     Manage training courses used across the system
   </p>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
 
   <!-- ADD COURSE -->
   <form method="post"

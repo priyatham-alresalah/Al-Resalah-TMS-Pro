@@ -75,23 +75,62 @@ if (!$userId) {
   exit;
 }
 
-/* Update profiles table with email */
-$updateCtx = stream_context_create([
+/* Ensure profile exists - create if it doesn't, update if it does */
+$checkCtx = stream_context_create([
   'http' => [
-    'method' => 'PATCH',
+    'method' => 'GET',
     'header' =>
-      "Content-Type: application/json\r\n" .
       "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => json_encode(['email' => $email])
+      "Authorization: Bearer " . SUPABASE_SERVICE
   ]
 ]);
 
-@file_get_contents(
-  SUPABASE_URL . "/rest/v1/profiles?id=eq.$userId",
-  false,
-  $updateCtx
+$existingProfile = json_decode(
+  @file_get_contents(SUPABASE_URL . "/rest/v1/profiles?id=eq.$userId&select=id", false, $checkCtx),
+  true
 );
+
+if (empty($existingProfile)) {
+  // Profile doesn't exist, create it
+  $profileData = [
+    'id' => $userId,
+    'full_name' => $fullName,
+    'email' => $email,
+    'role' => strtolower($role),
+    'is_active' => true
+  ];
+  
+  $createProfileCtx = stream_context_create([
+    'http' => [
+      'method' => 'POST',
+      'header' =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode($profileData)
+    ]
+  ]);
+  
+  @file_get_contents(SUPABASE_URL . "/rest/v1/profiles", false, $createProfileCtx);
+} else {
+  // Profile exists, update email
+  $updateCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode(['email' => $email])
+    ]
+  ]);
+  
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/profiles?id=eq.$userId",
+    false,
+    $updateCtx
+  );
+}
 
 header('Location: ' . BASE_PATH . '/pages/users.php?success=' . urlencode('User created successfully'));
 exit;

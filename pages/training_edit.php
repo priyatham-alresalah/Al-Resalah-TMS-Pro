@@ -42,7 +42,7 @@ $locked = in_array($training['status'], ['completed','cancelled']);
 <html>
 <head>
   <title>Edit Training</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

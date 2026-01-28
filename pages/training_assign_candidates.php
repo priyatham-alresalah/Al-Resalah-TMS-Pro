@@ -51,7 +51,7 @@ $assigned_ids = array_column($assigned, 'candidate_id');
 <html>
 <head>
   <title>Assign Candidates</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

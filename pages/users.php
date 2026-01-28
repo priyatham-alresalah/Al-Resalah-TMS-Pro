@@ -17,17 +17,35 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$usersResponse = @file_get_contents(
-  SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,is_active,created_at&order=created_at.desc",
-  false,
-  $ctx
-);
+// Fetch all users from profiles table
+// Note: Using service role key bypasses RLS, so we should get all records
+$usersUrl = SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role,is_active,created_at&order=created_at.desc";
+
+$usersResponse = @file_get_contents($usersUrl, false, $ctx);
 
 if ($usersResponse === false) {
-  error_log("Failed to fetch users from Supabase");
+  $error = error_get_last();
+  error_log("Failed to fetch users from Supabase. URL: " . $usersUrl . " Error: " . ($error['message'] ?? 'Unknown'));
   $users = [];
 } else {
-  $users = json_decode($usersResponse, true) ?: [];
+  $users = json_decode($usersResponse, true);
+  
+  // Handle JSON decode errors
+  if (json_last_error() !== JSON_ERROR_NONE) {
+    error_log("JSON decode error in users.php: " . json_last_error_msg() . " Response: " . substr($usersResponse, 0, 500));
+    $users = [];
+  } else {
+    $users = $users ?: [];
+  }
+  
+  // Debug logging
+  error_log("Users fetched: " . count($users) . " users found");
+  
+  // Additional debug: log user IDs
+  if (!empty($users)) {
+    $userIds = array_column($users, 'id');
+    error_log("User IDs: " . implode(', ', array_slice($userIds, 0, 10)));
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -47,7 +65,10 @@ if ($usersResponse === false) {
       <h2>Users</h2>
       <p class="muted">Manage system users and access</p>
     </div>
-    <a href="user_create.php" class="btn">+ Create User</a>
+    <div style="display:flex;gap:10px;">
+      <a href="../api/users/sync_profiles.php" class="btn" style="background:#6366f1;" onclick="return confirm('This will sync all users from Supabase Auth to profiles table. Continue?')">🔄 Sync Users</a>
+      <a href="user_create.php" class="btn">+ Create User</a>
+    </div>
   </div>
 
   <?php if (isset($_GET['success'])): ?>
@@ -59,6 +80,32 @@ if ($usersResponse === false) {
   <?php if (isset($_GET['error'])): ?>
     <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
       <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php 
+  // Filter valid users (those with IDs) and re-index array
+  $validUsers = array_values(array_filter($users, function($u) {
+    return !empty($u['id']) && isset($u['id']);
+  }));
+  $validCount = count($validUsers);
+  
+  // Debug logging
+  error_log("Users page - Total fetched: " . count($users) . ", Valid: " . $validCount);
+  if ($validCount > 0) {
+    error_log("Valid users: " . implode(', ', array_column($validUsers, 'id')));
+  }
+  ?>
+  
+  <?php if ($validCount > 0): ?>
+    <div style="background: #f3f4f6; color: #374151; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 14px;">
+      Showing <strong><?= $validCount ?></strong> user(s) from profiles table.
+      <?php if (count($users) > $validCount): ?>
+        <span style="color: #dc2626;">⚠️ <?= count($users) - $validCount ?> user(s) skipped due to missing data.</span>
+      <?php endif; ?>
+      <?php if ($validCount < 10): ?>
+        <span style="color: #dc2626;">⚠️ Some users may be missing. Click "Sync Users" to sync from Supabase Auth.</span>
+      <?php endif; ?>
     </div>
   <?php endif; ?>
 
@@ -75,38 +122,45 @@ if ($usersResponse === false) {
     </thead>
     <tbody>
 
-    <?php if (!empty($users)): foreach ($users as $u): ?>
+    <?php if (!empty($validUsers)): 
+      foreach ($validUsers as $u): 
+        $fullName = trim($u['full_name'] ?? '') ?: '-';
+        $email = trim($u['email'] ?? '') ?: '-';
+        $role = trim($u['role'] ?? '') ?: 'user';
+        $isActive = isset($u['is_active']) ? (bool)$u['is_active'] : true;
+        $createdAt = $u['created_at'] ?? null;
+    ?>
       <tr>
-        <td><?= htmlspecialchars($u['full_name']) ?></td>
-        <td style="font-size:12px;color:#6b7280;"><?= htmlspecialchars($u['email'] ?? '-') ?></td>
-        <td><?= ucfirst($u['role']) ?></td>
+        <td><?= htmlspecialchars($fullName) ?></td>
+        <td style="font-size:12px;color:#6b7280;"><?= htmlspecialchars($email) ?></td>
+        <td><?= ucfirst($role) ?></td>
         <td>
-          <?= $u['is_active']
+          <?= $isActive
             ? '<span class="badge-success">Active</span>'
             : '<span class="badge-danger">Inactive</span>' ?>
         </td>
-        <td><?= date('d M Y', strtotime($u['created_at'])) ?></td>
+        <td><?= $createdAt ? date('d M Y', strtotime($createdAt)) : '-' ?></td>
         <td class="col-actions">
           <div class="action-menu-wrapper">
             <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">
               &#8942;
             </button>
             <div class="action-menu">
-              <a href="user_edit.php?id=<?= $u['id'] ?>">Edit</a>
+              <a href="user_edit.php?id=<?= htmlspecialchars($u['id']) ?>">Edit</a>
 
-              <form action="../api/users/toggle_status.php" method="post">
+              <form action="../api/users/toggle_status.php" method="post" style="margin: 0;">
                 <?php require '../includes/csrf.php'; echo csrfField(); ?>
-                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                <input type="hidden" name="is_active" value="<?= $u['is_active'] ? 0 : 1 ?>">
-                <button type="submit" class="danger">
-                  <?= $u['is_active'] ? 'Deactivate' : 'Activate' ?>
+                <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
+                <input type="hidden" name="is_active" value="<?= $isActive ? 0 : 1 ?>">
+                <button type="submit" class="danger" style="width: 100%; text-align: left; background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: #dc2626;">
+                  <?= $isActive ? 'Deactivate' : 'Activate' ?>
                 </button>
               </form>
 
-              <form action="../api/users/reset_password.php" method="post">
+              <form action="../api/users/reset_password.php" method="post" style="margin: 0;">
                 <?php require '../includes/csrf.php'; echo csrfField(); ?>
-                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                <button type="submit" class="danger">
+                <input type="hidden" name="user_id" value="<?= htmlspecialchars($u['id']) ?>">
+                <button type="submit" class="danger" style="width: 100%; text-align: left; background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: #dc2626;">
                   Reset Password
                 </button>
               </form>
@@ -116,7 +170,31 @@ if ($usersResponse === false) {
       </tr>
     <?php endforeach; else: ?>
       <tr>
-        <td colspan="6">No users found</td>
+        <td colspan="6">
+          <div style="padding: 20px; text-align: center;">
+            <p>No users found</p>
+            <?php if (count($users) > 0): ?>
+              <p style="color: #dc2626; font-size: 12px;">
+                Note: <?= count($users) ?> user(s) were fetched but filtered out (missing IDs or invalid data).
+                <br>Check PHP error logs for details.
+              </p>
+            <?php endif; ?>
+          </div>
+        </td>
+      </tr>
+    <?php endif; ?>
+    
+    <?php 
+    // Debug: Show raw data if in development
+    if (defined('BASE_PATH') && BASE_PATH === '/training-management-system' && isset($_GET['debug'])): 
+    ?>
+      <tr>
+        <td colspan="6" style="background:#fef3c7;padding:20px;">
+          <strong>Debug Info:</strong><br>
+          Total users fetched: <?= count($users) ?><br>
+          Valid users: <?= $validCount ?><br>
+          <pre><?= htmlspecialchars(print_r($users, true)) ?></pre>
+        </td>
       </tr>
     <?php endif; ?>
 

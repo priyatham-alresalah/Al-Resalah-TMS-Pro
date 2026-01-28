@@ -38,7 +38,7 @@ if ($role !== 'admin' && ($client['created_by'] ?? null) !== $userId) {
 <html>
 <head>
   <title>Edit Client</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

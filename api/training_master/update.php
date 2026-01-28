@@ -21,11 +21,17 @@ $ctx = stream_context_create([
   ]
 ]);
 
-file_get_contents(
+$response = @file_get_contents(
   SUPABASE_URL . "/rest/v1/training_master?id=eq.$id",
   false,
   $ctx
 );
 
-header('Location: ' . BASE_PATH . '/pages/training_master.php');
+if ($response === false) {
+  error_log("Failed to update training master course");
+  header('Location: ' . BASE_PATH . '/pages/training_master.php?error=' . urlencode('Failed to update course. Please try again.'));
+  exit;
+}
+
+header('Location: ' . BASE_PATH . '/pages/training_master.php?success=' . urlencode('Course updated successfully'));
 exit;

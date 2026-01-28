@@ -20,7 +20,11 @@ if (session_status() === PHP_SESSION_NONE) {
 */
 // PRODUCTION: Set to '' for subdomain root
 // DEVELOPMENT: Set to '/training-management-system' for localhost
-define('BASE_PATH', '');
+// Auto-detect: Check if running on localhost
+$isLocalhost = ($_SERVER['HTTP_HOST'] ?? '') === 'localhost' || 
+               strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
+               strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false;
+define('BASE_PATH', $isLocalhost ? '/training-management-system' : '');
 
 /* =========================
    SUPABASE CONFIG

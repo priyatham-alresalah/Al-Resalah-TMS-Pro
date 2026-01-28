@@ -30,7 +30,7 @@ $trainers = json_decode(
 <html>
 <head>
   <title>Convert Inquiry → Training</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

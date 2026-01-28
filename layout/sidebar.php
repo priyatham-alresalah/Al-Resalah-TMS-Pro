@@ -46,6 +46,12 @@ if ($isInPages) {
           <span class="icon">🧑‍🎓</span> Candidates
         </a>
       </li>
+
+      <li>
+        <a href="<?= $basePath ?>training_master.php" class="<?= ($current=='training_master.php' && $isInPages)?'active':'' ?>">
+          <span class="icon">📚</span> Training Master
+        </a>
+      </li>
     <?php endif; ?>
 
     <!-- OPERATIONS -->
@@ -55,6 +61,18 @@ if ($isInPages) {
       <li>
         <a href="<?= $basePath ?>inquiries.php" class="<?= ($current=='inquiries.php' && $isInPages)?'active':'' ?>">
           <span class="icon">📩</span> Inquiries
+        </a>
+      </li>
+
+      <li>
+        <a href="<?= $basePath ?>quotations.php" class="<?= ($current=='quotations.php' && $isInPages)?'active':'' ?>">
+          <span class="icon">📋</span> Quotations
+        </a>
+      </li>
+
+      <li>
+        <a href="<?= $basePath ?>client_orders.php" class="<?= ($current=='client_orders.php' && $isInPages)?'active':'' ?>">
+          <span class="icon">📄</span> Client Orders (LPO)
         </a>
       </li>
 
@@ -83,6 +101,12 @@ if ($isInPages) {
       <li>
         <a href="<?= $basePath ?>invoices.php" class="<?= ($current=='invoices.php' && $isInPages)?'active':'' ?>">
           <span class="icon">💰</span> Invoices
+        </a>
+      </li>
+
+      <li>
+        <a href="<?= $basePath ?>payments.php" class="<?= ($current=='payments.php' && $isInPages)?'active':'' ?>">
+          <span class="icon">💳</span> Payments
         </a>
       </li>
     <?php endif; ?>

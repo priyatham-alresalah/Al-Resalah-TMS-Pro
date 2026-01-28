@@ -9,7 +9,7 @@ $training_id = $_GET['training_id'] ?? '';
 <html>
 <head>
   <title>Generate Certificate</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

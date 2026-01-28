@@ -32,7 +32,7 @@ $c = $data[0];
 <html>
 <head>
   <title>View Certificate</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

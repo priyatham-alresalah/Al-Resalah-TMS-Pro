@@ -27,7 +27,7 @@ $inq = json_decode(
 <html>
 <head>
   <title>Edit Inquiry</title>
-  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
 

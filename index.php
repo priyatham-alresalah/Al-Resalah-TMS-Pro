@@ -19,7 +19,7 @@ $error = $_GET['error'] ?? '';
 
   <!-- SINGLE GLOBAL CSS -->
   <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
 </head>
 
 <body>

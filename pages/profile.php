@@ -2,7 +2,20 @@
 require '../includes/config.php';
 require '../includes/auth_check.php';
 
-$userId = $_SESSION['user']['id'];
+// Get user ID from session - this is the source of truth
+$userId = $_SESSION['user']['id'] ?? null;
+$userEmail = $_SESSION['user']['email'] ?? null;
+$userName = $_SESSION['user']['name'] ?? null;
+$userRole = $_SESSION['user']['role'] ?? null;
+
+if (!$userId) {
+  header('Location: dashboard.php?error=' . urlencode('Session expired. Please login again.'));
+  exit;
+}
+
+// Log for debugging
+error_log("Profile page accessed - Session User ID: $userId, Email: $userEmail, Name: $userName");
+
 $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
 
@@ -16,18 +29,58 @@ $ctx = stream_context_create([
   ]
 ]);
 
-$profile = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/profiles?id=eq.$userId&select=id,full_name,email",
-    false,
-    $ctx
-  ),
-  true
-)[0] ?? null;
+// Start with session data (most reliable - set during login)
+$profile = [
+  'id' => $userId,
+  'full_name' => $userName ?: 'User',
+  'email' => $userEmail ?: '',
+  'role' => $userRole
+];
 
-if (!$profile) {
-  header('Location: dashboard.php?error=' . urlencode('Profile not found'));
-  exit;
+// Try to fetch updated email from database (email might have changed)
+// URL encode the user ID to prevent injection
+$encodedUserId = rawurlencode($userId);
+$profileUrl = SUPABASE_URL . "/rest/v1/profiles?id=eq.$encodedUserId&select=id,full_name,email,role&limit=1";
+
+$profileResponse = @file_get_contents($profileUrl, false, $ctx);
+
+if ($profileResponse !== false) {
+  $profiles = json_decode($profileResponse, true);
+  
+  if (json_last_error() === JSON_ERROR_NONE && is_array($profiles) && !empty($profiles)) {
+    $dbProfile = $profiles[0];
+    $dbProfileId = $dbProfile['id'] ?? null;
+    
+    // Only use database data if ID matches exactly
+    if ($dbProfileId === $userId) {
+      // Update email and full_name from database (in case they were updated)
+      if (!empty($dbProfile['email'])) {
+        $profile['email'] = $dbProfile['email'];
+      }
+      if (!empty($dbProfile['full_name'])) {
+        $profile['full_name'] = $dbProfile['full_name'];
+      }
+      if (!empty($dbProfile['role'])) {
+        $profile['role'] = $dbProfile['role'];
+      }
+      error_log("Profile data updated from database for user ID: $userId");
+    } else {
+      error_log("WARNING: Database profile ID ($dbProfileId) doesn't match session user ID ($userId). Using session data.");
+    }
+  }
+} else {
+  error_log("Could not fetch profile from database for user ID: $userId. Using session data.");
+}
+
+// Final check - ensure we never use wrong user's data
+if (isset($profile['id']) && $profile['id'] !== $userId) {
+  error_log("CRITICAL: Profile ID mismatch detected! Resetting to session data.");
+  $profile = [
+    'id' => $userId,
+    'full_name' => $userName ?: 'User',
+    'email' => $userEmail ?: '',
+    'role' => $userRole
+  ];
 }
 ?>
 
@@ -68,19 +121,38 @@ if (!$profile) {
     </div>
   <?php endif; ?>
 
+  <?php 
+  // Debug info (remove in production)
+  if (defined('BASE_PATH') && BASE_PATH === '/training-management-system' && isset($_GET['debug'])): 
+  ?>
+    <div style="background: #fef3c7; color: #92400e; padding: 15px; border-radius: 6px; margin-bottom: 20px; font-family: monospace; font-size: 12px;">
+      <strong>Debug Info:</strong><br>
+      Session User ID: <?= htmlspecialchars($userId) ?><br>
+      Session Email: <?= htmlspecialchars($userEmail ?? 'N/A') ?><br>
+      Session Name: <?= htmlspecialchars($userName ?? 'N/A') ?><br>
+      Profile ID: <?= htmlspecialchars($profile['id'] ?? 'N/A') ?><br>
+      Profile Email: <?= htmlspecialchars($profile['email'] ?? 'N/A') ?><br>
+      Profile Name: <?= htmlspecialchars($profile['full_name'] ?? 'N/A') ?><br>
+      Match: <?= ($profile['id'] ?? null) === $userId ? '✓ YES' : '✗ NO - MISMATCH!' ?>
+    </div>
+  <?php endif; ?>
+
   <div class="card">
     <form method="post" action="../api/users/update_profile.php" id="profileForm">
       <input type="hidden" name="user_id" value="<?= htmlspecialchars($userId) ?>">
 
       <div class="form-group">
         <label>Email</label>
-        <input type="email" value="<?= htmlspecialchars($profile['email']) ?>" disabled style="background: #f3f4f6; cursor: not-allowed;">
+        <input type="email" value="<?= htmlspecialchars($profile['email'] ?? $userEmail ?? '') ?>" disabled style="background: #f3f4f6; cursor: not-allowed;">
         <small style="color: #6b7280; display: block; margin-top: 4px;">Email cannot be changed</small>
+        <?php if (isset($profile['id']) && $profile['id'] !== $userId): ?>
+          <small style="color: #dc2626; display: block; margin-top: 4px;">⚠️ Warning: Profile ID mismatch detected!</small>
+        <?php endif; ?>
       </div>
 
       <div class="form-group">
         <label>Full Name *</label>
-        <input type="text" name="full_name" value="<?= htmlspecialchars($profile['full_name']) ?>" required>
+        <input type="text" name="full_name" value="<?= htmlspecialchars($profile['full_name'] ?? $userName ?? '') ?>" required>
       </div>
 
       <div class="form-group">
