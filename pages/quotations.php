@@ -53,6 +53,8 @@ foreach ($inquiries as $inq) {
 <head>
   <title>Quotations</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 

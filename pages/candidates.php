@@ -57,6 +57,8 @@ if ($candidatesResponse === false) {
 <head>
   <title>Candidates</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="/training-management-system/favicon.ico">
 </head>
 <body>

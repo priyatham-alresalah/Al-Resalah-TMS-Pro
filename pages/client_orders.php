@@ -45,7 +45,9 @@ $quotations = json_decode(
 <head>
   <title>Client Orders (LPO)</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
   <link rel="icon" href="/training-management-system/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 

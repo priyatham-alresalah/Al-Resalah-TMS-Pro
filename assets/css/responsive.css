@@ -1,0 +1,537 @@
+/**
+ * Responsive Styles for Training Management System
+ * Mobile-first approach with desktop preservation
+ */
+
+/* =========================================================
+   BREAKPOINTS
+========================================================= */
+/* Mobile: max-width 576px */
+/* Tablet: max-width 768px */
+/* Desktop: 769px+ */
+
+/* =========================================================
+   MOBILE: HEADER & SIDEBAR DRAWER
+========================================================= */
+@media (max-width: 768px) {
+  /* Hamburger menu button */
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    margin-right: 10px;
+  }
+
+  .mobile-menu-toggle:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .mobile-menu-toggle:hover {
+    opacity: 0.8;
+  }
+
+  /* Hide sidebar by default on mobile */
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: -220px;
+    width: 220px;
+    height: calc(100vh - 60px);
+    transition: left 0.3s ease;
+    z-index: 999;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Show sidebar when drawer is open */
+  .sidebar.drawer-open {
+    left: 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Overlay when drawer is open */
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+  }
+
+  .drawer-overlay.active {
+    display: block;
+  }
+
+  /* Content full width on mobile */
+  .content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  /* Header adjustments */
+  .header-left span {
+    display: none; /* Hide company name on mobile */
+  }
+
+  .header-right {
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .header-right a {
+    padding: 8px 12px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* =========================================================
+   MOBILE: TABLES → CARDS
+========================================================= */
+@media (max-width: 768px) {
+  /* Hide table on mobile */
+  .table {
+    display: none;
+  }
+
+  /* Show card container */
+  .mobile-cards {
+    display: block;
+  }
+
+  /* Card styling */
+  .mobile-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .mobile-card-title {
+    font-weight: 600;
+    font-size: 16px;
+    color: #111827;
+    flex: 1;
+  }
+
+  .mobile-card-badge {
+    margin-left: 8px;
+  }
+
+  .mobile-card-field {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+  }
+
+  .mobile-card-label {
+    color: #6b7280;
+    font-weight: 500;
+    min-width: 100px;
+  }
+
+  .mobile-card-value {
+    color: #111827;
+    text-align: right;
+    flex: 1;
+  }
+
+  .mobile-card-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mobile-card-actions .btn {
+    width: 100%;
+    padding: 12px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
+/* Desktop: Hide mobile cards, show table */
+@media (min-width: 769px) {
+  .mobile-cards {
+    display: none;
+  }
+
+  .mobile-menu-toggle {
+    display: none;
+  }
+
+  .drawer-overlay {
+    display: none !important;
+  }
+}
+
+/* =========================================================
+   MOBILE: FORMS
+========================================================= */
+@media (max-width: 768px) {
+  /* Single column forms */
+  .form-inline {
+    flex-direction: column;
+  }
+
+  .form-inline > * {
+    width: 100%;
+  }
+
+  /* Full width inputs */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    width: 100% !important;
+    padding: 12px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  /* Form groups */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  /* Form card */
+  .form-card {
+    padding: 20px 15px;
+  }
+
+  /* Sticky submit button */
+  .form-actions-sticky {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 12px 15px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  .form-actions-sticky .btn {
+    width: 100%;
+    padding: 14px;
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Add padding to content when sticky button is present */
+  .content.has-sticky-form {
+    padding-bottom: 80px;
+  }
+
+  /* Checkbox and radio spacing */
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-width: 44px;
+    min-height: 44px;
+    margin-right: 8px;
+  }
+
+  /* Label spacing */
+  label {
+    margin-bottom: 8px;
+    display: block;
+  }
+}
+
+/* =========================================================
+   MOBILE: BUTTONS & ACTIONS
+========================================================= */
+@media (max-width: 768px) {
+  /* Larger buttons */
+  .btn {
+    min-height: 44px;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+
+  /* Icon + label buttons */
+  .btn-icon-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Stack action buttons */
+  .action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+  }
+
+  /* Page header actions */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .page-header .actions {
+    width: 100%;
+  }
+
+  .page-header .actions .btn {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   MOBILE: DASHBOARD
+========================================================= */
+@media (max-width: 768px) {
+  /* Stack dashboard cards */
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-card {
+    margin-bottom: 15px;
+  }
+
+  /* Hide non-essential charts on mobile */
+  .dashboard-chart {
+    display: none;
+  }
+
+  /* KPI cards */
+  .kpi-card {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .kpi-value {
+    font-size: 24px;
+  }
+
+  .kpi-label {
+    font-size: 13px;
+  }
+}
+
+/* =========================================================
+   MOBILE: GENERAL UX
+========================================================= */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Safe spacing */
+  .content {
+    padding: 15px;
+  }
+
+  /* Larger tap targets */
+  a, button, input[type="submit"], input[type="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Auth card mobile */
+  .auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 25px 20px;
+  }
+
+  .auth-container {
+    padding: 15px;
+  }
+
+  /* Empty states */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6b7280;
+  }
+
+  .empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .empty-state-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #111827;
+  }
+
+  .empty-state-message {
+    font-size: 14px;
+  }
+}
+
+  /* Pagination mobile */
+  .pagination {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .pagination > div {
+    width: 100%;
+    text-align: center;
+  }
+
+  .pagination .btn {
+    min-width: 44px;
+    padding: 10px 14px;
+  }
+
+  /* Table card wrapper */
+  .table-card {
+    overflow-x: visible;
+  }
+
+  /* Action menu mobile */
+  .action-menu-wrapper {
+    position: relative;
+  }
+
+  .action-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    min-width: 150px;
+  }
+
+  /* Page header mobile */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .page-header h2 {
+    font-size: 20px;
+  }
+
+  .page-header .muted {
+    font-size: 13px;
+  }
+
+  /* Modal mobile */
+  .modal,
+  #trainerModal,
+  #candidateModal {
+    padding: 20px 15px;
+  }
+
+  .modal > div,
+  #trainerModal > div,
+  #candidateModal > div {
+    width: 95%;
+    max-width: none;
+    padding: 20px;
+  }
+
+  /* Sidebar menu items - larger tap targets on mobile */
+  .sidebar a {
+    min-height: 44px;
+    padding: 14px 20px;
+  }
+
+  .sidebar .menu-title {
+    padding: 16px 20px 8px;
+    font-size: 12px;
+    min-height: auto;
+    color: #9ca3af;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* =========================================================
+   TABLET: ADJUSTMENTS
+========================================================= */
+@media (min-width: 577px) and (max-width: 768px) {
+  .content {
+    padding: 20px;
+  }
+
+  .mobile-card {
+    padding: 20px;
+  }
+}
+
+/* =========================================================
+   UTILITY CLASSES
+========================================================= */
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Prevent layout jumps */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Safe touch targets */
+@media (max-width: 768px) {
+  .btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

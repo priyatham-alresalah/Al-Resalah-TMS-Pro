@@ -156,7 +156,9 @@ if (!empty($trainingIds)) {
 <head>
   <title>Trainings</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
   <link rel="icon" href="/training-management-system/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -333,6 +335,78 @@ endforeach; else: ?>
 
   </tbody>
 </table>
+
+<!-- Mobile Cards -->
+<div class="mobile-cards">
+  <?php if ($trainings): foreach ($trainings as $t): 
+    $trainingCandidates = $trainingCandidatesMap[$t['id']] ?? [];
+    $hasClient = !empty($t['client_id']) && isset($clientMap[$t['client_id']]);
+    $status = strtolower($t['status'] ?? 'scheduled');
+    $badgeClass = 'badge-info';
+    if ($status === 'completed') $badgeClass = 'badge-success';
+    elseif ($status === 'cancelled') $badgeClass = 'badge-danger';
+  ?>
+    <div class="mobile-card">
+      <div class="mobile-card-header">
+        <div class="mobile-card-title">
+          <?php if ($hasClient): ?>
+            <?= htmlspecialchars($clientMap[$t['client_id']]) ?>
+          <?php else: ?>
+            <span style="color: #6b7280; font-style: italic;">Individual</span>
+          <?php endif; ?>
+        </div>
+        <span class="badge <?= $badgeClass ?> mobile-card-badge">
+          <?= strtoupper($status) ?>
+        </span>
+      </div>
+      <div class="mobile-card-field">
+        <span class="mobile-card-label">Course:</span>
+        <span class="mobile-card-value"><?= htmlspecialchars($t['course_name'] ?? '-') ?></span>
+      </div>
+      <?php if (!empty($t['trainer_id']) && isset($trainerMap[$t['trainer_id']])): ?>
+      <div class="mobile-card-field">
+        <span class="mobile-card-label">Trainer:</span>
+        <span class="mobile-card-value"><?= htmlspecialchars($trainerMap[$t['trainer_id']]) ?></span>
+      </div>
+      <?php endif; ?>
+      <div class="mobile-card-field">
+        <span class="mobile-card-label">Date:</span>
+        <span class="mobile-card-value"><?= $t['training_date'] ? date('d M Y', strtotime($t['training_date'])) : '-' ?></span>
+      </div>
+      <?php if (!empty($t['training_time'])): ?>
+      <div class="mobile-card-field">
+        <span class="mobile-card-label">Time:</span>
+        <span class="mobile-card-value"><?= htmlspecialchars($t['training_time']) ?></span>
+      </div>
+      <?php endif; ?>
+      <?php if (!empty($trainingCandidates)): ?>
+      <div class="mobile-card-field">
+        <span class="mobile-card-label">Candidates:</span>
+        <span class="mobile-card-value"><?= count($trainingCandidates) ?> assigned</span>
+      </div>
+      <?php endif; ?>
+      <div class="mobile-card-actions">
+        <a href="training_edit.php?id=<?= $t['id'] ?>" class="btn">View / Edit</a>
+        <?php if ($t['status'] === 'scheduled'): ?>
+          <form method="post" action="../api/trainings/update.php" style="margin: 0;">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <input type="hidden" name="status" value="completed">
+            <button type="submit" class="btn">Complete</button>
+          </form>
+        <?php endif; ?>
+        <?php if ($t['status'] === 'completed'): ?>
+          <a href="issue_certificates.php?training_id=<?= $t['id'] ?>" class="btn">Issue Certificates</a>
+        <?php endif; ?>
+      </div>
+    </div>
+  <?php endforeach; else: ?>
+    <div class="empty-state">
+      <div class="empty-state-icon">🎓</div>
+      <div class="empty-state-title">No trainings found</div>
+      <div class="empty-state-message">Create your first training to get started</div>
+    </div>
+  <?php endif; ?>
+</div>
 
 <?php
 // Render pagination

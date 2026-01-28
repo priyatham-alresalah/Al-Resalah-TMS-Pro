@@ -89,7 +89,9 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
 <head>
   <title>Inquiries</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
   <link rel="icon" href="/training-management-system/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -280,6 +282,7 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
     </tbody>
   </table>
 
+<script src="<?= BASE_PATH ?>/assets/js/mobile.js"></script>
 <script>
   function toggleClientInquiries(rowId) {
     const rows = document.querySelectorAll('.client-detail-' + rowId);

@@ -2,3 +2,4 @@
   © <?= date('Y') ?> Al Resalah Consultancies & Training
 </footer>
 <script src="<?= BASE_PATH ?>/assets/js/performance.js"></script>
+<script src="<?= BASE_PATH ?>/assets/js/mobile.js"></script>

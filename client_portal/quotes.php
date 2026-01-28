@@ -132,6 +132,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
   <title>Client Portal - Quotes</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
   <?php $portalNavActive = 'quotes'; include '../layout/portal_header.php'; ?>

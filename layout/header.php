@@ -1,5 +1,6 @@
 <header class="main-header">
   <div class="header-left">
+    <button class="mobile-menu-toggle" aria-label="Toggle menu" type="button">☰</button>
     <img src="<?= BASE_PATH ?>/assets/images/logo.png" alt="Logo">
     <span>Al Resalah Consultancies & Training</span>
   </div>
@@ -23,3 +24,4 @@
     <a href="<?= BASE_PATH ?>/logout.php">Logout</a>
   </div>
 </header>
+<div class="drawer-overlay"></div>

@@ -65,7 +65,9 @@ foreach ($clients as $c) {
 <head>
   <title>Invoices</title>
   <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
   <link rel="icon" href="/training-management-system/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -140,6 +142,58 @@ foreach ($clients as $c) {
 
     </tbody>
   </table>
+
+  <!-- Mobile Cards -->
+  <div class="mobile-cards">
+    <?php if (!empty($invoices)): foreach ($invoices as $inv): 
+      $status = strtolower($inv['status'] ?? 'unpaid');
+      $badgeClass = 'badge-info';
+      if ($status === 'paid') $badgeClass = 'badge-success';
+      elseif ($status === 'overdue') $badgeClass = 'badge-danger';
+    ?>
+      <div class="mobile-card">
+        <div class="mobile-card-header">
+          <div class="mobile-card-title"><?= htmlspecialchars($inv['invoice_no']) ?></div>
+          <span class="badge <?= $badgeClass ?> mobile-card-badge">
+            <?= strtoupper($status) ?>
+          </span>
+        </div>
+        <div class="mobile-card-field">
+          <span class="mobile-card-label">Client:</span>
+          <span class="mobile-card-value">
+            <?= htmlspecialchars($clientMap[$inv['client_id']]['company_name'] ?? '-') ?>
+          </span>
+        </div>
+        <div class="mobile-card-field">
+          <span class="mobile-card-label">Amount:</span>
+          <span class="mobile-card-value"><?= number_format($inv['amount'], 2) ?></span>
+        </div>
+        <div class="mobile-card-field">
+          <span class="mobile-card-label">VAT:</span>
+          <span class="mobile-card-value"><?= number_format($inv['vat'], 2) ?></span>
+        </div>
+        <div class="mobile-card-field">
+          <span class="mobile-card-label">Total:</span>
+          <span class="mobile-card-value"><strong><?= number_format($inv['total'], 2) ?></strong></span>
+        </div>
+        <div class="mobile-card-field">
+          <span class="mobile-card-label">Issued:</span>
+          <span class="mobile-card-value">
+            <?= $inv['issued_date'] ? date('d M Y', strtotime($inv['issued_date'])) : '-' ?>
+          </span>
+        </div>
+        <div class="mobile-card-actions">
+          <a href="invoice_edit.php?id=<?= $inv['id'] ?>" class="btn">View / Edit</a>
+        </div>
+      </div>
+    <?php endforeach; else: ?>
+      <div class="empty-state">
+        <div class="empty-state-icon">📄</div>
+        <div class="empty-state-title">No invoices found</div>
+        <div class="empty-state-message">Invoices will appear here once created</div>
+      </div>
+    <?php endif; ?>
+  </div>
 
   <?php
   // Render pagination
