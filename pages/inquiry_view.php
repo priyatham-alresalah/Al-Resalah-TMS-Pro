@@ -2,6 +2,7 @@
 require '../includes/config.php';
 require '../includes/auth_check.php';
 require '../includes/rbac.php';
+require '../includes/csrf.php';
 
 /* RBAC Check */
 requirePermission('inquiries', 'view');
@@ -66,6 +67,18 @@ $status = strtolower($inquiry['status'] ?? 'new');
     </div>
   </div>
 
+  <?php if (isset($_GET['error'])): ?>
+    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['error']) ?>
+    </div>
+  <?php endif; ?>
+
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
   <div class="form-card" style="max-width: 800px;">
     <div style="margin-bottom: 20px;">
       <strong>Client:</strong> <?= htmlspecialchars($client['company_name'] ?? '-') ?><br>
@@ -75,8 +88,8 @@ $status = strtolower($inquiry['status'] ?? 'new');
       <?php
         $badgeClass = 'badge-info';
         if ($status === 'quoted') $badgeClass = 'badge-warning';
-        elseif ($status === 'accepted') $badgeClass = 'badge-success';
-        elseif ($status === 'rejected') $badgeClass = 'badge-danger';
+        elseif ($status === 'closed') $badgeClass = 'badge-success';
+        // Note: 'accepted' and 'rejected' are not valid statuses - use 'closed' instead
       ?>
       <span class="badge <?= $badgeClass ?>"><?= strtoupper($status) ?></span><br>
       <?php if (!empty($inquiry['quote_no'])): ?>
@@ -89,7 +102,8 @@ $status = strtolower($inquiry['status'] ?? 'new');
     <?php if ($status === 'quoted'): ?>
       <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
         <h3>Client Response</h3>
-        <form method="post" action="../api/inquiries/respond_quote.php">
+        <form method="post" action="<?= BASE_PATH ?>/api/inquiries/respond_quote.php">
+          <?= csrfField() ?>
           <input type="hidden" name="inquiry_id" value="<?= $inquiry['id'] ?>">
           
           <div class="form-group">
@@ -114,24 +128,40 @@ $status = strtolower($inquiry['status'] ?? 'new');
       </div>
     <?php endif; ?>
 
-    <?php if ($status === 'accepted'): ?>
-      <div style="background: #dcfce7; padding: 15px; border-radius: 6px; margin-top: 20px;">
-        <strong>Quote Accepted!</strong> 
-        <?php if (!empty($inquiry['response_reason'])): ?>
-          <p style="margin-top: 10px;">Reason: <?= htmlspecialchars($inquiry['response_reason']) ?></p>
-        <?php endif; ?>
+    <?php if ($status === 'closed'): ?>
+      <?php
+      // Check if there's a quotation with response info
+      $quotation = null;
+      if (!empty($inquiry['id'])) {
+        $quoteCtx = stream_context_create([
+          'http' => [
+            'method' => 'GET',
+            'header' =>
+              "apikey: " . SUPABASE_SERVICE . "\r\n" .
+              "Authorization: Bearer " . SUPABASE_SERVICE
+          ]
+        ]);
+        $quotations = json_decode(
+          @file_get_contents(
+            SUPABASE_URL . "/rest/v1/quotations?inquiry_id=eq.{$inquiry['id']}&select=*&order=created_at.desc&limit=1",
+            false,
+            $quoteCtx
+          ),
+          true
+        ) ?: [];
+        $quotation = $quotations[0] ?? null;
+      }
+      
+      // Determine if it was accepted or rejected based on context
+      // For now, show generic closed message - can be enhanced later
+      ?>
+      <div style="background: #e0f2fe; padding: 15px; border-radius: 6px; margin-top: 20px;">
+        <strong>Inquiry Closed</strong>
+        <p style="margin-top: 10px; color: #666;">This inquiry has been closed. You can schedule training or create a new inquiry if needed.</p>
         <div style="margin-top: 15px;">
           <a href="schedule_training.php?inquiry_id=<?= $inquiry['id'] ?>" class="btn">Schedule Training</a>
+          <a href="inquiry_create.php" class="btn btn-secondary" style="margin-left: 10px;">Create New Inquiry</a>
         </div>
-      </div>
-    <?php endif; ?>
-
-    <?php if ($status === 'rejected'): ?>
-      <div style="background: #fee2e2; padding: 15px; border-radius: 6px; margin-top: 20px;">
-        <strong>Quote Rejected</strong>
-        <?php if (!empty($inquiry['response_reason'])): ?>
-          <p style="margin-top: 10px;">Reason: <?= htmlspecialchars($inquiry['response_reason']) ?></p>
-        <?php endif; ?>
       </div>
     <?php endif; ?>
   </div>

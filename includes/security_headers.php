@@ -4,10 +4,17 @@
  * Sets production-safe security headers
  */
 
+// Prevent multiple includes
+if (defined('SECURITY_HEADERS_INCLUDED')) {
+  return;
+}
+define('SECURITY_HEADERS_INCLUDED', true);
+
 /**
  * Set security headers
  * Should be called before any output
  */
+if (!function_exists('setSecurityHeaders')) {
 function setSecurityHeaders() {
   // Only set headers if not already sent
   if (headers_sent()) {
@@ -32,6 +39,7 @@ function setSecurityHeaders() {
   
   // Permissions Policy (restrictive)
   header("Permissions-Policy: geolocation=(), microphone=(), camera=()");
+}
 }
 
 // Set headers automatically when included (only if not already set and headers not sent)

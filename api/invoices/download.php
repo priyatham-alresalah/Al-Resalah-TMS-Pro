@@ -55,9 +55,12 @@ if (!file_exists($pdfPath)) {
         $invoice['issued_date'] ?? date('Y-m-d'),
         $invoice['due_date'] ?? null
       );
-      $pdfPath = __DIR__ . "/../../uploads/invoices/" . $pdfFileName;
+      if ($pdfFileName) {
+        $pdfPath = __DIR__ . "/../../uploads/invoices/" . $pdfFileName;
+      }
     }
   } catch (Exception $e) {
+    error_log("Error generating invoice PDF: " . $e->getMessage());
     die("Error generating PDF: " . $e->getMessage());
   }
 }

@@ -4,6 +4,12 @@
  * Generates and validates CSRF tokens
  */
 
+// Prevent multiple includes
+if (defined('CSRF_INCLUDED')) {
+  return;
+}
+define('CSRF_INCLUDED', true);
+
 if (session_status() === PHP_SESSION_NONE) {
   session_start();
 }
@@ -11,16 +17,19 @@ if (session_status() === PHP_SESSION_NONE) {
 /**
  * Generate CSRF token and store in session
  */
+if (!function_exists('generateCSRFToken')) {
 function generateCSRFToken() {
   if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
   }
   return $_SESSION['csrf_token'];
 }
+}
 
 /**
  * Get current CSRF token
  */
+if (!function_exists('getCSRFToken')) {
 function getCSRFToken() {
   if (!isset($_SESSION['csrf_token'])) {
     generateCSRFToken();
@@ -37,10 +46,12 @@ function validateCSRFToken($token) {
   }
   return hash_equals($_SESSION['csrf_token'], $token);
 }
+}
 
 /**
  * Generate CSRF token HTML input field
  */
+if (!function_exists('csrfField')) {
 function csrfField() {
   return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(getCSRFToken()) . '">';
 }
@@ -62,4 +73,5 @@ function requireCSRF() {
       die('Invalid CSRF token. Please refresh the page and try again.');
     }
   }
+}
 }

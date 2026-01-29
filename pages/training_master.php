@@ -66,10 +66,10 @@ $courses = json_decode(
 
   <!-- ADD COURSE -->
   <form method="post"
-        action="../api/training_master/create.php"
-        class="form-inline">
-    <?= csrfField() ?>
+        action="<?= BASE_PATH ?>/api/training_master/create.php"
+        class="form-inline"
         style="margin-bottom:20px;">
+    <?= csrfField() ?>
     <input name="course_name" placeholder="Course Name *" required>
     <input name="duration" placeholder="Duration (e.g. 1 Day)">
     <button type="submit">Add Course</button>

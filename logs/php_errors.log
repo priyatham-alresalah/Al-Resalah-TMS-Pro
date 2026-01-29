@@ -1,0 +1,32 @@
+[29-Jan-2026 09:30:55 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 09:30:55 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 09:30:55 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 09:30:55 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 09:30:55 Europe/Berlin] PHP Warning:  require(../includes/config.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\training-management-system\includes\fpdf.php on line 2
+[29-Jan-2026 09:30:55 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../includes/config.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\training-management-system\includes\fpdf.php:2
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\includes\quote_pdf.php(8): require_once()
+#1 C:\xampp\htdocs\training-management-system\api\inquiries\create_quote.php(42): require('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\fpdf.php on line 2
+[29-Jan-2026 09:33:17 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 09:33:17 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 09:33:17 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 09:33:17 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 09:33:17 Europe/Berlin] PHP Warning:  require(../includes/config.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\training-management-system\includes\fpdf.php on line 2
+[29-Jan-2026 09:33:17 Europe/Berlin] Warning: Could not load quote_pdf.php: Failed opening required '../includes/config.php' (include_path='C:\xampp\php\PEAR')
+[29-Jan-2026 09:33:18 Europe/Berlin] FPDF class not found. PDF generation skipped.
+[29-Jan-2026 09:33:18 Europe/Berlin] Creating quotation with data: {"inquiry_id":"cae002d4-ae1f-4468-bc84-af19c988cb44","quotation_no":"QUOTE-2026-C48878","subtotal":1625,"vat":81.25,"discount":0,"total":1706.25,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f"}
+[29-Jan-2026 10:00:19 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 10:00:19 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 10:00:19 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 10:00:19 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 10:00:21 Europe/Berlin] PHP Fatal error:  Cannot redeclare generateQuotePDF() (previously declared in C:\xampp\htdocs\training-management-system\includes\quote_pdf.php:10) in C:\xampp\htdocs\training-management-system\includes\quote_pdf.php on line 10
+[29-Jan-2026 10:06:32 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 10:06:32 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 10:06:32 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 10:06:32 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 10:06:34 Europe/Berlin] Generating PDF with quote courses: [{"inquiry_id":"3faf23d6-281d-4ae1-8632-c33c1eec1fb0","course_name":"Basic Life Support (BLS)","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105},{"inquiry_id":"95c8f260-6cc5-432e-9baa-45fcfb877b91","course_name":"Basic Life Support (BLS)","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105},{"inquiry_id":"fd26211f-58c6-40a9-9470-6f0a774526f8","course_name":"Fire Fighting","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105},{"inquiry_id":"8d35a81c-d204-4697-a8ca-6524fe24096b","course_name":"First Aid Training","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105},{"inquiry_id":"c553fb77-c2e9-4b39-85ca-2e3260db3cce","course_name":"Manual Handling","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105}]
+[29-Jan-2026 10:06:34 Europe/Berlin] Grand total: 525
+[29-Jan-2026 10:06:34 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-C02022.pdf
+[29-Jan-2026 10:06:34 Europe/Berlin] Creating quotation with data: {"inquiry_id":"3faf23d6-281d-4ae1-8632-c33c1eec1fb0","quotation_no":"QUOTE-2026-C02022","subtotal":500,"vat":25,"discount":0,"total":525,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f"}

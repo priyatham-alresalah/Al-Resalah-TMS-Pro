@@ -3,16 +3,9 @@ $role = $_SESSION['user']['role'] ?? '';
 $current = basename($_SERVER['PHP_SELF']);
 $currentPath = $_SERVER['PHP_SELF'];
 $isInPages = strpos($currentPath, '/pages/') !== false;
-$isInApi = strpos($currentPath, '/api/') !== false;
 
-// Determine base path for links
-if ($isInPages) {
-  $basePath = ''; // Relative to pages folder
-} elseif ($isInApi) {
-  $basePath = '../../pages/'; // From api folder to pages
-} else {
-  $basePath = 'pages/'; // From root to pages
-}
+// Use BASE_PATH constant for all links
+$basePath = BASE_PATH . '/pages/';
 ?>
 
 <aside class="sidebar">

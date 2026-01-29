@@ -94,7 +94,7 @@ $allInquiries = json_decode(
   <div class="page-header">
     <div>
       <h2>Schedule Training</h2>
-      <p class="muted">Select days and times for training sessions</p>
+      <p class="muted">Select date and time for training session</p>
     </div>
     <div class="actions">
       <a href="inquiries.php" class="btn btn-sm btn-secondary">Back to Inquiries</a>
@@ -158,24 +158,15 @@ $allInquiries = json_decode(
         </div>
       </div>
 
-      <!-- Day Selection -->
+      <!-- Training Date Selection -->
       <div class="form-group">
-        <label>Select Days *</label>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px;">
-          <?php
-            $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            foreach ($days as $day):
-          ?>
-            <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #d1d5db; border-radius: 6px; cursor: pointer; transition: all 0.2s; background: #fff;" 
-                   onmouseover="this.style.borderColor='#2563eb'; this.style.background='#eff6ff'" 
-                   onmouseout="if(!this.querySelector('input').checked) {this.style.borderColor='#d1d5db'; this.style.background='#fff'}">
-              <input type="checkbox" name="days[]" value="<?= strtolower($day) ?>" 
-                     class="day-checkbox" style="margin-right: 8px; cursor: pointer;"
-                     onchange="updateDayStyle(this)">
-              <span style="font-weight: 500;"><?= $day ?></span>
-            </label>
-          <?php endforeach; ?>
-        </div>
+        <label>Training Date *</label>
+        <input type="date" name="training_date" required 
+               min="<?= date('Y-m-d') ?>" 
+               style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+        <small style="color: #6b7280; display: block; margin-top: 5px;">
+          Select the date for this training session
+        </small>
       </div>
 
       <!-- Time Selection -->
@@ -235,26 +226,6 @@ $allInquiries = json_decode(
         </small>
       </div>
 
-      <!-- Start Date -->
-      <div class="form-group">
-        <label>Training Start Date *</label>
-        <input type="date" name="start_date" required 
-               min="<?= date('Y-m-d') ?>" 
-               style="width: 100%; padding: 10px;">
-        <small style="color: #6b7280; display: block; margin-top: 5px;">
-          Select the date when training should begin
-        </small>
-      </div>
-
-      <!-- Duration (optional) -->
-      <div class="form-group">
-        <label>Number of Sessions (Optional)</label>
-        <input type="number" name="sessions" min="1" max="52" value="1" 
-               style="width: 100%; padding: 10px;">
-        <small style="color: #6b7280; display: block; margin-top: 5px;">
-          How many times should this training repeat? (Default: 1 session)
-        </small>
-      </div>
 
       <div class="form-actions">
         <button class="btn" type="submit">Schedule Training</button>
@@ -273,18 +244,6 @@ $allInquiries = json_decode(
     });
   }
 
-  function updateDayStyle(checkbox) {
-    const label = checkbox.closest('label');
-    if (checkbox.checked) {
-      label.style.borderColor = '#2563eb';
-      label.style.background = '#dbeafe';
-      label.style.fontWeight = '600';
-    } else {
-      label.style.borderColor = '#d1d5db';
-      label.style.background = '#fff';
-      label.style.fontWeight = '500';
-    }
-  }
 
   function updateTimeStyle(radio) {
     // Reset all time labels
@@ -306,10 +265,6 @@ $allInquiries = json_decode(
     }
   }
 
-  // Initialize day styles
-  document.querySelectorAll('.day-checkbox').forEach(cb => {
-    if (cb.checked) updateDayStyle(cb);
-  });
 
   document.getElementById('scheduleForm')?.addEventListener('submit', function(e) {
     const selectedDays = document.querySelectorAll('.day-checkbox:checked');

@@ -97,7 +97,7 @@ $allInquiries = json_decode(
   <?php else: ?>
 
   <div class="form-card" style="max-width: 100%;">
-    <form method="post" action="../api/inquiries/create_quote.php">
+      <form method="post" action="<?= BASE_PATH ?>/api/inquiries/create_quote.php">
       <?= csrfField() ?>
       <input type="hidden" name="client_id" value="<?= $inquiry['client_id'] ?>">
       
@@ -137,19 +137,39 @@ $allInquiries = json_decode(
                     <?= htmlspecialchars($inq['course_name']) ?>
                   </td>
                   <td style="padding: 10px;">
-                    <input type="number" name="amount[<?= $inq['id'] ?>]" 
-                           step="0.01" min="0" placeholder="0.00" 
-                           class="amount-input" oninput="calculateRow(<?= $inq['id'] ?>)" 
-                           style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+                    <input type="number" name="candidates[<?= $inq['id'] ?>]" 
+                           id="candidates_<?= $inq['id'] ?>"
+                           min="1" max="10000" placeholder="1" 
+                           class="candidates-input" 
+                           oninput="calculateRow('<?= $inq['id'] ?>')" 
+                           onchange="calculateRow('<?= $inq['id'] ?>')"
+                           style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;"
+                           value="1">
+                  </td>
+                  <td style="padding: 10px;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                      <input type="number" name="amount[<?= $inq['id'] ?>]" 
+                             id="amount_<?= $inq['id'] ?>"
+                             step="0.01" min="0" placeholder="0.00" 
+                             class="amount-input" 
+                             oninput="calculateRow('<?= $inq['id'] ?>')" 
+                             onchange="calculateRow('<?= $inq['id'] ?>')"
+                             style="flex: 1; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;"
+                             value="100">
+                      <span style="color: #6b7280; font-size: 12px;">AED</span>
+                    </div>
                   </td>
                   <td style="padding: 10px;">
                     <input type="number" name="vat[<?= $inq['id'] ?>]" 
+                           id="vat_<?= $inq['id'] ?>"
                            step="0.01" min="0" max="100" value="5" 
-                           class="vat-input" oninput="calculateRow(<?= $inq['id'] ?>)" 
+                           class="vat-input" 
+                           oninput="calculateRow('<?= $inq['id'] ?>')" 
+                           onchange="calculateRow('<?= $inq['id'] ?>')"
                            style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
                   </td>
                   <td style="padding: 10px;">
-                    <span class="total-display" id="total_<?= $inq['id'] ?>">0.00</span>
+                    <span class="total-display" id="total_<?= $inq['id'] ?>" style="font-weight: 600;">0.00 AED</span>
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -158,7 +178,7 @@ $allInquiries = json_decode(
               <tr style="border-top: 2px solid #e5e7eb; font-weight: bold;">
                 <td colspan="5" style="padding: 10px; text-align: right;">Grand Total:</td>
                 <td style="padding: 10px;">
-                  <span id="grand_total">0.00</span>
+                  <span id="grand_total" style="font-weight: 600;">0.00 AED</span>
                 </td>
               </tr>
             </tfoot>
@@ -191,26 +211,97 @@ $allInquiries = json_decode(
   }
 
   function calculateRow(id) {
-    const amount = parseFloat(document.querySelector(`input[name="amount[${id}]"]`).value) || 0;
-    const vat = parseFloat(document.querySelector(`input[name="vat[${id}]"]`).value) || 0;
-    const total = amount + (amount * vat / 100);
-    document.getElementById(`total_${id}`).textContent = total.toFixed(2);
-    updateGrandTotal();
+    try {
+      if (!id) {
+        return;
+      }
+      
+      // Use IDs for more reliable element selection
+      const candidatesInput = document.getElementById('candidates_' + id);
+      const amountInput = document.getElementById('amount_' + id);
+      const vatInput = document.getElementById('vat_' + id);
+      const totalElement = document.getElementById('total_' + id);
+      
+      if (!candidatesInput || !amountInput || !vatInput || !totalElement) {
+        return;
+      }
+      
+      // Get values and ensure they're numbers
+      const candidates = parseFloat(candidatesInput.value) || 0;
+      const amount = parseFloat(amountInput.value) || 0;
+      const vat = parseFloat(vatInput.value) || 0;
+      
+      // Calculate: (amount per candidate * number of candidates) * (1 + VAT%)
+      // Example: 100 AED * 7 candidates * 1.05 = 735.00 AED
+      const subtotal = amount * candidates;
+      const total = subtotal * (1 + vat / 100);
+      
+      // Update the display
+      totalElement.textContent = total.toFixed(2) + ' AED';
+      
+      // Update grand total
+      updateGrandTotal();
+    } catch (error) {
+      console.error('Error in calculateRow for id ' + id + ':', error);
+    }
   }
 
   function updateGrandTotal() {
     let grandTotal = 0;
-    document.querySelectorAll('.course-check:checked').forEach(cb => {
+    // Sum only checked courses for grand total
+    const checkedBoxes = document.querySelectorAll('.course-check:checked');
+    
+    checkedBoxes.forEach(cb => {
       const id = cb.value;
-      const total = parseFloat(document.getElementById(`total_${id}`).textContent) || 0;
-      grandTotal += total;
+      const totalElement = document.getElementById(`total_${id}`);
+      if (totalElement) {
+        const totalText = totalElement.textContent || '0.00 AED';
+        // Remove 'AED' and any whitespace, then parse
+        const total = parseFloat(totalText.replace(/AED/gi, '').trim()) || 0;
+        grandTotal += total;
+      }
     });
-    document.getElementById('grand_total').textContent = grandTotal.toFixed(2);
+    
+    const grandTotalElement = document.getElementById('grand_total');
+    if (grandTotalElement) {
+      grandTotalElement.textContent = grandTotal.toFixed(2) + ' AED';
+    }
   }
 
   function updateTotal() {
-    updateGrandTotal();
+    // Recalculate all rows when checkbox state changes
+    document.querySelectorAll('.course-check').forEach(cb => {
+      const id = cb.value;
+      calculateRow(id);
+    });
   }
+
+  // Initialize calculations on page load
+  function initCalculations() {
+    // Find all candidate input fields by ID and calculate their rows
+    const candidateInputs = document.querySelectorAll('input[id^="candidates_"]');
+    candidateInputs.forEach(input => {
+      // Extract ID from id attribute like "candidates_123-456-789"
+      const id = input.id.replace('candidates_', '');
+      if (id) {
+        calculateRow(id);
+      }
+    });
+  }
+
+  // Run calculations when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(initCalculations, 50);
+    });
+  } else {
+    setTimeout(initCalculations, 50);
+  }
+  
+  // Fallback - run again after page fully loads
+  window.addEventListener('load', function() {
+    setTimeout(initCalculations, 100);
+  });
 
   document.querySelector('form')?.addEventListener('submit', function(e) {
     const selected = document.querySelectorAll('.course-check:checked');

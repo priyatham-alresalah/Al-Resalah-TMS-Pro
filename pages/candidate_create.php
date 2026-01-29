@@ -57,39 +57,40 @@ $clients = json_decode(
     </div>
   <?php endif; ?>
 
-  <div class="form-card">
-    <form action="../api/candidates/create.php" method="post">
+  <div style="background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; max-width: 700px;">
+    <form action="<?= BASE_PATH ?>/api/candidates/create.php" method="post" id="candidateForm">
       <?php require '../includes/csrf.php'; echo csrfField(); ?>
-      <div class="form-group">
-        <label>Full Name *</label>
-        <input type="text" name="full_name" required autocomplete="name">
+      
+      <div style="margin-bottom: 24px;">
+        <label for="full_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Full Name *</label>
+        <input type="text" id="full_name" name="full_name" required autocomplete="name" placeholder="Enter full name" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Company</label>
-        <select name="client_id">
+      <div style="margin-bottom: 24px;">
+        <label for="client_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Company</label>
+        <select id="client_id" name="client_id" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
           <option value="">No Company (Individual)</option>
           <?php foreach ($clients as $cl): ?>
-            <option value="<?= $cl['id'] ?>">
+            <option value="<?= htmlspecialchars($cl['id']) ?>">
               <?= htmlspecialchars($cl['company_name']) ?>
             </option>
           <?php endforeach; ?>
         </select>
       </div>
 
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" name="email" autocomplete="email">
+      <div style="margin-bottom: 24px;">
+        <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="Enter email address" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text" name="phone" autocomplete="tel">
+      <div style="margin-bottom: 24px;">
+        <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Phone</label>
+        <input type="text" id="phone" name="phone" autocomplete="tel" placeholder="Enter phone number" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-actions">
-        <button class="btn" type="submit">Create Candidate</button>
-        <a href="candidates.php" class="btn-cancel">Cancel</a>
+      <div style="margin-top: 32px; display: flex; gap: 12px; align-items: center;">
+        <button type="submit" style="padding: 12px 24px; font-size: 14px; font-weight: 600; background: #2563eb; color: #ffffff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;">Create Candidate</button>
+        <a href="candidates.php" style="padding: 12px 24px; text-decoration: none; color: #dc2626; border: 1px solid #dc2626; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 500; transition: all 0.2s;">Cancel</a>
       </div>
     </form>
   </div>

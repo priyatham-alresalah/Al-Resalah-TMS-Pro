@@ -1,0 +1,17 @@
+{
+  "name": "training-management-system/tms",
+  "description": "Training Management System",
+  "type": "project",
+  "require": {
+    "php": ">=7.4",
+    "setasign/fpdf": "^1.8"
+  },
+  "autoload": {
+    "files": [
+      "includes/pdf_library.php"
+    ]
+  },
+  "config": {
+    "vendor-dir": "vendor"
+  }
+}

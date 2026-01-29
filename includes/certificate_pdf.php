@@ -1,5 +1,11 @@
 <?php
-require_once __DIR__ . '/fpdf.php';
+/**
+ * Certificate PDF Generator
+ * Generates PDF certificates for training completion
+ */
+
+// Load PDF library
+require_once __DIR__ . '/pdf_library.php';
 
 function generateCertificatePDF(
   string $candidateName,
@@ -7,10 +13,21 @@ function generateCertificatePDF(
   string $trainingTitle,
   string $clientName,
   string $qrPath
-): string {
+): ?string {
+  
+  // Check if FPDF is available
+  if (!isFPDFAvailable()) {
+    error_log("FPDF library not found. Certificate PDF generation skipped.");
+    return null;
+  }
 
   $fileName = "certificate_$certNo.pdf";
   $filePath = __DIR__ . "/../uploads/certificates/$fileName";
+
+  // Ensure directory exists
+  if (!file_exists(dirname($filePath))) {
+    mkdir(dirname($filePath), 0777, true);
+  }
 
   $pdf = new FPDF('P', 'mm', 'A4');
   $pdf->AddPage();

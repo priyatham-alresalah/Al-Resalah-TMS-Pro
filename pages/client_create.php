@@ -37,37 +37,44 @@ requirePermission('clients', 'create');
     </div>
   <?php endif; ?>
 
-  <div class="form-card">
-    <form action="../api/clients/create.php" method="post">
-      <?php require '../includes/csrf.php'; echo csrfField(); ?>
-      <div class="form-group">
-        <label>Company Name *</label>
-        <input type="text" name="company_name" required autocomplete="organization">
+  <?php if (isset($_GET['success'])): ?>
+    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+      <?= htmlspecialchars($_GET['success']) ?>
+    </div>
+  <?php endif; ?>
+
+  <div style="background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; max-width: 700px;">
+    <form action="<?= BASE_PATH ?>/api/clients/create.php" method="post" id="clientForm">
+      <?= csrfField() ?>
+      
+      <div style="margin-bottom: 24px;">
+        <label for="company_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Company Name *</label>
+        <input type="text" id="company_name" name="company_name" required autocomplete="organization" placeholder="Enter company name" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Contact Person</label>
-        <input type="text" name="contact_person" autocomplete="name">
+      <div style="margin-bottom: 24px;">
+        <label for="contact_person" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Contact Person</label>
+        <input type="text" id="contact_person" name="contact_person" autocomplete="name" placeholder="Enter contact person name" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" name="email" autocomplete="email">
+      <div style="margin-bottom: 24px;">
+        <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Email</label>
+        <input type="email" id="email" name="email" autocomplete="email" placeholder="Enter email address" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text" name="phone" autocomplete="tel">
+      <div style="margin-bottom: 24px;">
+        <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Phone</label>
+        <input type="text" id="phone" name="phone" autocomplete="tel" placeholder="Enter phone number" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; box-sizing: border-box; background: #ffffff;">
       </div>
 
-      <div class="form-group">
-        <label>Address</label>
-        <input type="text" name="address" autocomplete="street-address">
+      <div style="margin-bottom: 24px;">
+        <label for="address" style="display: block; margin-bottom: 8px; font-weight: 600; color: #111827; font-size: 14px;">Address</label>
+        <textarea id="address" name="address" autocomplete="street-address" rows="4" placeholder="Enter company address" style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; resize: vertical; box-sizing: border-box; background: #ffffff; min-height: 100px; font-family: inherit;"></textarea>
       </div>
 
-      <div class="form-actions">
-        <button class="btn" type="submit">Create Client</button>
-        <a href="clients.php" class="btn-cancel">Cancel</a>
+      <div style="margin-top: 32px; display: flex; gap: 12px; align-items: center;">
+        <button type="submit" style="padding: 12px 24px; font-size: 14px; font-weight: 600; background: #2563eb; color: #ffffff; border: none; border-radius: 6px; cursor: pointer; transition: background 0.2s;">Create Client</button>
+        <a href="clients.php" style="padding: 12px 24px; text-decoration: none; color: #dc2626; border: 1px solid #dc2626; border-radius: 6px; display: inline-block; font-size: 14px; font-weight: 500; transition: all 0.2s;">Cancel</a>
       </div>
     </form>
   </div>

@@ -1,0 +1,100 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+<title>Downloads</title>
+<link type="text/css" rel="stylesheet" href="fpdf.css">
+<style type="text/css">
+#doc {list-style-type:none; margin-left:0; padding-left:0; margin-top:1.5em}
+#doc li {margin-top:0.4em}
+#doc img {margin-right:8px}
+#archive {list-style-type:none; margin-left:0; padding-left:0; margin-top:1.5em}
+#archive li {margin-top:0.6em}
+#archive p {margin-left:10px; margin-top:0}
+</style>
+</head>
+<body onload="if(window.focus) window.focus()">
+
+<h1>Downloads</h1>
+
+<p>
+You can view the changelog <a href="changelog.php">here</a>.
+</p>
+
+<ul id="doc">
+<li><img src="../arabic.gif" width="21" height="15" alt="Arabic" title="Arabic">An Arabic version of documentation v1.53 is available in <a href="dl.php?id=88">ZIP</a> and <a href="dl.php?id=89">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:abdullah'+'&#'+'64;'+'mycompiler.com">');</script>Abdullah E.AL-Mehmadi<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../catalan.gif" width="21" height="15" alt="Catalan" title="Catalan">A Catalan version of documentation v1.81 is available in <a href="dl.php?id=143">ZIP</a> and <a href="dl.php?id=144">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:info'+'&#'+'64;'+'sima.cat">');</script>David Gimeno i Ayuso<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../hungarian.gif" width="21" height="15" alt="Hungarian" title="Hungarian">A Hungarian version of documentation v1.81 is available in <a href="dl.php?id=149">ZIP</a> and <a href="dl.php?id=150">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:szte.varga.csaba'+'&#'+'64;'+'gmail.com">');</script>Csaba Varga<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../indonesian.gif" width="21" height="15" alt="Indonesian" title="Indonesian">An Indonesian version of documentation v1.82 is available in <a href="dl.php?id=151">ZIP</a> and <a href="dl.php?id=152">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:kangoedin'+'&#'+'64;'+'gmail.com">');</script>Kang Oedin<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../japanese.gif" width="21" height="15" alt="Japanese" title="Japanese">A Japanese version of documentation v1.52 is available in <a href="dl.php?id=68">ZIP</a> and <a href="dl.php?id=69">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:ataka'+'&#'+'64;'+'attend.co.jp">');</script>Matt Ataka<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../korean.gif" width="21" height="15" alt="Korean" title="Korean">A Korean version of documentation v1.6 is available in <a href="dl.php?id=101">ZIP</a> and <a href="dl.php?id=102">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:gonom9'+'&#'+'64;'+'gmail.com">');</script>Kim Taegon<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../dutch.gif" width="21" height="15" alt="Dutch" title="Dutch">A Dutch version of documentation v1.6 is available in <a href="dl.php?id=111">ZIP</a> and <a href="dl.php?id=112">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:martijn.h'+'&#'+'64;'+'kreatif.nl">');</script>Martijn Hogerheijde<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../polish.gif" width="21" height="15" alt="Polish" title="Polish">A Polish version of documentation v1.81 is available in <a href="dl.php?id=147">ZIP</a> and <a href="dl.php?id=148">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:doctor.eu'+'&#'+'64;'+'gmail.com">');</script>Rafał Lysik<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../brazilian.gif" width="21" height="15" alt="Brazilian" title="Brazilian">A Brazilian Portuguese version of documentation v1.81 is available in <a href="dl.php?id=139">ZIP</a> and <a href="dl.php?id=140">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:domingos.paraiso'+'&#'+'64;'+'gmail.com">');</script>Domingos Paraiso<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../romanian.gif" width="21" height="15" alt="Romanian" title="Romanian">A Romanian version of documentation v1.52 is available in <a href="dl.php?id=70">ZIP</a> and <a href="dl.php?id=71">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:canti'+'&#'+'64;'+'gmx.net">');</script>Cantemir Mihu<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../russian.gif" width="21" height="15" alt="Russian" title="Russian">A Russian version of documentation v1.53 is available in <a href="dl.php?id=92">ZIP</a> and <a href="dl.php?id=93">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:SmilaOlga'+'&#'+'64;'+'ukr.net">');</script>Olga Smila<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../turkish.gif" width="21" height="15" alt="Turkish" title="Turkish">A Turkish version of documentation v1.86 is available in <a href="dl.php?id=153">ZIP</a> and <a href="dl.php?id=154">TGZ</a> formats (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:hortatepe2002'+'&#'+'64;'+'gmail.com">');</script>Hamza Ortatepe<script type="text/javascript">document.write('<\/a>');</script>)</li>
+<li><img src="../chinese.gif" width="21" height="15" alt="Chinese" title="Chinese">A Chinese version of documentation v1.52 is available in simplified (<a href="dl.php?id=72">ZIP</a>, <a href="dl.php?id=73">TGZ</a>) and traditional language (<a href="dl.php?id=74">ZIP</a>, <a href="dl.php?id=75">TGZ</a>) (translation by <script type="text/javascript">document.write('<a h'+'ref="m'+'ailto:andrew'+'&#'+'64;'+'tophk.net">');</script>Andrew Choi<script type="text/javascript">document.write('<\/a>');</script>)</li>
+</ul>
+
+
+<ul id="archive">
+<li>
+<b>v1.86</b> (2023-06-25)
+<p><a href='dl.php?v=186&amp;f=zip'>ZIP</a> | <a href='dl.php?v=186&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.85</b> (2022-11-10)
+<p><a href='dl.php?v=185&amp;f=zip'>ZIP</a> | <a href='dl.php?v=185&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.84</b> (2021-08-28)
+<p><a href='dl.php?v=184&amp;f=zip'>ZIP</a> | <a href='dl.php?v=184&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.83</b> (2021-04-18)
+<p><a href='dl.php?v=183&amp;f=zip'>ZIP</a> | <a href='dl.php?v=183&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.82</b> (2019-12-07)
+<p><a href='dl.php?v=182&amp;f=zip'>ZIP</a> | <a href='dl.php?v=182&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.81</b> (2015-12-20)
+<p><a href='dl.php?v=181&amp;f=zip'>ZIP</a> | <a href='dl.php?v=181&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.8</b> (2015-11-29)
+<p><a href='dl.php?v=18&amp;f=zip'>ZIP</a> | <a href='dl.php?v=18&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.7</b> (2011-06-18)
+<p><a href='dl.php?v=17&amp;f=zip'>ZIP</a> | <a href='dl.php?v=17&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.6</b> (2008-08-03)
+<p><a href='dl.php?v=16&amp;f=zip'>ZIP</a> | <a href='dl.php?v=16&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.53</b> (2004-12-31)
+<p><a href='dl.php?v=153&amp;f=zip'>ZIP</a> | <a href='dl.php?v=153&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.52</b> (2003-12-30)
+<p><a href='dl.php?v=152&amp;f=zip'>ZIP</a> | <a href='dl.php?v=152&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.51</b> (2002-08-03)
+<p><a href='dl.php?v=151&amp;f=zip'>ZIP</a> | <a href='dl.php?v=151&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.5</b> (2002-05-28)
+<p><a href='dl.php?v=15&amp;f=zip'>ZIP</a> | <a href='dl.php?v=15&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.41</b> (2002-03-13)
+<p><a href='dl.php?v=141&amp;f=zip'>ZIP</a> | <a href='dl.php?v=141&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.4</b> (2002-03-02)
+<p><a href='dl.php?v=14&amp;f=zip'>ZIP</a> | <a href='dl.php?v=14&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.31</b> (2002-01-12)
+<p><a href='dl.php?v=131&amp;f=zip'>ZIP</a> | <a href='dl.php?v=131&amp;f=tgz'>TGZ</a></p></li>
+<li>
+<b>v1.3</b> (2001-12-03)
+<p><a href='dl.php?v=13&amp;f=zip'>ZIP</a> | <a href='dl.php?v=13&amp;f=tgz'>TGZ</a></p></li>
+</ul>
+
+<p>
+Older versions are available on the <a href="/?lang=fr&amp;go=download" target="_top">French</a> version of the site.
+</p>
+
+</body>
+</html>

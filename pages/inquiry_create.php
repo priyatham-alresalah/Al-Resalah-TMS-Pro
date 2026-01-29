@@ -6,10 +6,6 @@ require '../includes/csrf.php';
 
 /* RBAC Check */
 requirePermission('inquiries', 'create');
-require '../includes/rbac.php';
-
-/* RBAC Check */
-requirePermission('inquiries', 'create');
 
 $role = $_SESSION['user']['role'];
 $userId = $_SESSION['user']['id'];

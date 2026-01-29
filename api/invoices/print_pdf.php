@@ -66,6 +66,10 @@ try {
     $invoice['due_date'] ?? null
   );
 
+  if (!$pdfFileName) {
+    die("FPDF library not installed. Please install FPDF to generate PDFs. See INSTALL_FPDF.md for instructions.");
+  }
+
   $pdfPath = __DIR__ . "/../../uploads/invoices/" . $pdfFileName;
   
   if (file_exists($pdfPath)) {
@@ -76,6 +80,7 @@ try {
     die("Failed to generate PDF");
   }
 } catch (Exception $e) {
+  error_log("Error generating invoice PDF: " . $e->getMessage());
   die("Error generating PDF: " . $e->getMessage());
 }
 exit;

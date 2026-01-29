@@ -1,14 +1,11 @@
 <?php
-// Note: FPDF class should be available via require_once
-// If FPDF is not available, install it: composer require setasign/fpdf
-// Or download from https://www.fpdf.org/
+/**
+ * Invoice PDF Generator
+ * Generates PDF invoices for clients
+ */
 
-// Try to require FPDF - adjust path if needed
-if (file_exists(__DIR__ . '/fpdf.php')) {
-  require_once __DIR__ . '/fpdf.php';
-} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-  require_once __DIR__ . '/../vendor/autoload.php';
-}
+// Load PDF library
+require_once __DIR__ . '/pdf_library.php';
 
 function generateInvoicePDF(
   string $invoiceNo,
@@ -20,7 +17,7 @@ function generateInvoicePDF(
   float $total,
   string $issuedDate,
   ?string $dueDate = null
-): string {
+): ?string {
   
   if (!file_exists(__DIR__ . '/../uploads/invoices')) {
     mkdir(__DIR__ . '/../uploads/invoices', 0777, true);
@@ -29,9 +26,10 @@ function generateInvoicePDF(
   $fileName = "invoice_$invoiceNo.pdf";
   $filePath = __DIR__ . "/../uploads/invoices/$fileName";
 
-  // Check if FPDF class exists
-  if (!class_exists('FPDF')) {
-    throw new Exception('FPDF class not found. Please install FPDF library.');
+  // Check if FPDF is available
+  if (!isFPDFAvailable()) {
+    error_log("FPDF library not found. Invoice PDF generation skipped.");
+    return null;
   }
   
   $pdf = new FPDF('P', 'mm', 'A4');

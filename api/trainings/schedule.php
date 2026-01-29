@@ -15,16 +15,23 @@ requirePermission('trainings', 'create');
 
 $inquiryIds = $_POST['inquiry_ids'] ?? [];
 $clientId = $_POST['client_id'] ?? '';
-$days = $_POST['days'] ?? [];
+$trainingDate = $_POST['training_date'] ?? '';
 $trainingTime = $_POST['training_time'] ?? '';
-$startDate = $_POST['start_date'] ?? '';
-$sessions = intval($_POST['sessions'] ?? 1);
 $trainerId = $_POST['trainer_id'] ?? null;
 
-if (empty($inquiryIds) || empty($clientId) || empty($days) || empty($trainingTime) || empty($startDate)) {
-  header('Location: ../../pages/schedule_training.php?inquiry_id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Please fill all required fields'));
+if (empty($inquiryIds) || empty($clientId) || empty($trainingDate) || empty($trainingTime)) {
+  header('Location: ../../pages/schedule_training.php?inquiry_id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Please fill all required fields: courses, date, and time'));
   exit;
 }
+
+// Validate date format
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $trainingDate)) {
+  header('Location: ../../pages/schedule_training.php?inquiry_id=' . ($inquiryIds[0] ?? '') . '&error=' . urlencode('Invalid date format'));
+  exit;
+}
+
+// Use single date for training
+$trainingDates = [$trainingDate];
 
 // Enforce workflow - validate ALL inquiries have quotation + LPO
 foreach ($inquiryIds as $inqId) {
@@ -66,45 +73,7 @@ if (empty($inquiries)) {
   exit;
 }
 
-/* Calculate training dates based on selected days and start date */
-$startDateTime = new DateTime($startDate);
-$trainingDates = [];
-$dayMap = [
-  'monday' => 1,
-  'tuesday' => 2,
-  'wednesday' => 3,
-  'thursday' => 4,
-  'friday' => 5,
-  'saturday' => 6,
-  'sunday' => 0
-];
-
-$selectedDayNumbers = [];
-foreach ($days as $day) {
-  $selectedDayNumbers[] = $dayMap[strtolower($day)];
-}
-
-/* Generate dates for the specified number of sessions */
-$currentDate = clone $startDateTime;
-$sessionCount = 0;
-$maxIterations = $sessions * 7; // Prevent infinite loop
-
-while ($sessionCount < $sessions && $maxIterations > 0) {
-  $dayOfWeek = (int)$currentDate->format('w'); // 0 = Sunday, 1 = Monday, etc.
-  
-  if (in_array($dayOfWeek, $selectedDayNumbers)) {
-    $trainingDates[] = $currentDate->format('Y-m-d');
-    $sessionCount++;
-  }
-  
-  $currentDate->modify('+1 day');
-  $maxIterations--;
-}
-
-if (empty($trainingDates)) {
-  header('Location: ../../schedule_training.php?inquiry_id=' . $inquiryIds[0] . '&error=' . urlencode('Could not generate training dates. Please check your selections.'));
-  exit;
-}
+// Training date is provided directly from the calendar selection
 
 /* Create training records */
 $createCtx = stream_context_create([

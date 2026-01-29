@@ -178,9 +178,8 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
             $status = strtolower($firstInquiry['status'] ?? 'new');
             $badgeClass = 'badge-info';
             if ($status === 'quoted') $badgeClass = 'badge-warning';
-            elseif ($status === 'accepted') $badgeClass = 'badge-success';
-            elseif ($status === 'rejected') $badgeClass = 'badge-danger';
             elseif ($status === 'closed') $badgeClass = 'badge-success';
+            // Note: 'accepted' and 'rejected' are not valid statuses - use 'closed' instead
           ?>
           <span class="badge <?= $badgeClass ?>">
             <?= strtoupper($status) ?>
@@ -203,15 +202,15 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
               <?php if ($status === 'new'): ?>
                 <a href="inquiry_quote.php?id=<?= $firstInquiry['id'] ?>">Quote</a>
               <?php elseif ($status === 'quoted'): ?>
-                <a href="inquiry_view.php?id=<?= $firstInquiry['id'] ?>">View</a>
+                <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?inquiry_id=<?= $firstInquiry['id'] ?>">Download PDF</a>
                 <?php if (!empty($firstInquiry['quote_pdf'])): ?>
-                  <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?file=<?= urlencode($firstInquiry['quote_pdf']) ?>">Download PDF</a>
-                  <form action="../api/inquiries/send_quote_email.php" method="post">
+                  <form action="<?= BASE_PATH ?>/api/inquiries/send_quote_email.php" method="post">
+                    <?php require '../includes/csrf.php'; echo csrfField(); ?>
                     <input type="hidden" name="inquiry_id" value="<?= $firstInquiry['id'] ?>">
                     <button type="submit" class="danger">Send Email</button>
                   </form>
                 <?php endif; ?>
-              <?php elseif ($status === 'accepted'): ?>
+              <?php elseif ($status === 'closed'): ?>
                 <a href="schedule_training.php?inquiry_id=<?= $firstInquiry['id'] ?>">Schedule Training</a>
               <?php endif; ?>
               <a href="inquiry_view.php?id=<?= $firstInquiry['id'] ?>">View Details</a>
@@ -253,10 +252,10 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
                   if ($s === 'new'): ?>
                   <a href="inquiry_quote.php?id=<?= $i['id'] ?>">Quote</a>
                 <?php elseif ($s === 'quoted'): ?>
-                  <a href="inquiry_view.php?id=<?= $i['id'] ?>">View</a>
+                  <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?inquiry_id=<?= $i['id'] ?>">Download PDF</a>
                   <?php if (!empty($i['quote_pdf'])): ?>
-                    <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?file=<?= urlencode($i['quote_pdf']) ?>">Download PDF</a>
-                    <form action="../api/inquiries/send_quote_email.php" method="post">
+                    <form action="<?= BASE_PATH ?>/api/inquiries/send_quote_email.php" method="post">
+                      <?php require '../includes/csrf.php'; echo csrfField(); ?>
                       <input type="hidden" name="inquiry_id" value="<?= $i['id'] ?>">
                       <button type="submit" class="danger">Send Email</button>
                     </form>

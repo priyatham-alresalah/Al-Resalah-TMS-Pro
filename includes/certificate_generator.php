@@ -1,0 +1,123 @@
+<?php
+/**
+ * Certificate PDF Generator Script
+ * This file generates certificate PDFs when accessed directly
+ * Moved from fpdf.php to avoid confusion with FPDF library
+ */
+
+require '../includes/config.php';
+require '../includes/auth_check.php';
+require '../includes/pdf_library.php';
+require '../includes/certificate_pdf.php';
+
+if (!isFPDFAvailable()) {
+  die('FPDF library not installed. Please install FPDF to generate certificates.');
+}
+
+$training_id = $_GET['training_id'] ?? null;
+$cert_no = $_GET['cert_no'] ?? null;
+
+if (!$training_id || !$cert_no) {
+  die('Training ID and Certificate Number are required');
+}
+
+// Fetch training and candidate data
+$ctx = stream_context_create([
+  'http' => [
+    'method' => 'GET',
+    'header' =>
+      "apikey: " . SUPABASE_SERVICE . "\r\n" .
+      "Authorization: Bearer " . SUPABASE_SERVICE
+  ]
+]);
+
+$training = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainings?id=eq.$training_id&select=*,client_id,course_name",
+    false,
+    $ctx
+  ),
+  true
+)[0] ?? null;
+
+if (!$training) {
+  die('Training not found');
+}
+
+// Fetch client
+$client = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/clients?id=eq.{$training['client_id']}&select=company_name",
+    false,
+    $ctx
+  ),
+  true
+)[0] ?? null;
+
+// Fetch candidate (assuming one candidate per certificate for now)
+$candidate = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/training_candidates?training_id=eq.$training_id&limit=1&select=*,candidate_id",
+    false,
+    $ctx
+  ),
+  true
+)[0] ?? null;
+
+if (!$candidate) {
+  die('Candidate not found for this training');
+}
+
+$candidateDetails = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/candidates?id=eq.{$candidate['candidate_id']}&select=full_name",
+    false,
+    $ctx
+  ),
+  true
+)[0] ?? null;
+
+if (!$candidateDetails) {
+  die('Candidate details not found');
+}
+
+// Generate QR code path (if exists)
+$qrPath = __DIR__ . "/../uploads/qrcodes/cert_$cert_no.png";
+
+// Generate certificate PDF
+try {
+  $pdfFileName = generateCertificatePDF(
+    $candidateDetails['full_name'],
+    $cert_no,
+    $training['course_name'],
+    $client['company_name'] ?? 'Client',
+    $qrPath
+  );
+
+  // Update certificate record with file path
+  $updateData = json_encode([
+    'file_path' => $pdfFileName
+  ]);
+
+  $updateCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => $updateData
+    ]
+  ]);
+
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificates?certificate_no=eq.$cert_no",
+    false,
+    $updateCtx
+  );
+
+  header("Location: " . BASE_PATH . "/pages/certificates.php?success=" . urlencode("Certificate generated: $cert_no"));
+  exit;
+} catch (Exception $e) {
+  die("Error generating certificate: " . $e->getMessage());
+}

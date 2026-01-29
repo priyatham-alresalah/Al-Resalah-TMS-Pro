@@ -1,15 +1,13 @@
 <?php
-// Note: FPDF class should be available via require_once
-// If FPDF is not available, install it: composer require setasign/fpdf
-// Or download from https://www.fpdf.org/
+/**
+ * Quote PDF Generator
+ * Generates PDF quotations for clients
+ */
 
-// Try to require FPDF - adjust path if needed
-if (file_exists(__DIR__ . '/fpdf.php')) {
-  require_once __DIR__ . '/fpdf.php';
-} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
-  require_once __DIR__ . '/../vendor/autoload.php';
-}
+// Load PDF library
+require_once __DIR__ . '/pdf_library.php';
 
+if (!function_exists('generateQuotePDF')) {
 function generateQuotePDF(
   string $quoteNo,
   string $clientName,
@@ -18,7 +16,13 @@ function generateQuotePDF(
   array $courses, // [['course_name' => '', 'amount' => 0, 'vat' => 0, 'total' => 0]]
   float $grandTotal,
   string $notes = ''
-): string {
+): ?string {
+  
+  // Check if FPDF class exists first
+  if (!class_exists('FPDF')) {
+    error_log("FPDF class not found. PDF generation skipped.");
+    return null;
+  }
   
   if (!file_exists(__DIR__ . '/../uploads/quotes')) {
     mkdir(__DIR__ . '/../uploads/quotes', 0777, true);
@@ -26,11 +30,6 @@ function generateQuotePDF(
 
   $fileName = "quote_$quoteNo.pdf";
   $filePath = __DIR__ . "/../uploads/quotes/$fileName";
-
-  // Check if FPDF class exists
-  if (!class_exists('FPDF')) {
-    throw new Exception('FPDF class not found. Please install FPDF library.');
-  }
   
   $pdf = new FPDF('P', 'mm', 'A4');
   $pdf->AddPage();
@@ -104,3 +103,4 @@ function generateQuotePDF(
   $pdf->Output('F', $filePath);
   return $fileName;
 }
+} // End function_exists check

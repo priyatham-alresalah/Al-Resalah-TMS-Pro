@@ -24,18 +24,31 @@ $ctx = stream_context_create([
 // Fetch quotations based on role
 $baseUrl = SUPABASE_URL . "/rest/v1/quotations?select=*,inquiries(client_id,course_name),profiles!quotations_created_by_fkey(full_name)";
 if ($role === 'bdo') {
+  // BDO sees their own quotations
   $baseUrl .= "&created_by=eq.$userId";
 } elseif ($role === 'bdm') {
-  // BDM sees quotations pending approval and approved
-  $baseUrl .= "&status=in.(pending_approval,approved,rejected)";
+  // BDM sees quotations pending approval, approved, and accepted
+  $baseUrl .= "&status=in.(pending_approval,approved,accepted,rejected)";
 }
+// Admin and other roles see ALL quotations (no filter)
 
 $baseUrl .= "&order=created_at.desc";
+
+// Debug: Log the query
+error_log("Quotations query for role '$role': $baseUrl");
 
 $quotations = json_decode(
   @file_get_contents($baseUrl, false, $ctx),
   true
 ) ?: [];
+
+// Debug: Log results (only in development - remove in production)
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+  error_log("Quotations page - Role: $role, Found " . count($quotations) . " quotation(s)");
+  if (empty($quotations)) {
+    error_log("No quotations found. Query was: $baseUrl");
+  }
+}
 
 // Fetch inquiries for reference
 $inquiries = json_decode(
@@ -145,6 +158,10 @@ foreach ($inquiries as $inq) {
                       <input type="hidden" name="quotation_id" value="<?= $q['id'] ?>">
                       <button type="submit" style="width: 100%; text-align: left; background: none; border: none; padding: 10px 16px; cursor: pointer;">Accept</button>
                     </form>
+                  <?php endif; ?>
+                  <?php if ($status === 'accepted'): ?>
+                    <a href="client_orders.php?quotation_id=<?= $q['id'] ?>">Upload LPO</a>
+                    <a href="schedule_training.php?quotation_id=<?= $q['id'] ?>">Schedule Training</a>
                   <?php endif; ?>
                   <a href="quotation_view.php?id=<?= $q['id'] ?>">View</a>
                 </div>

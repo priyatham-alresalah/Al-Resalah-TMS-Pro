@@ -77,7 +77,9 @@ if (!file_exists($pdfPath)) {
       $invoice['issued_date'] ?? date('Y-m-d'),
       $invoice['due_date'] ?? null
     );
-    $pdfPath = __DIR__ . "/../../uploads/invoices/" . $pdfFileName;
+    if ($pdfFileName) {
+      $pdfPath = __DIR__ . "/../../uploads/invoices/" . $pdfFileName;
+    }
   } catch (Exception $e) {
     header('Location: ../../pages/invoices.php?error=' . urlencode('Failed to generate PDF: ' . $e->getMessage()));
     exit;
@@ -104,7 +106,12 @@ try {
   $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
   $mail->addAddress($client['email'], $client['company_name']);
 
-  $mail->addAttachment($pdfPath, 'invoice_' . $invoice['invoice_no'] . '.pdf');
+  // Attach PDF if it exists
+  if (file_exists($pdfPath)) {
+    $mail->addAttachment($pdfPath, 'invoice_' . $invoice['invoice_no'] . '.pdf');
+  } else {
+    error_log("Invoice PDF not found for attachment: $pdfPath");
+  }
 
   $mail->isHTML(true);
   $mail->Subject = 'Invoice ' . $invoice['invoice_no'];
