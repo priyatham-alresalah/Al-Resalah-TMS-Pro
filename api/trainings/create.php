@@ -6,7 +6,6 @@ require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
 require '../../includes/branch.php';
-require '../../includes/branch.php';
 
 /* CSRF Protection */
 requireCSRF();

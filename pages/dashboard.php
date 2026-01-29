@@ -77,8 +77,18 @@ if ($cachedData === null) {
   $inquiries = json_decode(@file_get_contents($recentInquiriesUrl, false, $ctx), true) ?: [];
   
   // Clients (minimal data)
-  $clientsUrl = SUPABASE_URL . "/rest/v1/clients?select=id,created_by,created_at";
+  $clientsUrl = SUPABASE_URL . "/rest/v1/clients?select=id,company_name,created_by,created_at";
   $clients = json_decode(@file_get_contents($clientsUrl, false, $ctx), true) ?: [];
+  
+  // All trainings (for role-specific dashboards - BDM, BDO, trainer, coordinator)
+  // Limit to recent 1000 records to prevent timeout
+  $trainingsUrl = SUPABASE_URL . "/rest/v1/trainings?select=id,status,training_date,training_time,client_id,course_name,trainer_id&order=training_date.desc&limit=1000";
+  $trainings = json_decode(@file_get_contents($trainingsUrl, false, $ctx), true) ?: [];
+  
+  // All invoices (for role-specific dashboards - admin, BDM, accounts, coordinator)
+  // Limit to recent 1000 records to prevent timeout
+  $invoicesUrl = SUPABASE_URL . "/rest/v1/invoices?select=id,status,total,issued_date,due_date,client_id,vat&order=issued_date.desc&limit=1000";
+  $invoices = json_decode(@file_get_contents($invoicesUrl, false, $ctx), true) ?: [];
   
   $cachedData = [
     'thisMonthInquiries' => $thisMonthInquiries,
@@ -90,7 +100,9 @@ if ($cachedData === null) {
     'overdueInvoices' => $overdueInvoices,
     'users' => $users,
     'inquiries' => $inquiries,
-    'clients' => $clients
+    'clients' => $clients,
+    'trainings' => $trainings,
+    'invoices' => $invoices
   ];
   
   setCache($cacheKey, $cachedData);
@@ -694,9 +706,9 @@ if ($role === 'admin') {
   <meta charset="UTF-8">
   <title>Dashboard | <?= APP_NAME ?></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/training-management-system/favicon.ico">
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>

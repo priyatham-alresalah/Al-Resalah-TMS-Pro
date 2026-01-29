@@ -4,7 +4,7 @@
  * Prevents writes during maintenance mode
  */
 
-require __DIR__ . '/config.php';
+require_once __DIR__ . '/config.php';
 
 /**
  * Check if maintenance mode is enabled
@@ -77,12 +77,24 @@ function enforceMaintenanceMode() {
     http_response_code(503);
     header('Retry-After: 3600'); // Suggest retry after 1 hour
     
-    require __DIR__ . '/app_log.php';
-    logWarning('maintenance_mode_blocked', [
-      'method' => $method,
-      'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
-      'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-    ]);
+    // Log maintenance mode block (only if function exists)
+    if (function_exists('logWarning')) {
+      logWarning('maintenance_mode_blocked', [
+        'method' => $method,
+        'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+      ]);
+    } else {
+      // Fallback: require app_log if function doesn't exist
+      @require_once __DIR__ . '/app_log.php';
+      if (function_exists('logWarning')) {
+        logWarning('maintenance_mode_blocked', [
+          'method' => $method,
+          'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+          'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+        ]);
+      }
+    }
     
     die(json_encode([
       'error' => 'Service Unavailable',

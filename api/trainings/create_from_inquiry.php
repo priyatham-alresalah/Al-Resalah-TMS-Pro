@@ -93,6 +93,21 @@ if (!empty($course)) {
 $trainingDateTime = new DateTime($trainingDate);
 $dayOfWeek = $trainingDateTime->format('w'); // 0 = Sunday, 1 = Monday, etc.
 
+// Check if trainer already has training on this date (prevent double-booking)
+$existingTraining = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainings?trainer_id=eq.$trainerId&training_date=eq.$trainingDate&select=id",
+    false,
+    $ctx
+  ),
+  true
+);
+
+if (!empty($existingTraining)) {
+  header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer already has a training scheduled on this date'));
+  exit;
+}
+
 // Check if trainer is already blocked
 $blocked = json_decode(
   @file_get_contents(
@@ -124,31 +139,59 @@ if (empty($availability)) {
 }
 
 // Block trainer availability FIRST (before creating training) to prevent race condition
-$blockData = [
-  'trainer_id' => $trainerId,
-  'available_date' => $trainingDate,
-  'from_time' => '08:00:00',
-  'to_time' => '18:00:00',
-  'status' => 'blocked'
-];
-
-$blockCtx = stream_context_create([
-  'http' => [
-    'method' => 'POST',
-    'header' =>
-      "Content-Type: application/json\r\n" .
-      "apikey: " . SUPABASE_SERVICE . "\r\n" .
-      "Authorization: Bearer " . SUPABASE_SERVICE,
-    'content' => json_encode($blockData)
-  ]
-]);
-
-$blockResponse = @file_get_contents(SUPABASE_URL . "/rest/v1/trainer_availability", false, $blockCtx);
-
-if ($blockResponse === false) {
-  // Failed to block - trainer may have been booked by another request
-  header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer availability could not be reserved. Please try again.'));
-  exit;
+// Use PATCH to update existing availability record instead of POST to make it more atomic
+$availabilityId = $availability[0]['id'] ?? null;
+if ($availabilityId) {
+  // Update existing availability to blocked
+  $blockCtx = stream_context_create([
+    'http' => [
+      'method' => 'PATCH',
+      'header' =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode(['status' => 'blocked'])
+    ]
+  ]);
+  
+  $blockResponse = @file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainer_availability?id=eq.$availabilityId",
+    false,
+    $blockCtx
+  );
+  
+  if ($blockResponse === false) {
+    // Failed to block - trainer may have been booked by another request
+    header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer availability could not be reserved. Please try again.'));
+    exit;
+  }
+} else {
+  // No availability record exists, create blocked record
+  $blockData = [
+    'trainer_id' => $trainerId,
+    'available_date' => $trainingDate,
+    'from_time' => '08:00:00',
+    'to_time' => '18:00:00',
+    'status' => 'blocked'
+  ];
+  
+  $blockCtx = stream_context_create([
+    'http' => [
+      'method' => 'POST',
+      'header' =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE,
+      'content' => json_encode($blockData)
+    ]
+  ]);
+  
+  $blockResponse = @file_get_contents(SUPABASE_URL . "/rest/v1/trainer_availability", false, $blockCtx);
+  
+  if ($blockResponse === false) {
+    header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Trainer availability could not be reserved. Please try again.'));
+    exit;
+  }
 }
 
 // Now create training (availability already blocked)

@@ -55,9 +55,9 @@ $success = $_GET['success'] ?? '';
 <html>
 <head>
   <title>Edit Invoice</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>

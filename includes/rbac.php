@@ -4,8 +4,8 @@
  * Checks user permissions based on roles and permissions tables
  */
 
-require __DIR__ . '/config.php';
-require __DIR__ . '/auth_check.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/auth_check.php';
 
 /**
  * Check if user has permission for a module and action

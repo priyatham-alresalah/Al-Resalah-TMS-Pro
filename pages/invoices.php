@@ -64,9 +64,9 @@ foreach ($clients as $c) {
 <html>
 <head>
   <title>Invoices</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -121,12 +121,12 @@ foreach ($clients as $c) {
             </button>
             <div class="action-menu">
               <a href="invoice_edit.php?id=<?= $inv['id'] ?>">Edit</a>
-              <a href="../api/invoices/print_pdf.php?id=<?= $inv['id'] ?>" target="_blank">Print PDF</a>
+              <a href="<?= BASE_PATH ?>/api/invoices/print_pdf.php?id=<?= $inv['id'] ?>" target="_blank">Print PDF</a>
               <form method="post" action="../api/invoices/send_email.php" style="margin: 0;">
                 <input type="hidden" name="invoice_id" value="<?= $inv['id'] ?>">
                 <button type="submit" style="width: 100%; text-align: left; background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: #374151;">Send Mail</button>
               </form>
-              <a href="../api/invoices/download.php?id=<?= $inv['id'] ?>">Download</a>
+              <a href="<?= BASE_PATH ?>/api/invoices/download.php?id=<?= $inv['id'] ?>">Download</a>
             </div>
           </div>
         </td>

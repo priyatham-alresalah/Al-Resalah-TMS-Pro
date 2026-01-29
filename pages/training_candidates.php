@@ -75,8 +75,8 @@ foreach ($assigned as $a) {
 <html>
 <head>
   <title>Training Candidates</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -140,7 +140,7 @@ foreach ($assigned as $a) {
           </td>
           <td>
             <?php if ($training['status'] !== 'completed'): ?>
-              <a href="../api/training_candidates/remove.php?id=<?= $a['id'] ?>"
+              <a href="<?= BASE_PATH ?>/api/training_candidates/remove.php?id=<?= $a['id'] ?>"
                  onclick="return confirm('Remove candidate?')">
                 Remove
               </a>

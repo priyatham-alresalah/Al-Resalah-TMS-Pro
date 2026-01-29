@@ -1,9 +1,9 @@
 <?php
-session_start();
+require 'includes/config.php';
 
 /* If already logged in, go to dashboard */
 if (isset($_SESSION['user'])) {
-  header('Location: pages/dashboard.php');
+  header('Location: ' . BASE_PATH . '/pages/dashboard.php');
   exit;
 }
 
@@ -18,7 +18,8 @@ $error = $_GET['error'] ?? '';
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 
   <!-- SINGLE GLOBAL CSS -->
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
   <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
 </head>
 
@@ -27,7 +28,7 @@ $error = $_GET['error'] ?? '';
 <!-- ================= HEADER ================= -->
 <header class="auth-header">
   <div class="header-inner">
-    <img src="assets/images/logo.png" alt="AI Resalah">
+    <img src="<?= BASE_PATH ?>/assets/images/logo.png" alt="AI Resalah">
     <h1>AI Resalah Consultancies & Training</h1>
   </div>
 </header>
@@ -44,7 +45,7 @@ $error = $_GET['error'] ?? '';
       </p>
     <?php endif; ?>
 
-    <form method="post" action="api/auth/login.php">
+    <form method="post" action="<?= BASE_PATH ?>/api/auth/login.php">
       <input
         type="email"
         name="email"
@@ -65,8 +66,8 @@ $error = $_GET['error'] ?? '';
     <a href="#" onclick="showReset(); return false;">Forgot password?</a>
 
     <!-- RESET PASSWORD -->
-    <div id="resetBox" class="hidden" style="margin-top:20px;">
-      <form method="post" action="api/auth/reset.php">
+    <div id="resetBox" style="display:none; margin-top:20px;">
+      <form method="post" action="<?= BASE_PATH ?>/api/auth/reset.php">
         <input
           type="email"
           name="email"
@@ -88,10 +89,10 @@ $error = $_GET['error'] ?? '';
 
 <script>
 function showReset() {
-  document.getElementById('resetBox').classList.remove('hidden');
+  document.getElementById('resetBox').style.display = 'block';
 }
 function hideReset() {
-  document.getElementById('resetBox').classList.add('hidden');
+  document.getElementById('resetBox').style.display = 'none';
 }
 </script>
 

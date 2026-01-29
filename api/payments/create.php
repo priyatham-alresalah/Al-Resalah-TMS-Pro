@@ -49,20 +49,24 @@ $ctx = stream_context_create([
 ]);
 
 // Branch isolation: Verify all invoices belong to user's branch
+// BATCH FETCH all invoices at once (optimization)
 $branchId = getUserBranchId();
-if ($branchId !== null) {
-  foreach ($invoiceIds as $invoiceId) {
-    $invoice = json_decode(
-      @file_get_contents(
-        SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId&select=branch_id",
-        false,
-        $ctx
-      ),
-      true
-    );
+// Supabase uses in.(value1,value2) format
+$invoiceIdsList = implode(',', $invoiceIds);
 
-    if (!empty($invoice) && isset($invoice[0]['branch_id']) && $invoice[0]['branch_id'] !== $branchId) {
-      header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Cannot process payment: Invoice $invoiceId belongs to another branch"));
+if ($branchId !== null) {
+  $branchCheckInvoices = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/invoices?id=in.($invoiceIdsList)&select=id,branch_id",
+      false,
+      $ctx
+    ),
+    true
+  ) ?: [];
+  
+  foreach ($branchCheckInvoices as $inv) {
+    if (isset($inv['branch_id']) && $inv['branch_id'] !== $branchId) {
+      header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Cannot process payment: Invoice {$inv['id']} belongs to another branch"));
       exit;
     }
   }
@@ -118,6 +122,43 @@ $headers = "Content-Type: application/json\r\n" .
   "apikey: " . SUPABASE_SERVICE . "\r\n" .
   "Authorization: Bearer " . SUPABASE_SERVICE;
 
+// BATCH FETCH: Get all invoices and allocations in single queries (optimization)
+$invoiceIdsList = implode(',', $invoiceIds);
+$allInvoices = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/invoices?id=in.($invoiceIdsList)&select=id,total,status",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+// Create invoice map for quick lookup
+$invoiceMap = [];
+foreach ($allInvoices as $inv) {
+  $invoiceMap[$inv['id']] = $inv;
+}
+
+// BATCH FETCH: Get all existing allocations for all invoices at once
+$allExistingAllocations = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/payment_allocations?invoice_id=in.($invoiceIdsList)&select=invoice_id,allocated_amount",
+    false,
+    $ctx
+  ),
+  true
+) ?: [];
+
+// Group allocations by invoice_id
+$allocationsByInvoice = [];
+foreach ($allExistingAllocations as $alloc) {
+  $invId = $alloc['invoice_id'];
+  if (!isset($allocationsByInvoice[$invId])) {
+    $allocationsByInvoice[$invId] = 0;
+  }
+  $allocationsByInvoice[$invId] += floatval($alloc['allocated_amount']);
+}
+
 foreach ($invoiceIds as $index => $invoiceId) {
   $allocatedAmount = floatval($amounts[$index] ?? 0);
   
@@ -125,38 +166,18 @@ foreach ($invoiceIds as $index => $invoiceId) {
     continue;
   }
 
-  // Validate invoice exists and get total
-  $invoice = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/invoices?id=eq.$invoiceId&select=id,total,status",
-      false,
-      $ctx
-    ),
-    true
-  );
-
-  if (empty($invoice)) {
+  // Validate invoice exists (from batch fetch)
+  if (!isset($invoiceMap[$invoiceId])) {
     header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Invoice $invoiceId not found"));
     exit;
   }
 
-  $invoiceTotal = floatval($invoice[0]['total']);
-  $invoiceStatus = $invoice[0]['status'] ?? 'unpaid';
+  $invoice = $invoiceMap[$invoiceId];
+  $invoiceTotal = floatval($invoice['total']);
+  $invoiceStatus = $invoice['status'] ?? 'unpaid';
 
-  // Get existing allocations BEFORE adding new one
-  $existingAllocations = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/payment_allocations?invoice_id=eq.$invoiceId&select=allocated_amount",
-      false,
-      $ctx
-    ),
-    true
-  );
-
-  $existingAllocatedSum = 0;
-  foreach ($existingAllocations as $alloc) {
-    $existingAllocatedSum += floatval($alloc['allocated_amount']);
-  }
+  // Get existing allocations sum (from batch fetch)
+  $existingAllocatedSum = $allocationsByInvoice[$invoiceId] ?? 0;
 
   // Prevent overpayment: new allocation + existing allocations must not exceed invoice total
   $newTotalAllocated = $existingAllocatedSum + $allocatedAmount;
@@ -194,7 +215,20 @@ foreach ($invoiceIds as $index => $invoiceId) {
 
   if ($allocationResponse === false) {
     error_log("Failed to create payment allocation for invoice: $invoiceId");
-    continue; // Continue with other allocations
+    // Rollback: Delete payment record if allocation fails
+    $deleteCtx = stream_context_create([
+      'http' => [
+        'method' => 'DELETE',
+        'header' => $headers
+      ]
+    ]);
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/payments?id=eq.$paymentId",
+      false,
+      $deleteCtx
+    );
+    header('Location: ' . BASE_PATH . '/pages/payments.php?error=' . urlencode("Failed to allocate payment to invoice $invoiceId. Payment was cancelled."));
+    exit;
   }
 
   // Update invoice status based on new total allocated

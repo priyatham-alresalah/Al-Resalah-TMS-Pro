@@ -88,9 +88,9 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
 <html>
 <head>
   <title>Inquiries</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -205,7 +205,7 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
               <?php elseif ($status === 'quoted'): ?>
                 <a href="inquiry_view.php?id=<?= $firstInquiry['id'] ?>">View</a>
                 <?php if (!empty($firstInquiry['quote_pdf'])): ?>
-                  <a href="../api/inquiries/download_quote.php?file=<?= urlencode($firstInquiry['quote_pdf']) ?>">Download PDF</a>
+                  <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?file=<?= urlencode($firstInquiry['quote_pdf']) ?>">Download PDF</a>
                   <form action="../api/inquiries/send_quote_email.php" method="post">
                     <input type="hidden" name="inquiry_id" value="<?= $firstInquiry['id'] ?>">
                     <button type="submit" class="danger">Send Email</button>
@@ -255,7 +255,7 @@ $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
                 <?php elseif ($s === 'quoted'): ?>
                   <a href="inquiry_view.php?id=<?= $i['id'] ?>">View</a>
                   <?php if (!empty($i['quote_pdf'])): ?>
-                    <a href="../api/inquiries/download_quote.php?file=<?= urlencode($i['quote_pdf']) ?>">Download PDF</a>
+                    <a href="<?= BASE_PATH ?>/api/inquiries/download_quote.php?file=<?= urlencode($i['quote_pdf']) ?>">Download PDF</a>
                     <form action="../api/inquiries/send_quote_email.php" method="post">
                       <input type="hidden" name="inquiry_id" value="<?= $i['id'] ?>">
                       <button type="submit" class="danger">Send Email</button>

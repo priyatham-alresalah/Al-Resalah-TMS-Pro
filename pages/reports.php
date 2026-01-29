@@ -20,20 +20,20 @@ $ctx = stream_context_create([
   ]
 ]);
 
-/* FETCH ALL USERS */
+/* FETCH ALL USERS (limit for performance) */
 $users = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role&order=full_name.asc",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/profiles?select=id,full_name,email,role&order=full_name.asc&limit=1000",
     false,
     $ctx
   ),
   true
 ) ?: [];
 
-/* FETCH ALL DATA FOR STATISTICS */
+/* FETCH DATA FOR STATISTICS (with limits to prevent timeout) */
 $clients = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/clients?select=id,created_by,company_name",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/clients?select=id,created_by,company_name&limit=5000",
     false,
     $ctx
   ),
@@ -41,8 +41,8 @@ $clients = json_decode(
 ) ?: [];
 
 $inquiries = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries?select=id,created_by,status",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/inquiries?select=id,created_by,status&limit=5000",
     false,
     $ctx
   ),
@@ -50,8 +50,8 @@ $inquiries = json_decode(
 ) ?: [];
 
 $trainings = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/trainings?select=id,trainer_id,status",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/trainings?select=id,trainer_id,status&limit=5000",
     false,
     $ctx
   ),
@@ -59,8 +59,8 @@ $trainings = json_decode(
 ) ?: [];
 
 $certificates = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/certificates?select=id,issued_by,status",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/certificates?select=id,issued_by,status&limit=5000",
     false,
     $ctx
   ),
@@ -68,8 +68,8 @@ $certificates = json_decode(
 ) ?: [];
 
 $invoices = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/invoices?select=id,status",
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/invoices?select=id,status&limit=5000",
     false,
     $ctx
   ),
@@ -167,10 +167,10 @@ foreach ($certificates as $cert) {
 <html>
 <head>
   <title>Reports</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
 </head>
 <body>
 

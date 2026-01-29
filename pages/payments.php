@@ -68,10 +68,10 @@ foreach ($unpaidInvoices as $inv) {
 <html>
 <head>
   <title>Payments</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
 </head>
 <body>
 

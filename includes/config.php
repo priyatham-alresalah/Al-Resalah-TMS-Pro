@@ -1,32 +1,33 @@
 <?php
 /* =========================
+   PREVENT DOUBLE LOAD (avoids "Constant already defined" on login API)
+========================= */
+if (defined('BASE_PATH')) {
+  return;
+}
+
+/* =========================
    SECURITY HEADERS (Early)
 ========================= */
 require_once __DIR__ . '/security_headers.php';
-setSecurityHeaders();
+// Headers are set automatically when security_headers.php is included
 
 /* =========================
    SESSION
 ========================= */
 if (session_status() === PHP_SESSION_NONE) {
-  // Configure secure session settings
+  // Configure secure session settings BEFORE session_start()
+  // Using ini_set() is safer and works before session_start()
   ini_set('session.cookie_httponly', 1);
   ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 1 : 0);
   ini_set('session.cookie_samesite', 'Strict');
   ini_set('session.gc_maxlifetime', 1800); // 30 minutes
+  ini_set('session.cookie_lifetime', 0); // Browser session
+  ini_set('session.cookie_path', '/');
+  ini_set('session.cookie_domain', '');
   
+  // Now start the session with secure parameters
   session_start();
-  
-  // Set secure cookie parameters
-  $cookieParams = session_get_cookie_params();
-  session_set_cookie_params([
-    'lifetime' => $cookieParams['lifetime'],
-    'path' => $cookieParams['path'],
-    'domain' => $cookieParams['domain'],
-    'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
-    'httponly' => true,
-    'samesite' => 'Strict'
-  ]);
 }
 
 /* =========================
@@ -43,10 +44,14 @@ if (session_status() === PHP_SESSION_NONE) {
 */
 // PRODUCTION: Set to '' for subdomain root
 // DEVELOPMENT: Set to '/training-management-system' for localhost
-// Auto-detect: Check if running on localhost
-$isLocalhost = ($_SERVER['HTTP_HOST'] ?? '') === 'localhost' || 
-               strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
-               strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false;
+// Auto-detect: Check if running on localhost or production subdomain
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$isLocalhost = $host === 'localhost' || 
+               strpos($host, 'localhost') !== false ||
+               strpos($host, '127.0.0.1') !== false ||
+               strpos($host, '.local') !== false;
+
+// Production subdomain: reports.alresalahct.com uses empty BASE_PATH
 define('BASE_PATH', $isLocalhost ? '/training-management-system' : '');
 
 /* =========================
@@ -83,9 +88,13 @@ if ($supabaseService === false) {
     $env = parse_ini_file(__DIR__ . '/../.env');
     $supabaseService = $env['SUPABASE_SERVICE'] ?? null;
   }
-  // Last resort: Use hardcoded (should be removed in production)
+  // Last resort: Fail safely if no key found (production safety)
   if (empty($supabaseService)) {
+    error_log("CRITICAL: SUPABASE_SERVICE key not found in environment or .env file");
+    // TEMPORARY: Allow hardcoded key for quick deployment (REMOVE AFTER SETTING .env FILE)
+    // TODO: Create .env file on production server with SUPABASE_SERVICE key
     $supabaseService = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbXprcXNidnNtdGVxZHRwYXJuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyMjYyMSwiZXhwIjoyMDg0ODk4NjIxfQ.VbJCSHYPyhMFUosl-GRZgicdlUXSO68fEQlUgDBpsUs';
+    error_log("WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.");
   }
 }
 define('SUPABASE_SERVICE', $supabaseService);

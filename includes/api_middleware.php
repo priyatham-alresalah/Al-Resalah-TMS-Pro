@@ -5,18 +5,20 @@
  * Include this at the start of API endpoints
  */
 
-require __DIR__ . '/config.php';
-require __DIR__ . '/security_headers.php';
-require __DIR__ . '/maintenance.php';
-require __DIR__ . '/rate_limit.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/security_headers.php';
+require_once __DIR__ . '/maintenance.php';
+require_once __DIR__ . '/rate_limit.php';
 
 /**
  * Initialize API middleware
  * @param string $endpoint Endpoint identifier for rate limiting
  */
 function initAPIMiddleware($endpoint = null) {
-  // Set security headers
-  setSecurityHeaders();
+  // Set security headers (if not already set)
+  if (!defined('SECURITY_HEADERS_SET')) {
+    setSecurityHeaders();
+  }
   
   // Enforce maintenance mode
   enforceMaintenanceMode();

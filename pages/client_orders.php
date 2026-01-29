@@ -44,9 +44,9 @@ $quotations = json_decode(
 <html>
 <head>
   <title>Client Orders (LPO)</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -136,7 +136,7 @@ $quotations = json_decode(
                     </form>
                   <?php endif; ?>
                   <?php if ($order['lpo_file_path']): ?>
-                    <a href="../<?= htmlspecialchars($order['lpo_file_path']) ?>" target="_blank">View LPO</a>
+                    <a href="<?= BASE_PATH ?>/<?= htmlspecialchars($order['lpo_file_path']) ?>" target="_blank">View LPO</a>
                   <?php endif; ?>
                 </div>
               </div>

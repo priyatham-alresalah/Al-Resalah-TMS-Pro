@@ -4,7 +4,10 @@
  * Production-safe logging with sanitization
  */
 
-require __DIR__ . '/config.php';
+// Only require config if not already loaded
+if (!defined('BASE_PATH')) {
+  require __DIR__ . '/config.php';
+}
 
 define('LOG_DIR', __DIR__ . '/../logs');
 define('LOG_FILE', LOG_DIR . '/app.log');

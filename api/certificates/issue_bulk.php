@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/certificate_number.php';
 
 /* CSRF Protection */
 requireCSRF();
@@ -93,64 +94,47 @@ foreach ($candidates as $c) {
     continue; // already issued
   }
 
-  // Atomic certificate number generation - get and increment counter for each certificate
-  $counterCtx = stream_context_create([
-    'http' => [
-      'method' => 'GET',
-      'header' => $headers
-    ]
-  ]);
-
-  $counter = json_decode(
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year&select=last_number&limit=1",
-      false,
-      $counterCtx
-    ),
-    true
-  );
-
-  $lastNumber = !empty($counter) ? intval($counter[0]['last_number']) : 0;
-  $newNumber = $lastNumber + 1;
-
-  // Update counter atomically BEFORE creating certificate
-  $updateCounterData = ['last_number' => $newNumber];
-  $updateCounterCtx = stream_context_create([
-    'http' => [
-      'method' => 'PATCH',
-      'header' => $headers,
-      'content' => json_encode($updateCounterData)
-    ]
-  ]);
-
-  $counterUpdateResponse = @file_get_contents(
-    SUPABASE_URL . "/rest/v1/certificate_counters?year=eq.$year",
-    false,
-    $updateCounterCtx
-  );
-
-  // If counter doesn't exist, create it
-  if ($counterUpdateResponse === false && empty($counter)) {
-    $createCounterData = [
-      'year' => $year,
-      'last_number' => $newNumber
-    ];
-    $createCounterCtx = stream_context_create([
-      'http' => [
-        'method' => 'POST',
-        'header' => $headers,
-        'content' => json_encode($createCounterData)
-      ]
-    ]);
-    @file_get_contents(
-      SUPABASE_URL . "/rest/v1/certificate_counters",
-      false,
-      $createCounterCtx
-    );
+  // Use helper function for certificate number generation with retry logic
+  $maxRetries = 5;
+  $cert_no = null;
+  $retryCount = 0;
+  
+  while ($retryCount < $maxRetries) {
+    try {
+      $cert_no = getNextCertificateNumber();
+      
+      // Verify certificate number doesn't already exist (race condition check)
+      $existingCert = json_decode(
+        @file_get_contents(
+          SUPABASE_URL . "/rest/v1/certificates?certificate_no=eq.$cert_no&select=id",
+          false,
+          $ctx
+        ),
+        true
+      );
+      
+      if (empty($existingCert)) {
+        break; // Number is unique, proceed
+      }
+      
+      // Number exists, retry
+      $retryCount++;
+      usleep(100000 * $retryCount); // Exponential backoff: 100ms, 200ms, 300ms...
+    } catch (Exception $e) {
+      error_log("Certificate number generation error: " . $e->getMessage());
+      $retryCount++;
+      if ($retryCount >= $maxRetries) {
+        header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('Failed to generate certificate number. Please try again.'));
+        exit;
+      }
+      usleep(100000 * $retryCount);
+    }
   }
-
-  // Generate unique certificate number
-  $cert_no = "AR-$year-" . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+  
+  if (!$cert_no) {
+    header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('Failed to generate certificate number after retries. Please try again.'));
+    exit;
+  }
 
   $payload = json_encode([
     'training_id' => $training_id,

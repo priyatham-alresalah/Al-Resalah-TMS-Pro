@@ -1,17 +1,49 @@
 <?php
-require '../../includes/config.php';
-require '../../includes/api_middleware.php';
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't display, but log
+ini_set('log_errors', 1);
 
-// Initialize API middleware (rate limiting for auth endpoints)
-initAPIMiddleware('/auth/login');
+try {
+  require '../../includes/config.php';
+} catch (Throwable $e) {
+  error_log("Config error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+  http_response_code(500);
+  die(json_encode(['error' => 'Configuration error']));
+}
+
+try {
+  require '../../includes/api_middleware.php';
+} catch (Throwable $e) {
+  error_log("Middleware error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+  http_response_code(500);
+  die(json_encode(['error' => 'Middleware error']));
+}
 
 /* =========================
    ALLOW POST ONLY
 ========================= */
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  header('Location: ' . BASE_PATH . '/index.php');
+  try {
+    header('Location: ' . BASE_PATH . '/index.php');
+  } catch (Throwable $e) {
+    error_log("Redirect error: " . $e->getMessage());
+    http_response_code(500);
+    die('Redirect failed');
+  }
   exit;
 }
+
+// Initialize API middleware (rate limiting for auth endpoints)
+try {
+  initAPIMiddleware('/auth/login');
+} catch (Throwable $e) {
+  error_log("Init middleware error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+  // Don't die here - allow login to proceed even if rate limiting fails
+}
+
+// Wrap entire login logic in try-catch for error handling
+try {
 
 /* =========================
    INPUTS
@@ -117,3 +149,12 @@ session_regenerate_id(true);
 ========================= */
 header('Location: ' . BASE_PATH . '/pages/dashboard.php');
 exit;
+
+} catch (Throwable $e) {
+  // Log the error
+  error_log("Login error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+  
+  // Redirect to login with error
+  header('Location: ' . BASE_PATH . '/index.php?error=system');
+  exit;
+}

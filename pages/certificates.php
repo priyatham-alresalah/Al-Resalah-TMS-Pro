@@ -62,9 +62,9 @@ foreach ($clients as $c) $clientMap[$c['id']] = $c;
 <html>
 <head>
   <title>Certificates</title>
-  <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../assets/css/responsive.css">
-  <link rel="icon" href="/training-management-system/favicon.ico">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_PATH ?>/assets/css/responsive.css">
+  <link rel="icon" href="<?= BASE_PATH ?>/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
@@ -122,7 +122,7 @@ foreach ($clients as $c) $clientMap[$c['id']] = $c;
                 <input type="hidden" name="certificate_id" value="<?= $c['id'] ?>">
                 <button type="submit" style="width: 100%; text-align: left; background: none; border: none; padding: 10px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: #374151;">Send Mail</button>
               </form>
-              <a href="../api/certificates/download.php?id=<?= $c['id'] ?>">Download</a>
+              <a href="<?= BASE_PATH ?>/api/certificates/download.php?id=<?= $c['id'] ?>">Download</a>
               <?php if ($status === 'active'): ?>
                 <div class="danger">
                   <form method="post" action="../api/certificates/revoke.php" onsubmit="return confirm('Revoke this certificate?')" style="margin: 0;">
