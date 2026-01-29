@@ -43,7 +43,7 @@ $client = json_decode(
 )[0] ?? null;
 
 if (!$client) {
-  header('Location: ../../pages/inquiries.php?error=' . urlencode('Client not found'));
+  header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('Client not found'));
   exit;
 }
 
@@ -93,83 +93,83 @@ if (empty($quoteCourses)) {
   exit;
 }
 
-/* Generate quote number */
-$quoteNo = 'QUOTE-' . date('Y') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
-
-/* Generate PDF */
-$pdfFileName = null;
 try {
-  if (function_exists('generateQuotePDF')) {
-    $pdfFileName = generateQuotePDF(
-      $quoteNo,
-      $client['company_name'] ?? '',
-      $client['email'] ?? '',
-      $client['address'] ?? '',
-      $quoteCourses,
-      $grandTotal,
-      $notes
-    );
-  }
-} catch (Exception $e) {
-  // If FPDF not available, continue without PDF for now
-  $pdfFileName = null;
-  error_log("PDF generation failed: " . $e->getMessage());
-}
+  /* Generate quote number */
+  $quoteNo = 'QUOTE-' . date('Y') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
 
-/* Update inquiries status to 'quoted' and store quote data */
-foreach ($quoteCourses as $qc) {
-  // Build quote data - only include fields that exist in database
-  $quoteData = [
-    'status' => 'quoted',
-    'quote_no' => $quoteNo,
-    'quote_amount' => $qc['amount'], // Total amount before VAT
-    'quote_vat' => $qc['vat'],
-    'quote_total' => $qc['total'],
-    'quoted_at' => date('Y-m-d H:i:s'),
-    'quoted_by' => $_SESSION['user']['id']
-  ];
-  
-  // Note: If database has quote_candidates and quote_amount_per_candidate fields, uncomment below:
-  // $quoteData['quote_candidates'] = $qc['candidates'];
-  // $quoteData['quote_amount_per_candidate'] = $qc['amount_per_candidate'];
-  
-  if ($pdfFileName) {
-    $quoteData['quote_pdf'] = $pdfFileName;
-  }
-  
-  // Create context for each update with the quote data
-  $updateCtxFinal = stream_context_create([
-    'http' => [
-      'method' => 'PATCH',
-      'header' =>
-        "Content-Type: application/json\r\n" .
-        "apikey: " . SUPABASE_SERVICE . "\r\n" .
-        "Authorization: Bearer " . SUPABASE_SERVICE,
-      'content' => json_encode($quoteData)
-    ]
-  ]);
-  
-  $updateResponse = @file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries?id=eq.{$qc['inquiry_id']}",
-    false,
-    $updateCtxFinal
-  );
-  
-  // If update fails, log but continue (don't break the whole process)
-  if ($updateResponse === false) {
-    $httpResponse = isset($http_response_header) ? $http_response_header : [];
-    $errorMsg = 'Unknown error';
-    if (!empty($httpResponse[0])) {
-      $errorMsg = $httpResponse[0];
+  /* Generate PDF */
+  $pdfFileName = null;
+  try {
+    if (function_exists('generateQuotePDF')) {
+      $pdfFileName = generateQuotePDF(
+        $quoteNo,
+        $client['company_name'] ?? '',
+        $client['email'] ?? '',
+        $client['address'] ?? '',
+        $quoteCourses,
+        $grandTotal,
+        $notes
+      );
     }
-    error_log("Failed to update inquiry {$qc['inquiry_id']} with quote data: " . $errorMsg);
-    // Continue processing other inquiries even if one fails
+  } catch (Exception $e) {
+    // If FPDF not available, continue without PDF for now
+    $pdfFileName = null;
+    error_log("PDF generation failed: " . $e->getMessage());
   }
-}
+
+  /* Update inquiries status to 'quoted' and store quote data */
+  foreach ($quoteCourses as $qc) {
+    // Build quote data - only include fields that exist in database
+    $quoteData = [
+      'status' => 'quoted',
+      'quote_no' => $quoteNo,
+      'quote_amount' => $qc['amount'], // Total amount before VAT
+      'quote_vat' => $qc['vat'],
+      'quote_total' => $qc['total'],
+      'quoted_at' => date('Y-m-d H:i:s'),
+      'quoted_by' => $_SESSION['user']['id']
+    ];
+    
+    // Note: If database has quote_candidates and quote_amount_per_candidate fields, uncomment below:
+    // $quoteData['quote_candidates'] = $qc['candidates'];
+    // $quoteData['quote_amount_per_candidate'] = $qc['amount_per_candidate'];
+    
+    if ($pdfFileName) {
+      $quoteData['quote_pdf'] = $pdfFileName;
+    }
+    
+    // Create context for each update with the quote data
+    $updateCtxFinal = stream_context_create([
+      'http' => [
+        'method' => 'PATCH',
+        'header' =>
+          "Content-Type: application/json\r\n" .
+          "apikey: " . SUPABASE_SERVICE . "\r\n" .
+          "Authorization: Bearer " . SUPABASE_SERVICE,
+        'content' => json_encode($quoteData)
+      ]
+    ]);
+    
+    $updateResponse = @file_get_contents(
+      SUPABASE_URL . "/rest/v1/inquiries?id=eq.{$qc['inquiry_id']}",
+      false,
+      $updateCtxFinal
+    );
+    
+    // If update fails, log but continue (don't break the whole process)
+    if ($updateResponse === false) {
+      $httpResponse = isset($http_response_header) ? $http_response_header : [];
+      $errorMsg = 'Unknown error';
+      if (!empty($httpResponse[0])) {
+        $errorMsg = $httpResponse[0];
+      }
+      error_log("Failed to update inquiry {$qc['inquiry_id']} with quote data: " . $errorMsg);
+      // Continue processing other inquiries even if one fails
+    }
+  }
 
   header('Location: ' . BASE_PATH . '/pages/inquiries.php?success=' . urlencode("Quote created successfully! Quote No: $quoteNo" . ($pdfFileName ? ' (PDF generated)' : ' (Note: Install FPDF for PDF generation)')));
   exit;
-  
 } catch (Exception $e) {
   // Log the error
   error_log("Quote creation error: " . $e->getMessage());
