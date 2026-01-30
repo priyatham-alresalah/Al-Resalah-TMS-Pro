@@ -1,6 +1,7 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/csrf.php';
 require '../includes/rbac.php';
 require '../includes/pagination.php';
 require '../includes/cache.php';
@@ -169,26 +170,26 @@ if (!empty($trainingIds)) {
   <div class="page-header">
     <div>
       <h2>Trainings</h2>
-      <p class="muted">Manage training lifecycle</p>
+      <p class="muted">Manage training lifecycle. Each training can have one client and any number of candidates — use <strong>Candidates</strong> in Actions to add or bulk-assign.</p>
     </div>
+    <?php if (hasPermission('trainings', 'create')): ?>
+      <a href="schedule_training.php" class="btn btn-primary">
+        + Schedule Training
+      </a>
+    <?php endif; ?>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
-
-  <?php if (isset($_GET['success'])): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['success']) ?>
-    </div>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
   <?php endif; ?>
 
 <table class="table">
   <thead>
     <tr>
-      <th>Client / Candidates</th>
+      <th>Client &amp; candidates <span class="muted" style="font-weight: normal; font-size: 12px;">(many per training)</span></th>
       <th>Course</th>
       <th>Trainer</th>
       <th>Date</th>
@@ -208,28 +209,26 @@ if (!empty($trainingIds)) {
   <td>
     <?php if ($hasClient): ?>
       <strong><?= htmlspecialchars($clientMap[$t['client_id']]) ?></strong>
-      <?php if (!empty($trainingCandidates)): ?>
-        <?php 
-          $candidateCount = count($trainingCandidates);
-          $firstCandidate = $trainingCandidates[0];
-          $remainingCount = $candidateCount - 1;
-        ?>
-        <div style="margin-top: 4px;">
-          <span style="color: #6b7280; font-size: 13px;">
-            <?= htmlspecialchars($firstCandidate['full_name']) ?>
-            <?php if ($remainingCount > 0): ?>
-              <span class="candidate-count-badge">+<?= $remainingCount ?></span>
-            <?php endif; ?>
-          </span>
-          <?php if ($candidateCount > 1): ?>
+      <?php
+        $candidateCount = count($trainingCandidates);
+      ?>
+      <div style="margin-top: 4px; font-size: 13px;">
+        <?php if ($candidateCount > 0): ?>
+          <?php
+            $firstCandidate = $trainingCandidates[0];
+            $remainingCount = $candidateCount - 1;
+          ?>
+          <span style="color: #6b7280;"><?= $candidateCount ?> candidate<?= $candidateCount === 1 ? '' : 's' ?> — <?= htmlspecialchars($firstCandidate['full_name']) ?></span>
+          <?php if ($remainingCount > 0): ?>
+            <span class="candidate-count-badge">+<?= $remainingCount ?> more</span>
             <button type="button" class="btn-toggle-candidates" onclick="toggleTrainingCandidates('<?= $rowId ?>')">
               <span class="toggle-text-<?= $rowId ?>">Show</span>
             </button>
           <?php endif; ?>
-        </div>
-      <?php else: ?>
-        <span style="color: #9ca3af; font-style: italic; font-size: 13px;">No candidates</span>
-      <?php endif; ?>
+        <?php else: ?>
+          <span style="color: #9ca3af; font-style: italic;">No candidates (add via Candidates action)</span>
+        <?php endif; ?>
+      </div>
     <?php else: ?>
       <!-- Direct candidates (no client) -->
       <?php if (!empty($trainingCandidates)): ?>
@@ -238,15 +237,11 @@ if (!empty($trainingIds)) {
           $firstCandidate = $trainingCandidates[0];
           $remainingCount = $candidateCount - 1;
         ?>
-        <span style="color: #6b7280;">
-          <?= htmlspecialchars($firstCandidate['full_name']) ?>
-          <?php if ($remainingCount > 0): ?>
-            <span style="color: #2563eb; font-weight: 600;">+<?= $remainingCount ?></span>
-          <?php endif; ?>
-        </span>
-        <?php if ($candidateCount > 1): ?>
+        <span style="color: #6b7280; font-size: 13px;"><?= $candidateCount ?> candidate<?= $candidateCount === 1 ? '' : 's' ?> — <?= htmlspecialchars($firstCandidate['full_name']) ?></span>
+        <?php if ($remainingCount > 0): ?>
+          <span class="candidate-count-badge">+<?= $remainingCount ?> more</span>
           <button type="button" onclick="toggleTrainingCandidates('<?= $rowId ?>')" 
-                  style="margin-left: 8px; background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; text-decoration: underline;">
+                  style="margin-left: 6px; background: none; border: none; color: #2563eb; cursor: pointer; font-size: 12px; text-decoration: underline;">
             <span class="toggle-text-<?= $rowId ?>">Show</span>
           </button>
         <?php endif; ?>
@@ -267,10 +262,32 @@ if (!empty($trainingIds)) {
     <?php endif; ?>
   </td>
   <td><?= htmlspecialchars($t['course_name']) ?></td>
-  <td><?= date('d M Y', strtotime($t['training_date'])) ?></td>
+  <td>
+    <?php 
+      $trainerId = $t['trainer_id'] ?? null;
+      if ($trainerId && isset($trainerMap[$trainerId])) {
+        echo htmlspecialchars($trainerMap[$trainerId]);
+      } else {
+        echo '<span style="color: #9ca3af; font-style: italic;">Not assigned</span>';
+      }
+    ?>
+  </td>
+  <td>
+    <?php 
+      if (!empty($t['training_date'])) {
+        $date = strtotime($t['training_date']);
+        echo $date !== false ? date('d M Y', $date) : '-';
+      } else {
+        echo '-';
+      }
+    ?>
+  </td>
   <td>
     <?php if (!empty($t['training_time'])): ?>
-      <?= date('g:i A', strtotime($t['training_time'])) ?>
+      <?php
+        $time = strtotime($t['training_time']);
+        echo $time !== false ? date('g:i A', $time) : '-';
+      ?>
     <?php else: ?>
       —
     <?php endif; ?>
@@ -287,17 +304,18 @@ if (!empty($trainingIds)) {
       </button>
       <div class="action-menu">
         <a href="training_candidates.php?training_id=<?= $t['id'] ?>">Candidates</a>
-        <a href="#" onclick="assignCandidates(<?= $t['id'] ?>, '<?= htmlspecialchars(addslashes($t['course_name'])) ?>', <?= $t['client_id'] ? 'true' : 'false' ?>); return false;">Assign Candidates</a>
-        <a href="#" onclick="assignTrainer(<?= $t['id'] ?>, '<?= htmlspecialchars(addslashes($t['course_name'])) ?>', '<?= $t['trainer_id'] ?? '' ?>'); return false;">Assign Trainer</a>
+        <a href="#" class="js-assign-trainer" data-training-id="<?= htmlspecialchars($t['id']) ?>" data-course-name="<?= htmlspecialchars($t['course_name'] ?? '') ?>" data-trainer-id="<?= htmlspecialchars($t['trainer_id'] ?? '') ?>">Assign Trainer</a>
         <?php if ($t['status'] === 'scheduled'): ?>
-          <form method="post" action="../api/trainings/update_status.php">
+          <form method="post" action="../api/trainings/update.php" onsubmit="return validateStartTraining('<?= $t['id'] ?>', '<?= htmlspecialchars($t['trainer_id'] ?? '', ENT_QUOTES) ?>');">
+            <?= csrfField() ?>
             <input type="hidden" name="id" value="<?= $t['id'] ?>">
             <input type="hidden" name="status" value="ongoing">
-            <button type="submit">Start</button>
+            <button type="submit" <?= empty($t['trainer_id']) ? 'disabled title="Please assign a trainer first"' : '' ?>>Start</button>
           </form>
         <?php endif; ?>
         <?php if ($t['status'] === 'ongoing'): ?>
-          <form method="post" action="../api/trainings/update_status.php">
+          <form method="post" action="../api/trainings/update.php">
+            <?= csrfField() ?>
             <input type="hidden" name="id" value="<?= $t['id'] ?>">
             <input type="hidden" name="status" value="completed">
             <button type="submit">Complete</button>
@@ -389,6 +407,7 @@ endforeach; else: ?>
         <a href="training_edit.php?id=<?= $t['id'] ?>" class="btn">View / Edit</a>
         <?php if ($t['status'] === 'scheduled'): ?>
           <form method="post" action="../api/trainings/update.php" style="margin: 0;">
+            <?= csrfField() ?>
             <input type="hidden" name="id" value="<?= $t['id'] ?>">
             <input type="hidden" name="status" value="completed">
             <button type="submit" class="btn">Complete</button>
@@ -416,11 +435,12 @@ if ($totalPages > 1) {
 ?>
 
 <!-- Trainer Assignment Modal -->
-<div id="trainerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-  <div style="background: white; padding: 25px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+<div id="trainerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1050; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 25px; border-radius: 8px; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);" onclick="event.stopPropagation();">
     <h3 style="margin-bottom: 15px;">Assign Trainer</h3>
     <p id="modalCourseName" style="color: #6b7280; margin-bottom: 15px;"></p>
-    <form id="trainerForm" method="post" action="../api/trainings/assign_trainer.php">
+    <form id="trainerForm" method="post" action="<?= htmlspecialchars(BASE_PATH) ?>/api/trainings/assign_trainer.php">
+      <?= csrfField() ?>
       <input type="hidden" name="training_id" id="modalTrainingId">
       <div class="form-group">
         <label>Select Trainer</label>
@@ -441,28 +461,64 @@ if ($totalPages > 1) {
 
 <script>
   function assignTrainer(trainingId, courseName, currentTrainerId) {
-    document.getElementById('modalTrainingId').value = trainingId;
-    document.getElementById('modalCourseName').textContent = 'Course: ' + courseName;
-    
-    // Set current trainer if exists
-    document.getElementById('modalTrainerId').value = currentTrainerId || '';
-    
-    document.getElementById('trainerModal').style.display = 'flex';
-    
-    // Close all action menus
-    document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
-      openMenu.classList.remove('open');
-    });
+    try {
+      var modal = document.getElementById('trainerModal');
+      var modalTrainingId = document.getElementById('modalTrainingId');
+      var modalCourseName = document.getElementById('modalCourseName');
+      var modalTrainerId = document.getElementById('modalTrainerId');
+      
+      if (!modal || !modalTrainingId || !modalCourseName || !modalTrainerId) {
+        console.error('Modal elements not found');
+        alert('Error: Modal elements not found. Please refresh the page.');
+        return false;
+      }
+      
+      modalTrainingId.value = trainingId;
+      modalCourseName.textContent = 'Course: ' + courseName;
+      
+      // Set current trainer if exists
+      modalTrainerId.value = currentTrainerId || '';
+      
+      modal.style.display = 'flex';
+      
+      // Close all action menus
+      document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
+        openMenu.classList.remove('open');
+      });
+      
+      return false;
+    } catch (error) {
+      console.error('Error in assignTrainer:', error);
+      alert('Error opening trainer assignment modal. Please check the console for details.');
+      return false;
+    }
   }
 
   function closeTrainerModal() {
-    document.getElementById('trainerModal').style.display = 'none';
+    var modal = document.getElementById('trainerModal');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+    return false;
   }
 
   // Close modal when clicking outside
   document.getElementById('trainerModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
       closeTrainerModal();
+    }
+  });
+
+  // Assign Trainer link (delegated – uses data attributes so course names with quotes work)
+  document.addEventListener('click', function(e) {
+    var link = e.target.closest('.js-assign-trainer');
+    if (link) {
+      e.preventDefault();
+      var trainingId = link.getAttribute('data-training-id');
+      var courseName = link.getAttribute('data-course-name') || '';
+      var trainerId = link.getAttribute('data-trainer-id') || '';
+      assignTrainer(trainingId, courseName, trainerId);
+      return false;
     }
   });
 
@@ -503,45 +559,14 @@ if ($totalPages > 1) {
     toggleText.textContent = isHidden ? 'Hide' : 'Show';
   }
 
-  function assignCandidates(trainingId, courseName, hasClient) {
-    document.getElementById('modalCandidateTrainingId').value = trainingId;
-    document.getElementById('modalCandidateCourseName').textContent = 'Course: ' + courseName;
-    
-    // Fetch current assigned candidates and pre-check them
-    fetch('api/trainings/get_assigned_candidates.php?training_id=' + trainingId)
-      .then(response => response.json())
-      .then(data => {
-        const checkboxes = document.querySelectorAll('#candidateForm input[type="checkbox"]');
-        checkboxes.forEach(function(checkbox) {
-          checkbox.checked = data.includes(checkbox.value);
-        });
-      })
-      .catch(error => {
-        console.error('Error fetching assigned candidates:', error);
-      });
-    
-    document.getElementById('candidateModal').style.display = 'flex';
-    
-    // Close all action menus
-    document.querySelectorAll('.action-menu.open').forEach(function (openMenu) {
-      openMenu.classList.remove('open');
-    });
-  }
-
-  function closeCandidateModal() {
-    document.getElementById('candidateModal').style.display = 'none';
-    // Uncheck all checkboxes
-    document.querySelectorAll('#candidateForm input[type="checkbox"]').forEach(function(cb) {
-      cb.checked = false;
-    });
-  }
-
-  // Close candidate modal when clicking outside
-  document.getElementById('candidateModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-      closeCandidateModal();
+  function validateStartTraining(trainingId, trainerId) {
+    if (!trainerId || trainerId === '') {
+      alert('Cannot start training without a trainer. Please assign a trainer first.');
+      return false;
     }
-  });
+    return true;
+  }
+
 </script>
 
 </main>

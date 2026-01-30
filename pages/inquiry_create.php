@@ -69,16 +69,11 @@ $courses = json_decode(
     </div>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
-
-  <?php if (isset($_GET['success'])): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['success']) ?>
-    </div>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
   <?php endif; ?>
 
   <!-- ADD INQUIRY -->

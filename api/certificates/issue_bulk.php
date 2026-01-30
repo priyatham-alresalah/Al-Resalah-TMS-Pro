@@ -9,6 +9,7 @@ require '../../includes/csrf.php';
 require '../../includes/rbac.php';
 require '../../includes/workflow.php';
 require '../../includes/audit_log.php';
+require '../../includes/branch.php';
 require '../../includes/certificate_number.php';
 
 /* CSRF Protection */
@@ -82,6 +83,8 @@ foreach ($existing as $e) {
 $year = date('Y');
 $userId = $_SESSION['user']['id'];
 $issuedCount = 0;
+$skippedCount = 0;
+$errors = [];
 
 foreach ($candidates as $c) {
   $cid = $c['candidate_id'];
@@ -91,7 +94,8 @@ foreach ($candidates as $c) {
   }
 
   if (isset($issuedMap[$cid])) {
-    continue; // already issued
+    $skippedCount++; // already issued
+    continue;
   }
 
   // Use helper function for certificate number generation with retry logic
@@ -193,6 +197,9 @@ foreach ($candidates as $c) {
       ]);
       
       $issuedCount++;
+    } else {
+      $errors[] = "Failed to issue certificate for candidate: $cid";
+      error_log("Failed to issue certificate for candidate $cid: " . substr($result, 0, 200));
     }
   }
 }
@@ -216,7 +223,38 @@ if ($issuedCount > 0) {
     false,
     $checkpointCtx
   );
+
+  // Auto-create invoice for this training (amounts from approved quotation)
+  $invoiceResult = createInvoiceForTraining($training_id, [
+    'completed_by' => $userId,
+    'completed_at' => date('Y-m-d H:i:s'),
+    'branch_id' => function_exists('getUserBranchId') ? getUserBranchId() : null
+  ]);
+  if ($invoiceResult['created'] && $invoiceResult['invoice_id']) {
+    auditLog('invoices', 'create', $invoiceResult['invoice_id'], [
+      'invoice_no' => $invoiceResult['invoice_no'],
+      'training_id' => $training_id,
+      'auto' => true
+    ]);
+  }
 }
 
-header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&success=' . urlencode("Successfully issued $issuedCount certificate(s)"));
+// Build appropriate message
+if ($issuedCount > 0) {
+  $message = "Successfully issued $issuedCount certificate(s)";
+  if ($skippedCount > 0) {
+    $message .= ". $skippedCount certificate(s) were already issued.";
+  }
+  if (!empty($invoiceResult['created']) && !empty($invoiceResult['invoice_no'])) {
+    $message .= " Invoice " . $invoiceResult['invoice_no'] . " was created automatically.";
+  }
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&success=' . urlencode($message));
+} elseif ($skippedCount > 0) {
+  // All selected certificates were already issued
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&info=' . urlencode("All selected candidates already have certificates issued ($skippedCount certificate(s))."));
+} elseif (!empty($errors)) {
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('Failed to issue certificates. Please try again.'));
+} else {
+  header('Location: ' . BASE_PATH . '/pages/issue_certificates.php?training_id=' . urlencode($training_id) . '&error=' . urlencode('No certificates were issued. Please check your selections.'));
+}
 exit;

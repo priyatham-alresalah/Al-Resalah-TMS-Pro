@@ -51,10 +51,8 @@ $clients = json_decode(
     </div>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
 
   <div style="background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-top: 20px; max-width: 700px;">

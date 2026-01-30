@@ -17,7 +17,7 @@
            placeholder="Certificate Number"
            required
            style="width:100%;padding:10px;margin-bottom:10px;">
-    <button class="btn">Verify</button>
+    <button type="submit" class="btn">Verify</button>
   </form>
 
 <?php if (!empty($_GET['certificate_no'])): ?>

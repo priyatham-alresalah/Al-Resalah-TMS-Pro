@@ -1,4 +1,20 @@
 <?php
+/**
+ * Create Training
+ * 
+ * NON-NEGOTIABLE BUSINESS RULE:
+ * Training MUST NOT be created unless:
+ * 1. A quotation exists for the inquiry
+ * 2. Quotation status = 'accepted'
+ * 3. Corresponding LPO exists
+ * 4. LPO status = 'verified'
+ * 
+ * There are NO exceptions.
+ * 
+ * Inquiry is a sales intake object.
+ * Training creation is an operational step that is enabled only after
+ * commercial acceptance (quotation) and formal confirmation (LPO).
+ */
 require '../../includes/config.php';
 require '../../includes/auth_check.php';
 require '../../includes/csrf.php';
@@ -24,8 +40,10 @@ if (empty($inquiryId) || empty($clientId) || empty($trainingDate)) {
 }
 
 // Enforce workflow - check prerequisites
+// NON-NEGOTIABLE BUSINESS RULE: Training MUST NOT be created unless quotation is accepted AND LPO is verified
 $workflowCheck = canCreateTraining($inquiryId);
 if (!$workflowCheck['allowed']) {
+  http_response_code(403);
   header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode($workflowCheck['reason']));
   exit;
 }

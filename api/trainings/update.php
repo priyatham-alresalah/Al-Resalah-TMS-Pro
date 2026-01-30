@@ -49,6 +49,24 @@ if (empty($current)) {
 
 $current = $current[0];
 
+// Prevent starting training without a trainer
+if ($current['status'] === 'scheduled' && $newStatus === 'ongoing') {
+  // Fetch training to check trainer_id
+  $trainingCheck = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/trainings?id=eq.$id&select=trainer_id",
+      false,
+      $ctx
+    ),
+    true
+  );
+  
+  if (!empty($trainingCheck) && empty($trainingCheck[0]['trainer_id'])) {
+    header('Location: ' . BASE_PATH . '/pages/trainings.php?error=' . urlencode('Cannot start training without assigning a trainer. Please assign a trainer first.'));
+    exit;
+  }
+}
+
 // Enforce checkpoint requirement for completion
 if ($current['status'] !== 'completed' && $newStatus === 'completed') {
   $completionCheck = canCompleteTraining($id);

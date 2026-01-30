@@ -105,12 +105,39 @@ define('SUPABASE_SERVICE', $supabaseService);
 define('APP_NAME', 'AI Resalah Consultancies & Training');
 
 /* =========================
+   EMAIL (SMTP) CONFIG
+   Used for: quotations, invoices, certificates, password reset
+   Change app password in .env as SMTP_PASS or set environment variable.
+========================= */
+$env = [];
+if (file_exists(__DIR__ . '/../.env')) {
+  $env = parse_ini_file(__DIR__ . '/../.env') ?: [];
+}
+$smtpHost   = getenv('SMTP_HOST')   ?: ($env['SMTP_HOST']   ?? 'smtp.gmail.com');
+$smtpPort   = getenv('SMTP_PORT')   ?: ($env['SMTP_PORT']   ?? '587');
+$smtpUser   = getenv('SMTP_USER')   ?: ($env['SMTP_USER']   ?? '');
+$smtpPass   = getenv('SMTP_PASS')   ?: ($env['SMTP_PASS']   ?? '');
+$smtpFrom   = getenv('SMTP_FROM')   ?: ($env['SMTP_FROM']   ?? $smtpUser);
+$smtpFromName = getenv('SMTP_FROM_NAME') ?: ($env['SMTP_FROM_NAME'] ?? APP_NAME);
+
+if (!defined('SMTP_HOST'))     define('SMTP_HOST',     $smtpHost);
+if (!defined('SMTP_PORT'))     define('SMTP_PORT',     $smtpPort);
+if (!defined('SMTP_USER'))     define('SMTP_USER',     $smtpUser);
+if (!defined('SMTP_PASS'))     define('SMTP_PASS',     $smtpPass);
+if (!defined('SMTP_FROM'))     define('SMTP_FROM',     $smtpFrom);
+if (!defined('SMTP_FROM_NAME')) define('SMTP_FROM_NAME', $smtpFromName);
+
+/* =========================
    ERROR REPORTING (PRODUCTION)
 ========================= */
 /*
   PRODUCTION: Errors logged but not displayed
-  DEVELOPMENT: Set to E_ALL and display_errors = 1
+  DEVELOPMENT: Set display_errors = 1 in local env if needed
 */
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
+if (!$isLocalhost) {
+  @ini_set('display_errors', 0);
+  @ini_set('expose_php', 0);
+}

@@ -1,6 +1,7 @@
 <?php
 require '../includes/config.php';
 require '../includes/auth_check.php';
+require '../includes/csrf.php';
 require '../includes/rbac.php';
 
 /* RBAC Check */
@@ -68,13 +69,18 @@ $candidates = [];
 if (!empty($candidateIds)) {
   $candidateIdsStr = implode(',', $candidateIds);
   $candidates = json_decode(
-    file_get_contents(
-      SUPABASE_URL . "/rest/v1/candidates?id=in.($candidateIdsStr)&select=id,full_name,email",
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/candidates?id=in.(" . $candidateIdsStr . ")&select=id,full_name,email",
       false,
       $ctx
     ),
     true
   ) ?: [];
+  
+  // Log for debugging if candidates are empty
+  if (empty($candidates) && !empty($candidateIds)) {
+    error_log("Issue Certificates: No candidates found for IDs: " . $candidateIdsStr);
+  }
 }
 
 /* FETCH EXISTING CERTIFICATES */
@@ -94,6 +100,7 @@ foreach ($existing as $e) {
 
 $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
+$info = $_GET['info'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -126,15 +133,13 @@ $success = $_GET['success'] ?? '';
   </div>
 
   <?php if ($error): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($error) ?>
-    </div>
+    <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
-
   <?php if ($success): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($success) ?>
-    </div>
+    <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+  <?php endif; ?>
+  <?php if ($info): ?>
+    <div class="alert alert-info"><?= htmlspecialchars($info) ?></div>
   <?php endif; ?>
 
   <?php if (empty($candidates)): ?>

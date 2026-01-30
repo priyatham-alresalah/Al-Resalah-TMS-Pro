@@ -61,10 +61,8 @@ $user = $userResponse[0];
     </div>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
 
   <div class="form-card">

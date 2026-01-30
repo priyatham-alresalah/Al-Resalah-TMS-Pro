@@ -21,24 +21,185 @@ $ctx = stream_context_create([
   ]
 ]);
 
-// Fetch client orders with related data
-$baseUrl = SUPABASE_URL . "/rest/v1/client_orders?select=*,quotations(quotation_no,status,inquiry_id,inquiries(course_name,client_id,clients(company_name))),profiles!client_orders_verified_by_fkey(full_name)";
+// Fetch client orders - use simpler query to avoid join issues
+$baseUrl = SUPABASE_URL . "/rest/v1/client_orders?select=*";
 $baseUrl .= "&order=created_at.desc";
 
+// Debug: Log the query
+error_log("Client Orders query: $baseUrl");
+
+// Fetch client orders first
 $clientOrders = json_decode(
   @file_get_contents($baseUrl, false, $ctx),
   true
 ) ?: [];
 
-// Fetch quotations for creating new orders
+// Debug: Log results
+error_log("Client Orders page - Found " . count($clientOrders) . " order(s)");
+if (empty($clientOrders)) {
+  error_log("No client orders found. Query was: $baseUrl");
+  
+  // Try fetching ALL orders to see if any exist (for debugging)
+  $allOrdersUrl = SUPABASE_URL . "/rest/v1/client_orders?select=id,lpo_number,status,quotation_id,created_at&order=created_at.desc&limit=10";
+  $allOrders = json_decode(
+    @file_get_contents($allOrdersUrl, false, $ctx),
+    true
+  ) ?: [];
+  error_log("Total client orders in database: " . count($allOrders));
+  if (!empty($allOrders)) {
+    error_log("Sample orders: " . json_encode(array_slice($allOrders, 0, 3)));
+  }
+}
+
+// Now fetch related data separately if orders exist
+$quotationMap = [];
+$inquiryMap = [];
+$clientMap = [];
+$profileMap = [];
+
+if (!empty($clientOrders)) {
+  // Get quotation IDs, inquiry IDs, client IDs, and verified_by IDs
+  $quotationIds = array_unique(array_filter(array_column($clientOrders, 'quotation_id')));
+  $verifiedByIds = array_unique(array_filter(array_column($clientOrders, 'verified_by')));
+  
+  // Fetch quotations
+  if (!empty($quotationIds)) {
+    $quotationIdsStr = implode(',', $quotationIds);
+    $quotations = json_decode(
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/quotations?id=in.($quotationIdsStr)&select=id,quotation_no,status,inquiry_id",
+        false,
+        $ctx
+      ),
+      true
+    ) ?: [];
+    foreach ($quotations as $q) {
+      $quotationMap[$q['id']] = $q;
+    }
+    
+    // Get inquiry IDs from quotations
+    $inquiryIds = array_unique(array_filter(array_column($quotations, 'inquiry_id')));
+    
+    // Fetch inquiries
+    if (!empty($inquiryIds)) {
+      $inquiryIdsStr = implode(',', $inquiryIds);
+      $inquiries = json_decode(
+        @file_get_contents(
+          SUPABASE_URL . "/rest/v1/inquiries?id=in.($inquiryIdsStr)&select=id,course_name,client_id",
+          false,
+          $ctx
+        ),
+        true
+      ) ?: [];
+      foreach ($inquiries as $inq) {
+        $inquiryMap[$inq['id']] = $inq;
+      }
+      
+      // Get client IDs from inquiries
+      $clientIds = array_unique(array_filter(array_column($inquiries, 'client_id')));
+      
+      // Fetch clients
+      if (!empty($clientIds)) {
+        $clientIdsStr = implode(',', $clientIds);
+        $clients = json_decode(
+          @file_get_contents(
+            SUPABASE_URL . "/rest/v1/clients?id=in.($clientIdsStr)&select=id,company_name",
+            false,
+            $ctx
+          ),
+          true
+        ) ?: [];
+        foreach ($clients as $cl) {
+          $clientMap[$cl['id']] = $cl;
+        }
+      }
+    }
+  }
+  
+  // Fetch verified_by profiles
+  if (!empty($verifiedByIds)) {
+    $verifiedByIdsStr = implode(',', $verifiedByIds);
+    $profiles = json_decode(
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/profiles?id=in.($verifiedByIdsStr)&select=id,full_name",
+        false,
+        $ctx
+      ),
+      true
+    ) ?: [];
+    foreach ($profiles as $prof) {
+      $profileMap[$prof['id']] = $prof;
+    }
+  }
+  
+  // Attach related data to orders for easier access
+  foreach ($clientOrders as &$order) {
+    $quotation = $quotationMap[$order['quotation_id']] ?? null;
+    $inquiry = $quotation ? ($inquiryMap[$quotation['inquiry_id']] ?? null) : null;
+    $client = $inquiry ? ($clientMap[$inquiry['client_id']] ?? null) : null;
+    
+    $order['quotations'] = $quotation;
+    $order['quotations']['inquiries'] = $inquiry;
+    $order['quotations']['inquiries']['clients'] = $client;
+    $order['profiles'] = $order['verified_by'] ? ($profileMap[$order['verified_by']] ?? null) : null;
+  }
+  unset($order); // Unset reference
+}
+
+// Fetch quotations for creating new orders - simplified query
+$quotationsUrl = SUPABASE_URL . "/rest/v1/quotations?status=in.(approved,accepted)&select=id,quotation_no,inquiry_id&order=created_at.desc";
 $quotations = json_decode(
-  @file_get_contents(
-    SUPABASE_URL . "/rest/v1/quotations?status=in.(approved,accepted)&select=id,quotation_no,inquiry_id,inquiries(course_name,clients(company_name))&order=created_at.desc",
-    false,
-    $ctx
-  ),
+  @file_get_contents($quotationsUrl, false, $ctx),
   true
 ) ?: [];
+
+// Fetch inquiry and client data separately for dropdown
+if (!empty($quotations)) {
+  $inquiryIdsForDropdown = array_unique(array_filter(array_column($quotations, 'inquiry_id')));
+  if (!empty($inquiryIdsForDropdown)) {
+    $inquiryIdsStr = implode(',', $inquiryIdsForDropdown);
+    $inquiriesForDropdown = json_decode(
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/inquiries?id=in.($inquiryIdsStr)&select=id,course_name,client_id",
+        false,
+        $ctx
+      ),
+      true
+    ) ?: [];
+    
+    $clientIdsForDropdown = array_unique(array_filter(array_column($inquiriesForDropdown, 'client_id')));
+    if (!empty($clientIdsForDropdown)) {
+      $clientIdsStr = implode(',', $clientIdsForDropdown);
+      $clientsForDropdown = json_decode(
+        @file_get_contents(
+          SUPABASE_URL . "/rest/v1/clients?id=in.($clientIdsStr)&select=id,company_name",
+          false,
+          $ctx
+        ),
+        true
+      ) ?: [];
+      
+      // Create maps
+      $inquiryMapForDropdown = [];
+      foreach ($inquiriesForDropdown as $inq) {
+        $inquiryMapForDropdown[$inq['id']] = $inq;
+      }
+      $clientMapForDropdown = [];
+      foreach ($clientsForDropdown as $cl) {
+        $clientMapForDropdown[$cl['id']] = $cl;
+      }
+      
+      // Attach to quotations
+      foreach ($quotations as &$q) {
+        $inq = $inquiryMapForDropdown[$q['inquiry_id']] ?? null;
+        $cl = $inq ? ($clientMapForDropdown[$inq['client_id']] ?? null) : null;
+        $q['inquiries'] = $inq;
+        $q['inquiries']['clients'] = $cl;
+      }
+      unset($q);
+    }
+  }
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -67,16 +228,80 @@ $quotations = json_decode(
     <?php endif; ?>
   </div>
 
-  <?php if (isset($_GET['success'])): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['success']) ?>
-    </div>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
+  <?php endif; ?>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php 
+  // Debug: Show helpful message if no client orders found
+  if (empty($clientOrders)): 
+    // Try to fetch all orders (without filters) to check if any exist
+    $allOrdersUrl = SUPABASE_URL . "/rest/v1/client_orders?select=id,lpo_number,status,quotation_id,created_at&order=created_at.desc&limit=20";
+    $allOrdersDebug = json_decode(
+      @file_get_contents($allOrdersUrl, false, $ctx),
+      true
+    ) ?: [];
+  ?>
+    <?php if (!empty($allOrdersDebug)): ?>
+      <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #f59e0b;">
+        <strong>⚠ Query Issue Detected:</strong>
+        <p style="margin: 8px 0 0 0;">
+          Found <strong><?= count($allOrdersDebug) ?></strong> client order(s) in database, but they're not displaying correctly.<br>
+          This might be due to a query join issue. Please check error logs for details.
+        </p>
+        <?php if (isAdmin() || $role === 'admin'): ?>
+          <details style="margin-top: 10px;">
+            <summary style="cursor: pointer; font-weight: bold; color: #92400e;">Show All Client Orders in Database (Debug)</summary>
+            <table style="margin-top: 10px; width: 100%; font-size: 12px; border-collapse: collapse;">
+              <thead>
+                <tr style="background: #f3f4f6;">
+                  <th style="padding: 8px; border: 1px solid #d1d5db;">LPO Number</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db;">Status</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db;">Quotation ID</th>
+                  <th style="padding: 8px; border: 1px solid #d1d5db;">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($allOrdersDebug as $order): ?>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;"><?= htmlspecialchars($order['lpo_number'] ?? '-') ?></td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;">
+                      <span class="badge badge-<?= strtolower($order['status'] ?? 'pending') ?>">
+                        <?= strtoupper($order['status'] ?? 'PENDING') ?>
+                      </span>
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;"><?= htmlspecialchars($order['quotation_id'] ?? '-') ?></td>
+                    <td style="padding: 8px; border: 1px solid #d1d5db;"><?= $order['created_at'] ? date('d M Y H:i', strtotime($order['created_at'])) : '-' ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </details>
+        <?php endif; ?>
+      </div>
+    <?php else: ?>
+      <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #dc2626;">
+        <strong>❌ No Client Orders Found:</strong>
+        <p style="margin: 8px 0 0 0;">
+          There are no LPO/Client Orders in the database at all.<br>
+          <strong>To create a Client Order:</strong>
+          <ol style="margin: 8px 0 0 20px;">
+            <li>Ensure you have an <strong>approved or accepted quotation</strong> (check Quotations module)</li>
+            <li>Click the <strong>"+ Upload LPO"</strong> button above</li>
+            <li>Select the quotation and enter LPO details</li>
+            <li>Upload the LPO file (optional)</li>
+          </ol>
+          <strong>Prerequisites:</strong>
+          <ul style="margin: 8px 0 0 20px;">
+            <li>Quotation must be in <strong>'approved'</strong> or <strong>'accepted'</strong> status</li>
+            <li>You need permission to create client orders</li>
+          </ul>
+        </p>
+      </div>
+    <?php endif; ?>
   <?php endif; ?>
 
   <table class="table">
@@ -96,6 +321,7 @@ $quotations = json_decode(
     <tbody>
       <?php if (!empty($clientOrders)): ?>
         <?php foreach ($clientOrders as $order): 
+          // Handle both old format (nested) and new format (attached)
           $quotation = $order['quotations'] ?? null;
           $inquiry = $quotation['inquiries'] ?? null;
           $client = $inquiry['clients'] ?? null;
@@ -103,9 +329,12 @@ $quotations = json_decode(
           $badgeClass = 'badge-warning';
           if ($status === 'verified') $badgeClass = 'badge-success';
           elseif ($status === 'rejected') $badgeClass = 'badge-danger';
+          
+          // Handle verified_by profile
+          $verifiedByName = $order['profiles']['full_name'] ?? '-';
         ?>
           <tr>
-            <td><?= htmlspecialchars($order['lpo_number']) ?></td>
+            <td><?= htmlspecialchars($order['lpo_number'] ?? '-') ?></td>
             <td><?= htmlspecialchars($quotation['quotation_no'] ?? '-') ?></td>
             <td><?= htmlspecialchars($client['company_name'] ?? '-') ?></td>
             <td><?= htmlspecialchars($inquiry['course_name'] ?? '-') ?></td>
@@ -115,11 +344,11 @@ $quotations = json_decode(
                 <?= strtoupper($status) ?>
               </span>
             </td>
-            <td><?= htmlspecialchars($order['profiles']['full_name'] ?? '-') ?></td>
+            <td><?= htmlspecialchars($verifiedByName) ?></td>
             <td><?= $order['verified_at'] ? date('d M Y H:i', strtotime($order['verified_at'])) : '-' ?></td>
             <td class="col-actions">
               <div class="action-menu-wrapper">
-                <button type="button" class="btn-icon action-menu-toggle">&#8942;</button>
+                <button type="button" class="btn-icon action-menu-toggle" aria-label="Open actions">&#8942;</button>
                 <div class="action-menu">
                   <?php if ($status === 'pending' && hasPermission('client_orders', 'update')): ?>
                     <form method="post" action="../api/client_orders/verify.php" style="margin: 0;">

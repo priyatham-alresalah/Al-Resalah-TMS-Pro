@@ -30,3 +30,425 @@ Stack trace:
 [29-Jan-2026 10:06:34 Europe/Berlin] Grand total: 525
 [29-Jan-2026 10:06:34 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-C02022.pdf
 [29-Jan-2026 10:06:34 Europe/Berlin] Creating quotation with data: {"inquiry_id":"3faf23d6-281d-4ae1-8632-c33c1eec1fb0","quotation_no":"QUOTE-2026-C02022","subtotal":500,"vat":25,"discount":0,"total":525,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f"}
+[29-Jan-2026 13:45:36 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 13:45:36 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 13:45:36 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 13:45:36 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 13:45:37 Europe/Berlin] Generating PDF with quote courses: [{"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","course_name":"Advanced Scaffolding Inspector","candidates":2,"amount_per_candidate":2500,"amount":5000,"vat":5,"vat_amount":250,"total":5250},{"inquiry_id":"01d502c1-f44f-4c17-8e3f-2134ae00399d","course_name":"Advanced Time Management","candidates":10,"amount_per_candidate":850,"amount":8500,"vat":5,"vat_amount":425,"total":8925}]
+[29-Jan-2026 13:45:37 Europe/Berlin] Grand total: 14175
+[29-Jan-2026 13:45:37 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-BDFBE0.pdf
+[29-Jan-2026 13:45:37 Europe/Berlin] Creating quotation with data: {"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","quotation_no":"QUOTE-2026-BDFBE0","subtotal":13500,"vat":675,"discount":0,"total":14175,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f","notes":"MULTI_INQUIRY_IDS: [\"870de99d-03de-4328-8114-464373304f8a\",\"01d502c1-f44f-4c17-8e3f-2134ae00399d\"]"}
+[29-Jan-2026 13:45:38 Europe/Berlin] Invalid quotation response: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'notes' column of 'quotations' in the schema cache"}
+[29-Jan-2026 13:45:38 Europe/Berlin] Quote creation error: Failed to create quotation. Invalid response from server.
+[29-Jan-2026 13:45:38 Europe/Berlin] Stack trace: #0 {main}
+[29-Jan-2026 13:45:38 Europe/Berlin] POST data: Array
+(
+    [csrf_token] => e82c01fe54b6537e8900c78a6fb80759b11343377c5c2e6ad0a747bacaa5728a
+    [client_id] => 725cf707-e971-419a-bb8b-8d162bdba718
+    [inquiry_ids] => Array
+        (
+            [0] => 870de99d-03de-4328-8114-464373304f8a
+            [1] => 01d502c1-f44f-4c17-8e3f-2134ae00399d
+        )
+
+    [candidates] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 2
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 10
+        )
+
+    [amount] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 2500
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 850
+        )
+
+    [vat] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 5
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 5
+        )
+
+    [notes] => 
+)
+
+[29-Jan-2026 13:46:47 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 13:46:47 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 13:46:47 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 13:46:47 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 13:46:48 Europe/Berlin] Generating PDF with quote courses: [{"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","course_name":"Advanced Scaffolding Inspector","candidates":2,"amount_per_candidate":2500,"amount":5000,"vat":5,"vat_amount":250,"total":5250},{"inquiry_id":"01d502c1-f44f-4c17-8e3f-2134ae00399d","course_name":"Advanced Time Management","candidates":10,"amount_per_candidate":850,"amount":8500,"vat":5,"vat_amount":425,"total":8925}]
+[29-Jan-2026 13:46:48 Europe/Berlin] Grand total: 14175
+[29-Jan-2026 13:46:48 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-68194B.pdf
+[29-Jan-2026 13:46:48 Europe/Berlin] Creating quotation with data: {"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","quotation_no":"QUOTE-2026-68194B","subtotal":13500,"vat":675,"discount":0,"total":14175,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f","notes":"MULTI_INQUIRY_IDS: [\"870de99d-03de-4328-8114-464373304f8a\",\"01d502c1-f44f-4c17-8e3f-2134ae00399d\"]"}
+[29-Jan-2026 13:46:48 Europe/Berlin] Invalid quotation response: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'notes' column of 'quotations' in the schema cache"}
+[29-Jan-2026 13:46:48 Europe/Berlin] Quote creation error: Failed to create quotation. Invalid response from server.
+[29-Jan-2026 13:46:48 Europe/Berlin] Stack trace: #0 {main}
+[29-Jan-2026 13:46:48 Europe/Berlin] POST data: Array
+(
+    [csrf_token] => e82c01fe54b6537e8900c78a6fb80759b11343377c5c2e6ad0a747bacaa5728a
+    [client_id] => 725cf707-e971-419a-bb8b-8d162bdba718
+    [inquiry_ids] => Array
+        (
+            [0] => 870de99d-03de-4328-8114-464373304f8a
+            [1] => 01d502c1-f44f-4c17-8e3f-2134ae00399d
+        )
+
+    [candidates] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 2
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 10
+        )
+
+    [amount] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 2500
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 850
+        )
+
+    [vat] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 5
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 5
+        )
+
+    [notes] => 
+)
+
+[29-Jan-2026 13:51:49 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 13:51:49 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 13:51:49 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 13:51:49 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 13:51:50 Europe/Berlin] Generating PDF with quote courses: [{"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","course_name":"Advanced Scaffolding Inspector","candidates":2,"amount_per_candidate":850,"amount":1700,"vat":5,"vat_amount":85,"total":1785},{"inquiry_id":"01d502c1-f44f-4c17-8e3f-2134ae00399d","course_name":"Advanced Time Management","candidates":10,"amount_per_candidate":600,"amount":6000,"vat":5,"vat_amount":300,"total":6300}]
+[29-Jan-2026 13:51:50 Europe/Berlin] Grand total: 8085
+[29-Jan-2026 13:51:50 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-20302C.pdf
+[29-Jan-2026 13:51:51 Europe/Berlin] Creating quotation with data: {"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","quotation_no":"QUOTE-2026-20302C","subtotal":7700,"vat":385,"discount":0,"total":8085,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f","notes":"MULTI_INQUIRY_IDS: [\"870de99d-03de-4328-8114-464373304f8a\",\"01d502c1-f44f-4c17-8e3f-2134ae00399d\"]"}
+[29-Jan-2026 13:51:51 Europe/Berlin] HTTP Error 400 when creating quotation. Response: {"code":"PGRST204","details":null,"hint":null,"message":"Could not find the 'notes' column of 'quotations' in the schema cache"}
+[29-Jan-2026 13:51:51 Europe/Berlin] Quotation data sent: {"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","quotation_no":"QUOTE-2026-20302C","subtotal":7700,"vat":385,"discount":0,"total":8085,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f","notes":"MULTI_INQUIRY_IDS: [\"870de99d-03de-4328-8114-464373304f8a\",\"01d502c1-f44f-4c17-8e3f-2134ae00399d\"]"}
+[29-Jan-2026 13:51:51 Europe/Berlin] Quote creation error: Failed to create quotation: Could not find the 'notes' column of 'quotations' in the schema cache
+[29-Jan-2026 13:51:51 Europe/Berlin] Stack trace: #0 {main}
+[29-Jan-2026 13:51:51 Europe/Berlin] POST data: Array
+(
+    [csrf_token] => e82c01fe54b6537e8900c78a6fb80759b11343377c5c2e6ad0a747bacaa5728a
+    [client_id] => 725cf707-e971-419a-bb8b-8d162bdba718
+    [inquiry_ids] => Array
+        (
+            [0] => 870de99d-03de-4328-8114-464373304f8a
+            [1] => 01d502c1-f44f-4c17-8e3f-2134ae00399d
+        )
+
+    [candidates] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 2
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 10
+        )
+
+    [amount] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 850
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 600
+        )
+
+    [vat] => Array
+        (
+            [870de99d-03de-4328-8114-464373304f8a] => 5
+            [01d502c1-f44f-4c17-8e3f-2134ae00399d] => 5
+        )
+
+    [notes] => 
+)
+
+[29-Jan-2026 13:54:43 Europe/Berlin] create_quote.php: Starting quote creation process
+[29-Jan-2026 13:54:43 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 13:54:43 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 13:54:43 Europe/Berlin] create_quote.php: Includes loaded successfully
+[29-Jan-2026 13:54:44 Europe/Berlin] Generating PDF with quote courses: [{"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","course_name":"Advanced Scaffolding Inspector","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105},{"inquiry_id":"01d502c1-f44f-4c17-8e3f-2134ae00399d","course_name":"Advanced Time Management","candidates":1,"amount_per_candidate":100,"amount":100,"vat":5,"vat_amount":5,"total":105}]
+[29-Jan-2026 13:54:44 Europe/Berlin] Grand total: 210
+[29-Jan-2026 13:54:44 Europe/Berlin] PDF generated successfully: quote_QUOTE-2026-E5C7C2.pdf
+[29-Jan-2026 13:54:44 Europe/Berlin] Creating quotation with data: {"inquiry_id":"870de99d-03de-4328-8114-464373304f8a","quotation_no":"QUOTE-2026-E5C7C2","subtotal":200,"vat":10,"discount":0,"total":210,"status":"draft","created_by":"1f4ce157-b42e-46e8-a2be-8a7b44060e1f"}
+[29-Jan-2026 15:23:56 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 15:23:56 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 15:23:57 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:226
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(195): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 226
+[29-Jan-2026 15:25:26 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 15:25:26 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 15:25:27 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(199): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[29-Jan-2026 15:25:38 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 15:25:38 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 15:25:39 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\download.php(210): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[29-Jan-2026 15:29:09 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[29-Jan-2026 15:29:09 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[29-Jan-2026 15:29:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\download.php(210): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 06:07:18 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 06:07:18 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 06:07:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(199): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 06:07:30 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 06:07:30 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 06:07:31 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\download.php(210): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 06:13:32 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 06:13:32 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 06:13:33 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(205): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 06:14:08 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 06:14:08 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 06:14:09 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(205): generateCertificatePDF('Priyatham Rama ...', 'ARC-2026-0001', 'Basic Life Supp...', 'Al Resalah', '', NULL, '2026-01-29', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 08:51:16 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:51:16 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:51:17 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\download.php(205): generateCertificatePDF('Abioye Waliu', 'ARC-2026-0002', 'Advanced Time M...', 'Dp World', '', NULL, '2026-01-30', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 08:51:24 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:51:24 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:51:25 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+Stack trace:
+#0 C:\xampp\htdocs\training-management-system\api\certificates\print_pdf.php(205): generateCertificatePDF('Abioye Waliu', 'ARC-2026-0002', 'Advanced Time M...', 'Dp World', '', NULL, '2026-01-30', NULL, NULL)
+#1 {main}
+  thrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 241
+[30-Jan-2026 08:56:44 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:56:44 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:56:45 Europe/Berlin] Certificate print_pdf.php error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+[30-Jan-2026 08:57:03 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:57:03 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:57:04 Europe/Berlin] Certificate print_pdf.php error: Call to undefined method FPDF::Circle() in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php:241
+[30-Jan-2026 08:58:23 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:58:23 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:58:26 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:58:26 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:59:37 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:59:37 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 08:59:39 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 08:59:39 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:03:53 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:03:53 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:03:54 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:03:54 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:06:09 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:06:09 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:06:11 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:06:11 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:12:32 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:12:32 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:13:31 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:13:31 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:13:33 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:13:33 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:16:55 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:16:55 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:16:58 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:16:58 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:36:36 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:36:36 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:36:38 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:36:38 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:41:59 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:41:59 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:42:01 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:42:01 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:51:54 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:51:54 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:51:56 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:51:56 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:54:55 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:54:55 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:54:57 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:54:57 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:59:18 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:59:18 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 09:59:19 Europe/Berlin] PHP Warning:  Undefined variable $arabicFontName in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 202
+[30-Jan-2026 09:59:20 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 09:59:20 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:01:34 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:01:34 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:01:36 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:01:36 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:01:53 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:01:53 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:01:56 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:01:56 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:11:40 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:11:40 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:11:40 Europe/Berlin] TCPDF library not found. Certificate PDF generation requires TCPDF.
+[30-Jan-2026 10:11:40 Europe/Berlin] Install via: composer require tecnickcom/tcpdf
+[30-Jan-2026 10:11:40 Europe/Berlin] Or download from: https://github.com/tecnickcom/TCPDF
+[30-Jan-2026 10:11:41 Europe/Berlin] TCPDF library not found. Certificate PDF generation requires TCPDF.
+[30-Jan-2026 10:11:41 Europe/Berlin] Install via: composer require tecnickcom/tcpdf
+[30-Jan-2026 10:11:41 Europe/Berlin] Certificate print: generateCertificatePDF returned null for certificate ID: 8c3a6a71-9215-47fa-b8ae-871c2d4ed0b8
+[30-Jan-2026 10:13:09 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:13:09 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:13:09 Europe/Berlin] TCPDF library not found. Certificate PDF generation requires TCPDF.
+[30-Jan-2026 10:13:09 Europe/Berlin] Install via: composer require tecnickcom/tcpdf
+[30-Jan-2026 10:13:09 Europe/Berlin] Or download from: https://github.com/tecnickcom/TCPDF
+[30-Jan-2026 10:13:11 Europe/Berlin] TCPDF library not found. Certificate PDF generation requires TCPDF.
+[30-Jan-2026 10:13:11 Europe/Berlin] Install via: composer require tecnickcom/tcpdf
+[30-Jan-2026 10:13:11 Europe/Berlin] Certificate print: generateCertificatePDF returned null for certificate ID: bf1dbb3a-df32-413c-8f9a-5df9a04ea925
+[30-Jan-2026 10:18:00 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:18:00 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:20:22 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:20:22 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:20:23 Europe/Berlin] PHP Warning:  Undefined variable $hasImageSupport in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 219
+[30-Jan-2026 10:20:23 Europe/Berlin] PHP Warning:  Undefined variable $hasImageSupport in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 227
+[30-Jan-2026 10:20:23 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:20:24 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:20:24 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:23:03 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:23:03 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:23:04 Europe/Berlin] PHP Warning:  Undefined variable $hasImageSupport in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 216
+[30-Jan-2026 10:23:04 Europe/Berlin] PHP Warning:  Undefined variable $hasImageSupport in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 224
+[30-Jan-2026 10:23:04 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:23:05 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:23:05 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:28:01 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:28:01 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:28:02 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:28:02 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:28:02 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:32:46 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:32:46 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:32:47 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:32:47 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:32:47 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:36:02 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:36:02 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:36:03 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:03 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:36:04 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:36:04 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:40:30 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:40:30 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:40:31 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:31 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 289
+[30-Jan-2026 10:40:32 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:40:32 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:44:23 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:44:23 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:44:25 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:25 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:44:25 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:44:48 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:44:48 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:44:49 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:44:50 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:44:50 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:48:34 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:48:34 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:48:35 Europe/Berlin] Logo skipped: GD/Imagick extension not available for PNG image handling
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Undefined variable $darkBrown in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:35 Europe/Berlin] PHP Warning:  Trying to access array offset on value of type null in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 290
+[30-Jan-2026 10:48:36 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:48:36 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:52:33 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:52:33 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:52:34 Europe/Berlin] PHP Warning:  Undefined variable $titleY in C:\xampp\htdocs\training-management-system\includes\certificate_pdf.php on line 219
+[30-Jan-2026 10:52:35 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:52:35 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:56:31 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:56:31 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 10:56:33 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 10:56:33 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:00:08 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:00:08 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:00:08 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:00:08 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:01:19 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:01:19 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:01:21 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:01:21 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:04:34 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:04:34 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:04:35 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:04:35 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:04:52 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:04:52 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:10:57 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:10:57 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:10:58 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:10:58 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:14:26 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:14:26 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:14:28 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:14:28 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:16:56 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:16:56 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:16:58 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:16:58 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:19:03 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:19:03 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:19:05 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:19:05 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:38:22 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:38:22 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:38:24 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:38:24 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:41:00 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:41:00 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:47:15 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:47:15 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 11:47:16 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 11:47:16 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 12:43:53 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 12:43:53 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.
+[30-Jan-2026 12:43:55 Europe/Berlin] CRITICAL: SUPABASE_SERVICE key not found in environment or .env file
+[30-Jan-2026 12:43:55 Europe/Berlin] WARNING: Using hardcoded SUPABASE_SERVICE key. Please create .env file for production security.

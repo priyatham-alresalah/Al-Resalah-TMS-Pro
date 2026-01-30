@@ -102,7 +102,7 @@ $assigned_ids = array_column($assigned, 'candidate_id');
     </table>
 
     <br>
-    <button>Save Assignments</button>
+    <button type="submit" class="btn btn-primary">Save Assignments</button>
     <a href="trainings.php" class="link">Back</a>
   </form>
 </main>

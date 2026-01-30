@@ -100,6 +100,7 @@ if (!$client) {
 /* Prepare quote data */
 $quoteCourses = [];
 $grandTotal = 0;
+$firstClientId = null;
 
 foreach ($inquiryIds as $inqId) {
   $amountPerCandidate = floatval($amounts[$inqId] ?? 0);
@@ -133,15 +134,51 @@ foreach ($inquiryIds as $inqId) {
   $total = $subtotal + $vatAmount;
   $grandTotal += $total;
   
-  /* Fetch inquiry for course name */
+  /* Fetch inquiry for course name and status validation */
   $inquiry = json_decode(
     file_get_contents(
-      SUPABASE_URL . "/rest/v1/inquiries?id=eq.$inqId&select=course_name",
+      SUPABASE_URL . "/rest/v1/inquiries?id=eq.$inqId&select=id,course_name,status,client_id",
       false,
       $ctx
     ),
     true
   )[0] ?? null;
+  
+  if (!$inquiry) {
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
+    if (!headers_sent()) {
+      header('Location: ' . BASE_PATH . '/pages/inquiry_quote.php?id=' . $inquiryIds[0] . '&error=' . urlencode("Inquiry $inqId not found"));
+    }
+    exit;
+  }
+  
+  // Validate inquiry status is 'new'
+  if (strtolower($inquiry['status'] ?? '') !== 'new') {
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
+    if (!headers_sent()) {
+      header('Location: ' . BASE_PATH . '/pages/inquiry_quote.php?id=' . $inquiryIds[0] . '&error=' . urlencode("Inquiry '{$inquiry['course_name']}' is already quoted or closed"));
+    }
+    exit;
+  }
+  
+  // Validate all inquiries belong to same client
+  if ($inqId === $inquiryIds[0]) {
+    $firstClientId = $inquiry['client_id'] ?? null;
+  } else {
+    if (($inquiry['client_id'] ?? null) !== $firstClientId) {
+      if (ob_get_level()) {
+        ob_end_clean();
+      }
+      if (!headers_sent()) {
+        header('Location: ' . BASE_PATH . '/pages/inquiry_quote.php?id=' . $inquiryIds[0] . '&error=' . urlencode("All inquiries must belong to the same client"));
+      }
+      exit;
+    }
+  }
   
   if ($inquiry) {
     $quoteCourses[] = [
@@ -168,8 +205,40 @@ if (empty($quoteCourses)) {
 }
 
 try {
-  /* Generate quote number */
-  $quoteNo = 'QUOTE-' . date('Y') . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
+  /* Generate quote number - ensure uniqueness */
+  $maxAttempts = 10;
+  $quoteNo = '';
+  for ($attempt = 0; $attempt < $maxAttempts; $attempt++) {
+    $quoteNo = 'QUOTE-' . date('Y') . '-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+    
+    // Check if this quote number already exists
+    $checkCtx = stream_context_create([
+      'http' => [
+        'method' => 'GET',
+        'header' =>
+          "apikey: " . SUPABASE_SERVICE . "\r\n" .
+          "Authorization: Bearer " . SUPABASE_SERVICE
+      ]
+    ]);
+    
+    $existing = json_decode(
+      @file_get_contents(
+        SUPABASE_URL . "/rest/v1/quotations?quotation_no=eq.$quoteNo&select=id&limit=1",
+        false,
+        $checkCtx
+      ),
+      true
+    );
+    
+    if (empty($existing)) {
+      break; // Quote number is unique
+    }
+    
+    // If we've exhausted attempts, use timestamp for uniqueness
+    if ($attempt === $maxAttempts - 1) {
+      $quoteNo = 'QUOTE-' . date('Y') . '-' . time() . '-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 4));
+    }
+  }
 
   /* Generate PDF */
   $pdfFileName = null;
@@ -246,8 +315,11 @@ try {
   }
 
   // Create quotation record in quotations table
+  // Note: For multi-inquiry quotations, we'll create a separate junction table entry
+  // or use the quotation_no as a reference to link all inquiries
+  
   $quotationData = [
-    'inquiry_id' => $inquiryIds[0], // Use first inquiry as primary
+    'inquiry_id' => $inquiryIds[0], // Use first inquiry as primary (for backward compatibility)
     'quotation_no' => $quoteNo,
     'subtotal' => round($subtotal, 2),
     'vat' => round($vatTotal, 2),
@@ -255,6 +327,8 @@ try {
     'total' => round($total, 2),
     'status' => 'draft',
     'created_by' => $userId
+    // Note: 'notes' column doesn't exist in quotations table
+    // Multi-inquiry support: All inquiries will be linked via quotation_no lookup
   ];
   
   // Log the data being sent for debugging
@@ -279,6 +353,14 @@ try {
     $createCtx
   );
 
+  // Get HTTP response code
+  $httpCode = 0;
+  if (isset($http_response_header) && !empty($http_response_header[0])) {
+    if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
+      $httpCode = intval($matches[1]);
+    }
+  }
+
   if ($quotationResponse === false) {
     $httpResponse = isset($http_response_header) ? $http_response_header : [];
     $errorMsg = 'Failed to create quotation';
@@ -286,10 +368,37 @@ try {
       $errorMsg .= ': ' . $httpResponse[0];
     }
     error_log("Failed to create quotation: " . print_r($httpResponse, true));
+    error_log("Quotation data sent: " . json_encode($quotationData));
     throw new Exception($errorMsg);
   }
 
+  // Check for HTTP error codes
+  if ($httpCode >= 400) {
+    error_log("HTTP Error $httpCode when creating quotation. Response: " . $quotationResponse);
+    error_log("Quotation data sent: " . json_encode($quotationData));
+    
+    // Try to parse error message from response
+    $errorData = json_decode($quotationResponse, true);
+    if (isset($errorData['message'])) {
+      throw new Exception('Failed to create quotation: ' . $errorData['message']);
+    } elseif (isset($errorData['error']) || isset($errorData['hint'])) {
+      $errorMsg = isset($errorData['error']) ? $errorData['error'] : '';
+      $hintMsg = isset($errorData['hint']) ? ' (' . $errorData['hint'] . ')' : '';
+      throw new Exception('Failed to create quotation: ' . $errorMsg . $hintMsg);
+    } else {
+      throw new Exception('Failed to create quotation. HTTP ' . $httpCode . ': ' . substr($quotationResponse, 0, 200));
+    }
+  }
+
   $quotation = json_decode($quotationResponse, true);
+  
+  // Check if response is an error object
+  if (isset($quotation['message']) || isset($quotation['error'])) {
+    $errorMsg = isset($quotation['message']) ? $quotation['message'] : $quotation['error'];
+    error_log("Supabase error response: " . $quotationResponse);
+    error_log("Quotation data sent: " . json_encode($quotationData));
+    throw new Exception('Failed to create quotation: ' . $errorMsg);
+  }
   
   // Handle array response (PostgREST returns array with Prefer: return=representation)
   if (is_array($quotation) && isset($quotation[0])) {
@@ -298,10 +407,23 @@ try {
   
   if (empty($quotation) || !isset($quotation['id'])) {
     error_log("Invalid quotation response: " . $quotationResponse);
-    throw new Exception('Failed to create quotation. Invalid response from server.');
+    error_log("HTTP Code: $httpCode");
+    error_log("Quotation data sent: " . json_encode($quotationData));
+    
+    // Try to extract error from response
+    if (is_string($quotationResponse) && !empty($quotationResponse)) {
+      $errorData = json_decode($quotationResponse, true);
+      if (isset($errorData['message'])) {
+        throw new Exception('Failed to create quotation: ' . $errorData['message']);
+      }
+    }
+    
+    throw new Exception('Failed to create quotation. Invalid response from server. Please check the logs for details.');
   }
 
-  // Update inquiries status to 'quoted' (only status field, no quote data)
+  // Update inquiries status to 'quoted'
+  // Note: For multi-inquiry quotations, we'll use quotation_no as a reference
+  // All inquiries in the batch will be linked via the same quotation_no
   foreach ($quoteCourses as $qc) {
     $updateData = [
       'status' => 'quoted'
@@ -354,7 +476,6 @@ try {
   // Log the error with full details
   error_log("Quote creation error: " . $e->getMessage());
   error_log("Stack trace: " . $e->getTraceAsString());
-  error_log("POST data: " . print_r($_POST, true));
   
   // Clear output buffer
   ob_end_clean();

@@ -67,16 +67,11 @@ $status = strtolower($inquiry['status'] ?? 'new');
     </div>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
-
-  <?php if (isset($_GET['success'])): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['success']) ?>
-    </div>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
   <?php endif; ?>
 
   <div class="form-card" style="max-width: 800px;">
@@ -157,9 +152,9 @@ $status = strtolower($inquiry['status'] ?? 'new');
       ?>
       <div style="background: #e0f2fe; padding: 15px; border-radius: 6px; margin-top: 20px;">
         <strong>Inquiry Closed</strong>
-        <p style="margin-top: 10px; color: #666;">This inquiry has been closed. You can schedule training or create a new inquiry if needed.</p>
+        <p style="margin-top: 10px; color: #666;">This inquiry has been closed. To schedule training, please go to the Quotations module and ensure the quotation is accepted and LPO is verified.</p>
         <div style="margin-top: 15px;">
-          <a href="schedule_training.php?inquiry_id=<?= $inquiry['id'] ?>" class="btn">Schedule Training</a>
+          <a href="quotations.php" class="btn">View Quotations</a>
           <a href="inquiry_create.php" class="btn btn-secondary" style="margin-left: 10px;">Create New Inquiry</a>
         </div>
       </div>

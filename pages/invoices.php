@@ -28,6 +28,12 @@ $ctx = stream_context_create([
 $invoicesUrl = SUPABASE_URL . "/rest/v1/invoices?order=created_at.desc&limit=$limit&offset=$offset";
 $invoicesResponse = @file_get_contents($invoicesUrl, false, $ctx);
 
+$fetchError = false;
+if ($invoicesResponse === false) {
+  $fetchError = true;
+  error_log("Invoices page: Failed to fetch from Supabase (invoices). URL: " . $invoicesUrl);
+}
+
 // Get total count from headers
 $totalCount = 0;
 if ($invoicesResponse !== false) {
@@ -40,7 +46,7 @@ if ($invoicesResponse !== false) {
   }
 }
 
-$invoices = json_decode($invoicesResponse, true) ?: [];
+$invoices = $fetchError ? [] : (json_decode($invoicesResponse, true) ?: []);
 $totalPages = $totalCount > 0 ? ceil($totalCount / $limit) : 1;
 
 /* FETCH CLIENTS (cached) */
@@ -75,8 +81,22 @@ foreach ($clients as $c) {
 <?php include '../layout/sidebar.php'; ?>
 
 <main class="content">
-  <h2>Invoices</h2>
-  <p class="muted">Training invoices and payments</p>
+  <div class="page-header">
+    <div>
+      <h2>Invoices</h2>
+      <p class="muted">Training invoices and payments. Invoices are created automatically when certificates are issued for a completed training.</p>
+    </div>
+  </div>
+
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
+  <?php endif; ?>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
+  <?php endif; ?>
+  <?php if ($fetchError): ?>
+    <div class="alert alert-error">Could not load invoices. Please check your connection and try again.</div>
+  <?php endif; ?>
 
   <table class="table">
     <thead>
@@ -133,9 +153,12 @@ foreach ($clients as $c) {
       </tr>
     <?php endforeach; else: ?>
       <tr>
-        <td colspan="8" style="text-align: center; padding: 40px; color: #6b7280;">
-          <div style="font-size: 16px; margin-bottom: 8px;">No invoices found</div>
-          <div style="font-size: 14px;">Invoices will appear here once created</div>
+        <td colspan="8" class="empty-state-cell">
+          <div class="empty-state">
+            <div class="empty-state-icon">📄</div>
+            <div class="empty-state-title">No invoices yet</div>
+            <div class="empty-state-message">Invoices are created automatically when you issue certificates for a <strong>completed</strong> training. Go to <a href="<?= BASE_PATH ?>/pages/trainings.php">Trainings</a>, open a completed training, then use <strong>Issue Certificates</strong> — an invoice will be generated for that training.</div>
+          </div>
         </td>
       </tr>
     <?php endif; ?>
@@ -189,8 +212,8 @@ foreach ($clients as $c) {
     <?php endforeach; else: ?>
       <div class="empty-state">
         <div class="empty-state-icon">📄</div>
-        <div class="empty-state-title">No invoices found</div>
-        <div class="empty-state-message">Invoices will appear here once created</div>
+        <div class="empty-state-title">No invoices yet</div>
+        <div class="empty-state-message">Issue certificates for a completed training and an invoice will be created automatically. <a href="<?= BASE_PATH ?>/pages/trainings.php">View Trainings</a></div>
       </div>
     <?php endif; ?>
   </div>

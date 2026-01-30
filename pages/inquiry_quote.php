@@ -7,8 +7,8 @@ require '../includes/csrf.php';
 /* RBAC Check */
 requirePermission('quotations', 'create');
 
-$id = $_GET['id'] ?? '';
-if (!$id) die('Inquiry ID missing');
+$idParam = $_GET['id'] ?? '';
+$idsParam = trim($_GET['ids'] ?? '');
 
 $ctx = stream_context_create([
   'http' => [
@@ -19,21 +19,67 @@ $ctx = stream_context_create([
   ]
 ]);
 
-/* Fetch inquiry */
-$inquiry = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries?id=eq.$id&select=*",
-    false,
-    $ctx
-  ),
-  true
-)[0] ?? null;
+$selectedInquiries = [];
+$inquiry = null;
 
-if (!$inquiry) die('Inquiry not found');
+if ($idsParam !== '') {
+  /* Batch quote: multiple inquiry IDs (comma-separated) */
+  $requestedIds = array_filter(array_map('trim', explode(',', $idsParam)));
+  if (empty($requestedIds)) {
+    header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('No inquiry IDs provided'));
+    exit;
+  }
+  /* Fetch all requested inquiries (Supabase: id=in.(id1,id2,...)) */
+  $idsFilter = implode(',', $requestedIds);
+  $inquiriesResponse = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/inquiries?id=in.($idsFilter)&select=*&order=course_name.asc",
+      false,
+      $ctx
+    ),
+    true
+  );
+  if (empty($inquiriesResponse)) {
+    header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('Inquiries not found'));
+    exit;
+  }
+  /* Use only same client and status=new so one quote covers the batch */
+  $firstClientId = $inquiriesResponse[0]['client_id'] ?? null;
+  $selectedInquiries = [];
+  foreach ($inquiriesResponse as $inv) {
+    if (($inv['client_id'] ?? null) === $firstClientId && strtolower($inv['status'] ?? '') === 'new') {
+      $selectedInquiries[] = $inv;
+    }
+  }
+  if (empty($selectedInquiries)) {
+    header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('No quotable inquiries in this batch (same client, status NEW)'));
+    exit;
+  }
+  $inquiry = $selectedInquiries[0];
+} else {
+  /* Single inquiry */
+  if (!$idParam) {
+    header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('Inquiry ID missing'));
+    exit;
+  }
+  $inquiry = json_decode(
+    @file_get_contents(
+      SUPABASE_URL . "/rest/v1/inquiries?id=eq.$idParam&select=*",
+      false,
+      $ctx
+    ),
+    true
+  )[0] ?? null;
+  if (!$inquiry) {
+    header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('Inquiry not found'));
+    exit;
+  }
+  $selectedInquiries = [$inquiry];
+}
 
 /* Fetch client */
 $client = json_decode(
-  file_get_contents(
+  @file_get_contents(
     SUPABASE_URL . "/rest/v1/clients?id=eq.{$inquiry['client_id']}&select=*",
     false,
     $ctx
@@ -41,10 +87,19 @@ $client = json_decode(
   true
 )[0] ?? null;
 
-/* Group inquiries by client to show all courses for this client */
-$allInquiries = json_decode(
-  file_get_contents(
-    SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.{$inquiry['client_id']}&status=eq.new&order=course_name.asc",
+if (!$client) {
+  header('Location: ' . BASE_PATH . '/pages/inquiries.php?error=' . urlencode('Client not found'));
+  exit;
+}
+
+/* Available inquiries: same client, status=new, not already in selected */
+$selectedIds = array_column($selectedInquiries, 'id');
+$excludeFilter = count($selectedIds) === 1
+  ? "id=neq.{$inquiry['id']}"
+  : "id=not.in.(" . implode(',', $selectedIds) . ")";
+$availableInquiries = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/inquiries?client_id=eq.{$inquiry['client_id']}&status=eq.new&$excludeFilter&order=course_name.asc",
     false,
     $ctx
   ),
@@ -75,31 +130,17 @@ $allInquiries = json_decode(
     </div>
   </div>
 
-  <?php if (isset($_GET['error'])): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['error']) ?>
-    </div>
+  <?php if (!empty($_GET['error'])): ?>
+    <div class="alert alert-error"><?= htmlspecialchars($_GET['error']) ?></div>
   <?php endif; ?>
-
-  <?php if (isset($_GET['success'])): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($_GET['success']) ?>
-    </div>
+  <?php if (!empty($_GET['success'])): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($_GET['success']) ?></div>
   <?php endif; ?>
   
-  <?php if (empty($allInquiries)): ?>
-    <div style="background: #fef3c7; color: #92400e; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      No pending inquiries found for this client.
-    </div>
-    <div class="form-actions">
-      <a href="inquiries.php" class="btn">Back to Inquiries</a>
-    </div>
-  <?php else: ?>
-
   <div class="form-card" style="max-width: 100%;">
-      <form method="post" action="<?= BASE_PATH ?>/api/inquiries/create_quote.php">
+      <form method="post" action="<?= BASE_PATH ?>/api/inquiries/create_quote.php" id="quoteForm">
       <?= csrfField() ?>
-      <input type="hidden" name="client_id" value="<?= $inquiry['client_id'] ?>">
+      <input type="hidden" name="client_id" value="<?= $inquiry['client_id'] ?>" id="client_id">
       
       <div class="form-group">
         <label><strong>Client:</strong> <?= htmlspecialchars($client['company_name'] ?? '-') ?></label>
@@ -110,14 +151,12 @@ $allInquiries = json_decode(
       </div>
 
       <div class="form-group">
-        <label>Select Courses to Quote *</label>
+        <label>Selected Courses to Quote *</label>
         <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 15px; background: #f9fafb;">
-          <table style="width: 100%; border-collapse: collapse;">
+          <table style="width: 100%; border-collapse: collapse;" id="coursesTable">
             <thead>
               <tr style="border-bottom: 2px solid #e5e7eb;">
-                <th style="padding: 10px; text-align: left; width: 40px;">
-                  <input type="checkbox" id="select_all" onchange="toggleAll()">
-                </th>
+                <th style="padding: 10px; text-align: left; width: 40px;">Remove</th>
                 <th style="padding: 10px; text-align: left;">Course Name</th>
                 <th style="padding: 10px; text-align: left; width: 120px;">No. of Candidates</th>
                 <th style="padding: 10px; text-align: left; width: 150px;">Amount (per candidate)</th>
@@ -125,15 +164,17 @@ $allInquiries = json_decode(
                 <th style="padding: 10px; text-align: left; width: 150px;">Total</th>
               </tr>
             </thead>
-            <tbody>
-              <?php foreach ($allInquiries as $inq): ?>
-                <tr style="border-bottom: 1px solid #e5e7eb;">
+            <tbody id="coursesTableBody">
+              <?php foreach ($selectedInquiries as $inq): ?>
+                <tr data-inquiry-id="<?= $inq['id'] ?>" style="border-bottom: 1px solid #e5e7eb;">
                   <td style="padding: 10px;">
-                    <input type="checkbox" name="inquiry_ids[]" value="<?= $inq['id'] ?>" 
-                           class="course-check" onchange="updateTotal()" 
-                           data-course="<?= htmlspecialchars($inq['course_name']) ?>">
+                    <button type="button" class="btn-remove-course" onclick="removeCourse('<?= $inq['id'] ?>')" 
+                            style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                      ×
+                    </button>
                   </td>
                   <td style="padding: 10px;">
+                    <input type="hidden" name="inquiry_ids[]" value="<?= $inq['id'] ?>">
                     <?= htmlspecialchars($inq['course_name']) ?>
                   </td>
                   <td style="padding: 10px;">
@@ -186,6 +227,25 @@ $allInquiries = json_decode(
         </div>
       </div>
 
+      <?php if (!empty($availableInquiries)): ?>
+      <div class="form-group">
+        <label>Add More Courses (Optional)</label>
+        <div style="border: 1px solid #d1d5db; border-radius: 6px; padding: 15px; background: #f0f9ff;">
+          <select id="addInquirySelect" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 10px;">
+            <option value="">-- Select a course to add --</option>
+            <?php foreach ($availableInquiries as $availInq): ?>
+              <option value="<?= $availInq['id'] ?>" data-course="<?= htmlspecialchars($availInq['course_name']) ?>">
+                <?= htmlspecialchars($availInq['course_name']) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+          <button type="button" onclick="addSelectedCourse()" class="btn" style="width: 100%;">
+            + Add Selected Course
+          </button>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <div class="form-group">
         <label>Quote Notes (Optional)</label>
         <textarea name="notes" rows="4" placeholder="Additional notes or terms for this quote" style="width: 100%; padding: 8px;"></textarea>
@@ -197,17 +257,117 @@ $allInquiries = json_decode(
       </div>
     </form>
   </div>
-  <?php endif; ?>
 </main>
 
 <script>
-  function toggleAll() {
-    const selectAll = document.getElementById('select_all');
-    const checkboxes = document.querySelectorAll('.course-check');
-    checkboxes.forEach(cb => {
-      cb.checked = selectAll.checked;
-    });
-    updateTotal();
+  // Store available inquiries data
+  const availableInquiries = <?= json_encode($availableInquiries) ?>;
+  const selectedInquiryIds = new Set([<?= json_encode($inquiry['id']) ?>]);
+
+  function removeCourse(inquiryId) {
+    const row = document.querySelector(`tr[data-inquiry-id="${inquiryId}"]`);
+    if (row) {
+      row.remove();
+      selectedInquiryIds.delete(inquiryId);
+      updateGrandTotal();
+      
+      // Re-enable in dropdown if it was there
+      const option = document.querySelector(`#addInquirySelect option[value="${inquiryId}"]`);
+      if (option) {
+        option.disabled = false;
+      }
+    }
+  }
+
+  function addSelectedCourse() {
+    const select = document.getElementById('addInquirySelect');
+    if (!select) return;
+    
+    const inquiryId = select.value;
+    
+    if (!inquiryId) {
+      alert('Please select a course to add');
+      return;
+    }
+    
+    if (selectedInquiryIds.has(inquiryId)) {
+      alert('This course is already added');
+      return;
+    }
+    
+    const option = select.options[select.selectedIndex];
+    const courseName = option.getAttribute('data-course');
+    
+    // Find the inquiry data
+    const inquiry = availableInquiries.find(i => i.id === inquiryId);
+    if (!inquiry) {
+      alert('Course data not found');
+      return;
+    }
+    
+    // Add to selected set
+    selectedInquiryIds.add(inquiryId);
+    
+    // Add row to table
+    const tbody = document.getElementById('coursesTableBody');
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-inquiry-id', inquiryId);
+    newRow.style.borderBottom = '1px solid #e5e7eb';
+    newRow.innerHTML = `
+      <td style="padding: 10px;">
+        <button type="button" class="btn-remove-course" onclick="removeCourse('${inquiryId}')" 
+                style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+          ×
+        </button>
+      </td>
+      <td style="padding: 10px;">
+        <input type="hidden" name="inquiry_ids[]" value="${inquiryId}">
+        ${courseName}
+      </td>
+      <td style="padding: 10px;">
+        <input type="number" name="candidates[${inquiryId}]" 
+               id="candidates_${inquiryId}"
+               min="1" max="10000" placeholder="1" 
+               class="candidates-input" 
+               oninput="calculateRow('${inquiryId}')" 
+               onchange="calculateRow('${inquiryId}')"
+               style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;"
+               value="1">
+      </td>
+      <td style="padding: 10px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <input type="number" name="amount[${inquiryId}]" 
+                 id="amount_${inquiryId}"
+                 step="0.01" min="0" placeholder="0.00" 
+                 class="amount-input" 
+                 oninput="calculateRow('${inquiryId}')" 
+                 onchange="calculateRow('${inquiryId}')"
+                 style="flex: 1; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;"
+                 value="100">
+          <span style="color: #6b7280; font-size: 12px;">AED</span>
+        </div>
+      </td>
+      <td style="padding: 10px;">
+        <input type="number" name="vat[${inquiryId}]" 
+               id="vat_${inquiryId}"
+               step="0.01" min="0" max="100" value="5" 
+               class="vat-input" 
+               oninput="calculateRow('${inquiryId}')" 
+               onchange="calculateRow('${inquiryId}')"
+               style="width: 100%; padding: 6px; border: 1px solid #d1d5db; border-radius: 4px;">
+      </td>
+      <td style="padding: 10px;">
+        <span class="total-display" id="total_${inquiryId}" style="font-weight: 600;">0.00 AED</span>
+      </td>
+    `;
+    tbody.appendChild(newRow);
+    
+    // Disable option in dropdown
+    option.disabled = true;
+    select.value = '';
+    
+    // Calculate the new row
+    setTimeout(() => calculateRow(inquiryId), 100);
   }
 
   function calculateRow(id) {
@@ -248,17 +408,17 @@ $allInquiries = json_decode(
 
   function updateGrandTotal() {
     let grandTotal = 0;
-    // Sum only checked courses for grand total
-    const checkedBoxes = document.querySelectorAll('.course-check:checked');
-    
-    checkedBoxes.forEach(cb => {
-      const id = cb.value;
-      const totalElement = document.getElementById(`total_${id}`);
-      if (totalElement) {
-        const totalText = totalElement.textContent || '0.00 AED';
-        // Remove 'AED' and any whitespace, then parse
-        const total = parseFloat(totalText.replace(/AED/gi, '').trim()) || 0;
-        grandTotal += total;
+    // Sum all courses in the table
+    document.querySelectorAll('tr[data-inquiry-id]').forEach(row => {
+      const inquiryId = row.getAttribute('data-inquiry-id');
+      if (inquiryId) {
+        const totalElement = document.getElementById(`total_${inquiryId}`);
+        if (totalElement) {
+          const totalText = totalElement.textContent || '0.00 AED';
+          // Remove 'AED' and any whitespace, then parse
+          const total = parseFloat(totalText.replace(/AED/gi, '').trim()) || 0;
+          grandTotal += total;
+        }
       }
     });
     
@@ -269,10 +429,12 @@ $allInquiries = json_decode(
   }
 
   function updateTotal() {
-    // Recalculate all rows when checkbox state changes
-    document.querySelectorAll('.course-check').forEach(cb => {
-      const id = cb.value;
-      calculateRow(id);
+    // Recalculate all rows
+    document.querySelectorAll('tr[data-inquiry-id]').forEach(row => {
+      const inquiryId = row.getAttribute('data-inquiry-id');
+      if (inquiryId) {
+        calculateRow(inquiryId);
+      }
     });
   }
 
@@ -304,31 +466,33 @@ $allInquiries = json_decode(
   });
 
   document.querySelector('form')?.addEventListener('submit', function(e) {
-    const selected = document.querySelectorAll('.course-check:checked');
-    if (selected.length === 0) {
+    const selectedRows = document.querySelectorAll('tr[data-inquiry-id]');
+    if (selectedRows.length === 0) {
       e.preventDefault();
-      alert('Please select at least one course to quote');
+      alert('Please add at least one course to quote');
       return false;
     }
     
     // Validate amounts and candidates
     let hasError = false;
-    selected.forEach(cb => {
-      const id = cb.value;
-      const amount = document.querySelector(`input[name="amount[${id}]"]`).value;
-      const candidates = document.querySelector(`input[name="candidates[${id}]"]`).value;
+    selectedRows.forEach(row => {
+      const inquiryId = row.getAttribute('data-inquiry-id');
+      if (!inquiryId) return;
       
-      if (!amount || parseFloat(amount) <= 0) {
+      const amountInput = document.querySelector(`input[name="amount[${inquiryId}]"]`);
+      const candidatesInput = document.querySelector(`input[name="candidates[${inquiryId}]"]`);
+      
+      if (!amountInput || !amountInput.value || parseFloat(amountInput.value) <= 0) {
         hasError = true;
       }
-      if (!candidates || parseInt(candidates) < 1) {
+      if (!candidatesInput || !candidatesInput.value || parseInt(candidatesInput.value) < 1) {
         hasError = true;
       }
     });
     
     if (hasError) {
       e.preventDefault();
-      alert('Please enter valid amounts and number of candidates (minimum 1) for all selected courses');
+      alert('Please enter valid amounts and number of candidates (minimum 1) for all courses');
       return false;
     }
   });

@@ -84,15 +84,10 @@ $success = $_GET['success'] ?? '';
   </div>
 
   <?php if ($error): ?>
-    <div style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($error) ?>
-    </div>
+    <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
   <?php endif; ?>
-
   <?php if ($success): ?>
-    <div style="background: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-      <?= htmlspecialchars($success) ?>
-    </div>
+    <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
   <?php endif; ?>
 
   <div class="card">

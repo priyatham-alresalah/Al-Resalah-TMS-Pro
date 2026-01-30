@@ -234,9 +234,11 @@ Manage training quotations, approvals, and client acceptance workflow.
    ↓
 3. Client accepts ('accepted')
    ↓
-4. Upload LPO → Client Orders module
+4. Upload LPO → Client Orders module (status: 'pending')
    ↓
-5. Schedule Training → Trainings module
+5. Verify LPO → LPO status: 'verified'
+   ↓
+6. Schedule Training → Trainings module (ONLY after LPO verified)
 ```
 
 #### **Status Flow**
@@ -315,7 +317,7 @@ Schedule and manage training sessions, assign candidates, track completion.
   - Trainer availability check
 - **Training Checkpoints**: Automatic creation of workflow checkpoints
 - **Document Upload**: Upload training documents (attendance, materials)
-- **Convert to Training**: Convert inquiries directly to training (if prerequisites met)
+- **Strict Workflow**: Training can ONLY be scheduled from accepted quotations with verified LPOs
 
 #### **Workflow**
 ```
@@ -352,7 +354,6 @@ Schedule and manage training sessions, assign candidates, track completion.
 - `pages/training_edit.php` (Edit training)
 - `pages/training_candidates.php` (View assigned candidates)
 - `pages/training_assign_candidates.php` (Assign candidates)
-- `pages/convert_to_training.php` (Convert inquiry to training)
 - `api/trainings/create.php`
 - `api/trainings/update.php`
 - `api/trainings/schedule.php`
