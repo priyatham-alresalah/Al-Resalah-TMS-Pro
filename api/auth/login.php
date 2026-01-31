@@ -116,9 +116,65 @@ $profileResponse = @file_get_contents(
 $profile = json_decode($profileResponse, true)[0] ?? null;
 
 /* =========================
-   PROFILE VALIDATION
+   AUTO-CREATE PROFILE IF MISSING
+   Users added in Supabase Auth (e.g. dashboard) may not have a profiles row.
 ========================= */
-if (!$profile || !$profile['is_active']) {
+if (!$profile) {
+  $authUser = $data['user'];
+  $userId = $authUser['id'];
+  $userMeta = $authUser['user_metadata'] ?? $authUser['raw_user_meta_data'] ?? [];
+  $fullName = $userMeta['full_name'] ?? '';
+  if (empty($fullName) && !empty($email)) {
+    $fullName = explode('@', $email)[0];
+  }
+  $fullName = $fullName ?: 'User';
+  $role = $userMeta['role'] ?? 'user';
+
+  $createCtx = stream_context_create([
+    'http' => [
+      'method'  => 'POST',
+      'header'  =>
+        "Content-Type: application/json\r\n" .
+        "apikey: " . SUPABASE_SERVICE . "\r\n" .
+        "Authorization: Bearer " . SUPABASE_SERVICE . "\r\n" .
+        "Prefer: return=minimal",
+      'content' => json_encode([
+        'id'        => $userId,
+        'full_name' => $fullName,
+        'email'     => $email,
+        'role'      => $role,
+        'is_active' => true
+      ])
+    ]
+  ]);
+
+  $createResp = @file_get_contents(
+    SUPABASE_URL . '/rest/v1/profiles',
+    false,
+    $createCtx
+  );
+
+  if ($createResp !== false && isset($http_response_header) && preg_match('/^HTTP\/\d\.\d\s+2\d\d\b/', $http_response_header[0] ?? '')) {
+    $profile = [
+      'id'        => $userId,
+      'full_name' => $fullName,
+      'email'     => $email,
+      'role'      => $role,
+      'is_active' => true
+    ];
+  }
+}
+
+/* =========================
+   PROFILE VALIDATION
+   Block only when is_active is explicitly false (treat null/missing as active)
+========================= */
+if (!$profile) {
+  header('Location: ' . BASE_PATH . '/index.php?error=inactive');
+  exit;
+}
+$isInactive = isset($profile['is_active']) && in_array($profile['is_active'], [false, 0, 'f'], true);
+if ($isInactive) {
   header('Location: ' . BASE_PATH . '/index.php?error=inactive');
   exit;
 }

@@ -8,6 +8,11 @@ if (isset($_SESSION['user'])) {
 }
 
 $error = $_GET['error'] ?? '';
+$reset_sent = !empty($_GET['reset_sent']);
+$reset_error = !empty($_GET['reset_error']);
+if (!isset($_SESSION['reset_csrf'])) {
+  $_SESSION['reset_csrf'] = bin2hex(random_bytes(16));
+}
 ?>
 
 <!DOCTYPE html>
@@ -40,9 +45,10 @@ $error = $_GET['error'] ?? '';
     <h2>Login</h2>
 
     <?php if ($error === 'invalid'): ?>
-      <p style="color:#dc2626;font-size:14px;margin-bottom:10px;">
-        Invalid email or password
-      </p>
+      <p class="alert alert-error">Invalid email or password</p>
+    <?php endif; ?>
+    <?php if ($error === 'inactive'): ?>
+      <p class="alert alert-error">This account is disabled. Contact an administrator.</p>
     <?php endif; ?>
 
     <form method="post" action="<?= BASE_PATH ?>/api/auth/login.php">
@@ -66,13 +72,15 @@ $error = $_GET['error'] ?? '';
     <a href="#" onclick="showReset(); return false;">Forgot password?</a>
 
     <!-- RESET PASSWORD -->
-    <div id="resetBox" style="display:none; margin-top:20px;">
+    <div id="resetBox" class="reset-box" style="display:none; margin-top:20px;">
       <form method="post" action="<?= BASE_PATH ?>/api/auth/reset.php">
+        <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['reset_csrf']) ?>">
         <input
           type="email"
           name="email"
           placeholder="Registered Email"
           required
+          autocomplete="email"
         >
         <button type="submit">Send Reset Link</button>
       </form>
@@ -88,6 +96,13 @@ $error = $_GET['error'] ?? '';
 </footer>
 
 <script>
+(function() {
+  var hash = window.location.hash || '';
+  if (hash.indexOf('type=recovery') !== -1 && hash.indexOf('access_token=') !== -1) {
+    window.location.replace('<?= BASE_PATH ?>/set_password.php' + hash);
+    return;
+  }
+})();
 function showReset() {
   document.getElementById('resetBox').style.display = 'block';
 }

@@ -13,6 +13,7 @@ ErrorDocument 404 404.php
   RewriteRule ^includes/ - [F,L]
   RewriteRule ^logs/ - [F,L]
   RewriteRule ^cache/ - [F,L]
+  RewriteRule ^sql/ - [F,L]
 
   # Redirect to HTTPS (uncomment for production on cPanel)
   # RewriteCond %{HTTPS} off

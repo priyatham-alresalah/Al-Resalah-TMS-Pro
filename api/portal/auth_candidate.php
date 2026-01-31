@@ -44,6 +44,20 @@ if (empty($candidates[0])) {
 
 $candidate = $candidates[0];
 
+/* Check login_enabled (optional column - if present and false, block login) */
+$loginCheck = json_decode(
+  @file_get_contents(
+    SUPABASE_URL . "/rest/v1/candidates?id=eq." . rawurlencode($candidate['id']) . "&select=login_enabled",
+    false,
+    $ctx
+  ),
+  true
+);
+if (!empty($loginCheck[0]) && isset($loginCheck[0]['login_enabled']) && $loginCheck[0]['login_enabled'] === false) {
+  header('Location: ' . BASE_PATH . '/candidate_portal/login.php?error=Login disabled. Contact support.');
+  exit;
+}
+
 /* Check password */
 if (!empty($candidate['password_hash'])) {
   /* Password stored in database - verify */

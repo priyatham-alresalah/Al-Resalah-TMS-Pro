@@ -1,0 +1,25 @@
+# Environment (never commit real keys or app password)
+.env
+.env.local
+.env.*.local
+
+# Logs and cache
+logs/*.log
+cache/*.cache
+cache/rate_limits/*.json
+
+# Uploads (optional: ignore generated PDFs; keep empty dirs if needed)
+# uploads/quotes/*.pdf
+# uploads/certificates/*.pdf
+# uploads/qrcodes/*.png
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Composer (uncomment if you don't commit vendor)
+# vendor/

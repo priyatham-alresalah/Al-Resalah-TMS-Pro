@@ -54,26 +54,37 @@ $isLocalhost = $host === 'localhost' ||
 // Production subdomain: reports.alresalahct.com uses empty BASE_PATH
 define('BASE_PATH', $isLocalhost ? '/training-management-system' : '');
 
+/* Load .env into $_ENV (simple KEY=value parser, avoids parse_ini_file issues) */
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+  $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+  foreach ($lines as $line) {
+    $line = trim($line);
+    if ($line === '' || $line[0] === '#') continue;
+    $pos = strpos($line, '=');
+    if ($pos === false) continue;
+    $key = trim(substr($line, 0, $pos));
+    if ($key === '') continue;
+    $val = trim(substr($line, $pos + 1));
+    if ($val !== '' && ($val[0] === '"' || $val[0] === "'")) {
+      $val = trim($val, '"\'');
+    }
+    $_ENV[$key] = $val;
+  }
+}
+
 /* =========================
    SUPABASE CONFIG
 ========================= */
-define('SUPABASE_URL', getenv('SUPABASE_URL') ?: 'https://qqmzkqsbvsmteqdtparn.supabase.co');
+define('SUPABASE_URL', getenv('SUPABASE_URL') ?: ($_ENV['SUPABASE_URL'] ?? 'https://qqmzkqsbvsmteqdtparn.supabase.co'));
 
 /*
   ANON key → used for LOGIN / RESET
   Load from environment variable or .env file
 */
-$supabaseAnon = getenv('SUPABASE_ANON');
-if ($supabaseAnon === false) {
-  // Fallback: Try to load from .env file if exists
-  if (file_exists(__DIR__ . '/../.env')) {
-    $env = parse_ini_file(__DIR__ . '/../.env');
-    $supabaseAnon = $env['SUPABASE_ANON'] ?? null;
-  }
-  // Last resort: Use hardcoded (should be removed in production)
-  if (empty($supabaseAnon)) {
-    $supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbXprcXNidnNtdGVxZHRwYXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMjI2MjEsImV4cCI6MjA4NDg5ODYyMX0.aDCwm8cf46GGCxYhXIT0lqefLHK_5sAKEsDgEhp2158';
-  }
+$supabaseAnon = getenv('SUPABASE_ANON') ?: ($_ENV['SUPABASE_ANON'] ?? null);
+if (empty($supabaseAnon)) {
+  $supabaseAnon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbXprcXNidnNtdGVxZHRwYXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMjI2MjEsImV4cCI6MjA4NDg5ODYyMX0.aDCwm8cf46GGCxYhXIT0lqefLHK_5sAKEsDgEhp2158';
 }
 define('SUPABASE_ANON', $supabaseAnon);
 
@@ -81,13 +92,8 @@ define('SUPABASE_ANON', $supabaseAnon);
   SERVICE key → used for DB CRUD (server-side only)
   Load from environment variable or .env file
 */
-$supabaseService = getenv('SUPABASE_SERVICE');
-if ($supabaseService === false) {
-  // Fallback: Try to load from .env file if exists
-  if (file_exists(__DIR__ . '/../.env')) {
-    $env = parse_ini_file(__DIR__ . '/../.env');
-    $supabaseService = $env['SUPABASE_SERVICE'] ?? null;
-  }
+$supabaseService = getenv('SUPABASE_SERVICE') ?: ($_ENV['SUPABASE_SERVICE'] ?? null);
+if ($supabaseService === false || $supabaseService === null) {
   // Last resort: Fail safely if no key found (production safety)
   if (empty($supabaseService)) {
     error_log("CRITICAL: SUPABASE_SERVICE key not found in environment or .env file");
@@ -109,16 +115,12 @@ define('APP_NAME', 'AI Resalah Consultancies & Training');
    Used for: quotations, invoices, certificates, password reset
    Change app password in .env as SMTP_PASS or set environment variable.
 ========================= */
-$env = [];
-if (file_exists(__DIR__ . '/../.env')) {
-  $env = parse_ini_file(__DIR__ . '/../.env') ?: [];
-}
-$smtpHost   = getenv('SMTP_HOST')   ?: ($env['SMTP_HOST']   ?? 'smtp.gmail.com');
-$smtpPort   = getenv('SMTP_PORT')   ?: ($env['SMTP_PORT']   ?? '587');
-$smtpUser   = getenv('SMTP_USER')   ?: ($env['SMTP_USER']   ?? '');
-$smtpPass   = getenv('SMTP_PASS')   ?: ($env['SMTP_PASS']   ?? '');
-$smtpFrom   = getenv('SMTP_FROM')   ?: ($env['SMTP_FROM']   ?? $smtpUser);
-$smtpFromName = getenv('SMTP_FROM_NAME') ?: ($env['SMTP_FROM_NAME'] ?? APP_NAME);
+$smtpHost   = getenv('SMTP_HOST')   ?: ($_ENV['SMTP_HOST']   ?? 'smtp.gmail.com');
+$smtpPort   = getenv('SMTP_PORT')   ?: ($_ENV['SMTP_PORT']   ?? '587');
+$smtpUser   = getenv('SMTP_USER')   ?: ($_ENV['SMTP_USER']   ?? '');
+$smtpPass   = getenv('SMTP_PASS')   ?: ($_ENV['SMTP_PASS']   ?? '');
+$smtpFrom   = getenv('SMTP_FROM')   ?: ($_ENV['SMTP_FROM']   ?? $smtpUser);
+$smtpFromName = getenv('SMTP_FROM_NAME') ?: ($_ENV['SMTP_FROM_NAME'] ?? APP_NAME);
 
 if (!defined('SMTP_HOST'))     define('SMTP_HOST',     $smtpHost);
 if (!defined('SMTP_PORT'))     define('SMTP_PORT',     $smtpPort);
